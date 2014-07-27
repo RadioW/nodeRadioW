@@ -10,7 +10,7 @@ module.exports = function (server) {
 
 	
 	
-	var io = require('socket.io')(server, {'origins': 'radiow.ru:* www.radiow.ru:*'})
+	var io = require('socket.io')(server, {'origins': '*:*'})
 	log.info('socket.io server is running');
 	
 	io.use(require('./middleware/authorize'));
