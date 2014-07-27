@@ -1,0 +1,92 @@
+<% if (!ajax) {layout('./layout/page')}; -%>
+<% block('title', 'Chat'); -%>
+
+<p class='lead'>Здесь будет чат</p>
+<div id="room">
+	<ul></ul>
+	<form>
+		<input class="form-control" autocomplete="off" autofocus placeholder="Сообщение...">
+	</form>
+</div>
+
+<script>
+socket = io(location.host+'/chat', {'reconnection':false,
+									'forceNew':true,
+									'muliplex': false,
+									'transport': ['websocket']
+									});
+
+var input = $('#room input');                   
+var form = $('#room form');
+var ul = $('#room ul');
+
+var myName;
+
+input.prop('disabled', true);
+		
+  socket
+        .on('connect', function() {
+        printStatus("соединение установлено");
+        input.prop('disabled', false);
+		form.on("submit", sendMessage);
+		})
+		
+		.on('my name', function(name) {
+			myName = name;
+		})
+		
+		.on('message', function(username, message) {
+			printMessage((username == myName ? 'я': username) + ' -> ' + message);
+		})
+		
+		.on('join', function (username) {
+			printStatus(username + ' вошел в чат');
+		})
+		
+		.on('leave', function (username) {
+			printStatus(username + ' вышел из чата');
+		})
+		
+		.on('disconnect', function() {
+			printStatus("соединение потеряно");
+			form.off('submit', sendMessage);
+			input.prop('disabled', true);
+			setTimeout(reconnect, 500);
+		})
+		
+		.on('logout', function () {
+			location.href = "/";
+		})
+		
+		.on('error', function(reason) {
+			if (reason == "handshake unauthorized") {
+				printStatus("вы вышли из сайта");
+			} else {
+				setTimeout(reconnect, 500);
+			}
+		});
+
+  function sendMessage() {
+    var text = input.val();
+    socket.emit('message', text);
+
+    input.val('');
+    return false;
+  }
+
+  function reconnect() {
+	if (!socket) return;
+    socket.once('error', function() {
+      setTimeout(reconnect, 500);
+    });
+    socket.connect();
+  }
+
+  function printStatus(status) {
+    $('<li>').append($('<i>').text(status)).appendTo(ul);
+  }
+
+  function printMessage(text) {
+    $('<li>').text(text).appendTo(ul);
+  }
+</script>

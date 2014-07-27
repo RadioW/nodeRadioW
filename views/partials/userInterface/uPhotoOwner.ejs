@@ -1,0 +1,105 @@
+<div class="row" style="height:100%">
+	<p class="text-center lead">Фотографии (Master)</p>
+	<form id="photoForm" enctype="multipart/form-data" method="POST">
+		<span class="btn btn-primary btn-file">Browse<input type="file" name="photo[]" multiple></span>
+	</form>
+	<div class="progress progress-striped active" style="display:none">
+		<div class="progress-bar" role="progressbar" style="width:0">
+		</div>
+	</div>
+	<div class="col-xs-12 col-xs-11-vp" style="overflow-y:scroll; float:right;" id="photoRoll">
+			<div class="row">
+				<% for (var i=user.data.photo.length-1; i>-1; i--) { %>
+					<div class="photoPrev" id="<%- user.data.photo[i]._id -%>" onclick="showPhoto('/user/<%- user._id -%>/photo/<%- user.data.photo[i]._id -%>')">
+						<img src='<%- user.data.photo[i].link -%>prev.jpg'>
+					</div>
+				<% } %>
+			</div>
+	</div>
+</div>
+
+<script>
+/*
+$('.photoPrev').each(function(i, prev) {
+	$(prev).on('click', function() {
+		showPhoto($(this));
+		$('#largeModal').modal();
+	});
+});
+*/
+if (window.FormData === undefined) {
+	launchModal('Извините, но Ваш браузер устарел, загрузка изображений работать не будет!');
+} else {
+
+	$('#photoForm')
+    .on('change', '.btn-file :file', function() {
+        var input = $(this).get(0),
+            numFiles = input.files ? input.files.length : 1,
+            label = input.value.replace(/\\/g, '/').replace(/.*\//, '');
+			
+		var data = new FormData();
+			
+		for (var i in input.files) { 
+
+			if (i != 'length' && i != 'item') {
+				if (input.files[i].name.length < 1) {
+					launchModal('Мне очень жаль, но один или несколько файлов не имеют имени, изображения не будут загружены');
+					return false;
+				}
+				if (input.files[i].size > (20 * 1024 * 1024)) {
+					launchModal('Мне очень жаль, но один или несколько файлов слишком велики, изображения не будут загружены');
+					return false;
+				}
+				if (input.files[i].type != 'image/png' && input.files[i].type != 'image/jpg' && input.files[i].type != 'image/gif' && input.files[i].type != 'image/jpeg' ) {
+					launchModal('Мне очень жаль, но здесь могут быть загружены только изображения');
+					return false;
+				}
+				data.append('file-'+i, input.files[i]);
+			}
+		}
+			
+        $(input).trigger('fileselect', data);
+	});
+
+
+    $('.btn-file :file').on('fileselect', function(event, data) {
+        $.ajax({
+			url: '/user/savePhoto',
+			type: 'POST',
+			data: data,
+			processData: false,
+			xhr: function() {
+				var settings = $.ajaxSettings.xhr();
+				if (settings.upload) {                                 //это какой-то индуистский метод, надо подразобраться
+					settings.upload.addEventListener('progress', moveProgress)
+				}
+				return settings;
+			},
+			contentType: false,
+			cache: false,
+			statusCode: {
+				200: function() {
+					$('.progress-bar').parent().css('display', 'none');
+					launchModal('Фотографии успешно загружены');
+				},
+				500: function(jqXHR) {
+					var ans = JSON.parse(jqXHR.responseText)
+					launchModal(ans.message);
+				},
+				404: function(jqXHR) {
+					var ans = JSON.parse(jqXHR.responseText)
+					launchModal(ans.message);
+				}
+			},
+			beforeSend: function() {
+				$('.progress-bar').parent().css('display', 'block');
+				$('.progress-bar').css('width', 0);
+			}
+		});
+		function moveProgress(e) {
+			$('.progress-bar').css('width', 100*e.loaded/e.total+'%');
+		}
+    });
+}
+
+</script>

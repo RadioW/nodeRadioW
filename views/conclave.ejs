@@ -1,0 +1,97 @@
+<% layout('./layout/page') -%>
+
+<p class="lead">Конклав</p>
+
+<% for (var i=admin.length-1; i>=0; i--) { %>
+
+Администратор <%- admin[i].user.username -%>; уровень доступа: <%- admin[i].rate -%>; </br>
+
+<% } %>
+
+<form id="makeAdmin" onsubmit="return makeAdmin();">
+	<input type="text" name="id"> Дать права
+</form>
+
+<form id="deletePhoto" onsubmit="return remPhoto();">
+	<input type="text" name="uid"> Удалить у пользователя
+	<input type="text" name="index"> Индекс фото
+	<input type="submit">
+</form>
+
+<p>Пользователи</p>
+
+<% for (var key in users) { %>
+	<button class="btn btn-danger btn-xs" onclick="killUser('<%- users[key]._id -%>')"><i class="glyphicon glyphicon-remove"></i></button><%- users[key].username -%></br>
+<% } %>
+
+
+<script>
+	function makeAdmin() {
+		$.ajax({
+			url: "/conclave/give",
+			method: "POST",
+			data: $('#makeAdmin').serialize(),
+			statusCode: {
+				200: function () {
+					launchModal('Права выданы');
+				},
+				403: function () {
+					launchModal('Вы не имеете на это прав');
+				},
+				404: function () {
+					launchModal('Запрос неверен');
+				},
+				500: function () {
+					launchModal('Что-то пошло не так');
+				}
+			}
+		});
+		return false;
+	}
+	
+  function remPhoto() {
+		$.ajax({
+			url: "/conclave/del",
+			method: "POST",
+			data: $('#deletePhoto').serialize(),
+			statusCode: {
+				200: function () {
+					launchModal('Успешно');
+				},
+				403: function () {
+					launchModal('Вы не имеете на это прав');
+				},
+				404: function () {
+					launchModal('Запрос неверен');
+				},
+				500: function () {
+					launchModal('Что-то пошло не так');
+				}
+			}
+		});
+		return false;
+	}
+	
+	function killUser(id) {
+		$.ajax({
+			url: "/conclave/kill",
+			method: "POST",
+			data: "id="+encodeURIComponent(id),
+			statusCode: {
+				200: function () {
+					launchModal('Успешно');
+				},
+				403: function () {
+					launchModal('Вы не имеете на это прав');
+				},
+				404: function () {
+					launchModal('Запрос неверен');
+				},
+				500: function () {
+					launchModal('Что-то пошло не так');
+				}
+			}
+		});
+	}
+	
+</script>

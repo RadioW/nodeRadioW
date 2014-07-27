@@ -1,0 +1,12 @@
+	<p class="text-center lead">Блог</p>
+		<div style="height:83%; overflow:hidden" id="miniBlogRoll">
+			<% for(var i = user.data.blog.length-1; i >=0 && i >= user.data.blog.length - 5; i--) { %>
+				<div class="blogPost">
+					<div class="row">
+						<div class="col-xs-12">
+							<p><%- user.data.blog[i].message -%></p>
+						</div>
+					</div>
+				</div>
+			<% } %>
+		</div>

@@ -1,0 +1,54 @@
+		<div style="overflow:hidden;">
+			<div class="modal-body">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<div class="row">
+					<div class="col-xs-12">
+						<div class="photoWrap" id="largeModalMessage">
+							<% if (index < photo.length-1) { %>
+								<div class="photoScrollArrow" style="left:0" onclick="showPhoto('/user/<%- user._id -%>/photo/<%- photo[index+1]._id -%>')"></div>
+							<% } %>
+							<img class="fullSizeImg" id="fullSizeImg" src="<%- photo[index].link -%>.jpg">
+							<% if (index > 0) {%>
+								<div class="photoScrollArrow" style="right:0" onclick="showPhoto('/user/<%- user._id -%>/photo/<%- photo[index-1]._id -%>')"></div>
+							<% } %>
+						</div>
+						<p>Загружено <%- user.datify(photo[index].date) -%></p>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-xs-12">
+						<form id="photoDescription">
+
+							<div<% if(self && user._id.toString() == self._id.toString()) { %> onclick="transformDivToInput(this, '<%- photo[index]._id -%>')"<% } %>><% if (self && !photo[index].message && user._id.toString() == self._id.toString()) { %>Редактировать описание<% } else { %><%- photo[index].message %><% } %></div>
+						</form>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-xs-12 text-right">
+						<% if (self && user._id.toString() == self._id.toString() && user.info.avatar != photo[index]._id) { %>
+							<button type="button" onclick="removePhoto('<%- photo[index]._id -%>')" class="btn btn-danger">Удалить</button>
+							<button type="button" onclick="makeThisAva('<%- photo[index]._id -%>')" class="btn btn-primary">Сделать аватаркой</button>
+						<% } %>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<% if (self) { %>
+					<form class="comment" onsubmit="return comment(this, 'photo', '<%- photo[index]._id -%>')">
+						<textarea class="form-control"></textarea>
+						<input type="submit" class="btn btn-primary">
+					</form>
+				<% } %>
+				<div id="comments">
+				<% for (var i=photo[index].comments.length-1; i>=0; i--) { %>
+					<div class="comment" id="<%-  photo[index].comments[i]._id -%>">
+						<div><a href="/user/<%-  photo[index].comments[i].author._id -%>"><img src="/data/<%-  photo[index].comments[i].author._id -%>/avatar-xs.jpg"></a></div>
+						<div style="width:90%">
+							<div><a href="/user/<%-  photo[index].comments[i].author._id -%>"><%- photo[index].comments[i].author.username -%></a> <%-  user.datify(photo[index].comments[i].date) -%><% if (self && photo[index].comments[i].author._id.toString() == self._id.toString()) { %> <button class="btn btn-primary btn-xs" onclick="return remarkComment(this, 'photo', '<%- photo[index]._id -%>', <%- i -%>)"><i class="glyphicon glyphicon-pencil"></i></button><% } %></div>
+							<div><%- photo[index].comments[i].message -%></div>				
+						</div>
+					</div>
+				<% } %>
+				</div>
+			</div>
+		</div>

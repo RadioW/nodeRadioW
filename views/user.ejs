@@ -1,0 +1,217 @@
+<% if (!ajax) {layout('./layout/page')} -%>
+<% block('title', user.username) -%>
+<p class="lead text-center">Страница пользователя <%- user.username -%></p>
+
+<div class="col-lg-4 col-md-6 col-lg-4-v col-md-6-v col-sm-6 col-sm-6-v">
+	<a class="thumbnail thumbnail-v" href="/user/<%- user._id -%>/info">
+		<div class="container-fluid" id="userInfoMini">
+			<%- partial('./partials/userInterface/uInfoMini') -%>
+		</div>
+	</a>
+</div>
+
+<div class="col-lg-4 col-md-6 col-lg-4-v col-md-6-v col-sm-6 col-sm-6-v">
+	<a class="thumbnail thumbnail-v" href="/user/<%- user._id -%>/blog" style="overflow:hidden;">
+		<div class="container-fluid" id="userBlogMini" style="height:100%">
+			<%- partial('./partials/userInterface/uBlogMini') -%>
+		</div>
+	</a>
+</div>
+
+<div class="col-lg-4 col-md-6 col-lg-4-v col-md-6-v col-sm-6 col-sm-6-v">
+	<a class="thumbnail thumbnail-v" href="/user/<%- user._id -%>/photo" style="overflow:hidden;">
+		<div class="container-fluid" id="userPhotoMini">
+			<%- partial('./partials/userInterface/uPhotoMini') -%>
+		</div>
+	</a>
+</div>
+
+<div class="col-lg-4 col-md-6 col-lg-4-v col-md-6-v col-sm-6 col-sm-6-v">
+	<a class="thumbnail thumbnail-v" href="/#">
+		<div class="container-fluid" style="overflow:hidden;"></div>
+	</a>
+</div>
+
+<script>
+var _myID = "";
+<% if (self) { %>
+	_myID = "<%- self._id -%>";
+<% } %>
+
+socket = io(location.host+'/user', {'reconnection':false,
+									'forceNew':true,
+									'muliplex': false,
+									'transport': ['websocket']
+									});
+
+socket.on('connect', function() {
+	socket.emit('join', '<%- user._id -%>');
+});
+socket.on('free', function() {
+	var div = $('#usernameInput').get(0);
+	div.className = 'form-group has-success has-feedback';
+	div.children[1].className = 'xs form-control-feedback glyphicon glyphicon-ok';
+});
+
+socket.on('buzy', function() {
+	var div = $('#usernameInput').get(0);
+	div.className = 'form-group has-error has-feedback';
+	div.children[1].className = 'xs form-control-feedback glyphicon glyphicon-remove';
+});
+
+socket.on('newBlog', function(message, date, user) {
+
+	var blog = document.createElement('div');
+	blog.className = "blogPost";
+	blog.style.height = 0;
+	blog.innerHTML = "<div class='row'><div class='col-xs-12'><p>"+message+"</p></div></div>";
+	$('#miniBlogRoll').prepend(blog);
+	setTimeout(function() {blog.style.height = "";}, 50)
+	
+	if ($('#blogRoll').get(0)) {
+		var bigBlog = document.createElement('div');
+		bigBlog.className = "blogPost";
+		bigBlog.style.height = 0;
+		bigBlog.innerHTML = "<div class='row'><div class='col-xs-12'><p>"+message+"</p></div><div class='col-xs-12'><em>"+user+" "+datify(date)+"</em></div></div>";
+		$('#blogRoll').children().prepend(bigBlog);
+		setTimeout(function() {bigBlog.style.height = '';}, 50)
+	}
+
+});
+
+socket.on('new photo', function(files) {
+	if (!$('#photoRoll').get(0)) return;
+	for (var i=0; i<files.length; i++) {
+		var img = document.createElement('img');
+		img.src = files[i]+'prev.jpg';
+		var slot = document.createElement('div');
+		slot.className = 'photoPrev';
+		slot.onclick = function() {
+			var link = '/user/<%- user._id -%>/photo/'+files[i].slice(files[i].lastIndexOf('/')+1);
+			return function () {
+				showPhoto(link);
+			}
+		}();
+		slot.appendChild(img);
+		$('#photoRoll').children('.row').prepend(slot);
+	}
+});
+
+socket.on('new avatar', function(avatarID) {
+	changeAvatar('sm');
+	if ($('#avatar').get(0)) {
+		$('#avatar').get(0).parentNode.onclick = function() {
+			var link = '/user/<%- user._id -%>/photo/'+avatarID;
+			return function() {
+				showPhoto(link);
+			}
+		}();
+		changeAvatar();
+	}
+
+	function changeAvatar(size) {
+		size = size || '';
+		if (size !== '') size = '-'+size;
+		var oAva = $('#avatar'+size).get(0);
+		oAva.style.opacity = 0;
+		oAva.id = '';
+		var ava = document.createElement('img');
+		ava.src = "/data/<%- user._id -%>/avatar"+size+".jpg?";
+		ava.id = 'avatar'+size;
+		ava.style.position = 'absolute';
+		ava.style.left = 0;
+		ava.style.right = 0;
+		ava.style.opacity = 0;
+		setTimeout(function() {
+			oAva.parentNode.appendChild(ava);
+			oAva.parentNode.removeChild(oAva);
+			ava.style.position = '';
+			setTimeout(function() {
+				ava.style.opacity = 1;
+			}, 1)
+		}, 300);
+	}
+});
+
+socket.on('removed photo', function(id) {
+	if ($('#'+id).get(0)) $('#'+id).remove(); 
+});
+
+socket.on('error', function(err) {
+	launchModal('Извините, произошла ошибка!</br>'+err);
+});
+
+socket.on('error_', function(err) {
+	launchModal('Извините, произошла ошибка!</br>'+err);
+});
+
+socket.on('new comment', function(ans) {
+	if (ans.type == 'photo') {
+		if (window.location.href.slice(window.location.href.lastIndexOf('/')+1) == ans.id) {
+			var wrap = document.createElement('div');
+			wrap.className = 'comment';
+			wrap.id = ans.commentID;
+			
+			var avatar = document.createElement('div');
+			var avatarA = document.createElement('a');
+			avatarA.href = '/user/'+ans.commentator.id;
+			var avatarImg = document.createElement('img');
+			avatarImg.src = '/data/'+ans.commentator.id+'/avatar-xs.jpg';
+			
+			var wdiv = document.createElement('div');
+			wdiv.style.width = '90%';
+			var authDiv = document.createElement('div');
+			var authA = document.createElement('a');
+			authA.href = avatarA.href;
+			authA.innerHTML = ans.commentator.name;
+			
+			var comDiv = document.createElement('div');
+			comDiv.innerHTML = ans.message;
+			
+			document.getElementById('comments').insertBefore(wrap, document.getElementById('comments').children[0]);
+			wrap.appendChild(avatar);
+			wrap.appendChild(wdiv);
+			avatar.appendChild(avatarA);
+			avatarA.appendChild(avatarImg);
+			wdiv.appendChild(authDiv);
+			wdiv.appendChild(comDiv);
+			authDiv.appendChild(authA);
+			authDiv.innerHTML = authDiv.innerHTML+' '+datify(ans.date)+' ';
+			
+			if (ans.commentator.id == _myID) {
+				var button = document.createElement('button');
+				button.className = "btn btn-primary btn-xs";
+				button.onclick = function(id, i) {
+					return function() {
+						return remarkComment(this, 'photo', id, i);
+					}
+				}(ans.id, ans.index);
+				button.innerHTML = "<i class='glyphicon glyphicon-pencil'></i>";
+				authDiv.appendChild(button);
+			}
+			
+			clickers()
+		}
+	}
+	return;
+});
+
+socket.on('remark comment', function(ans){
+	if (ans.type == 'photo') {
+		if (window.location.href.slice(window.location.href.lastIndexOf('/')+1) == ans.id) {
+			$('#'+ans.commentID).children().last().append('<div>'+ans.message+'</div>');
+		}
+	}
+});
+
+$('.thumbnail-v').each(function (i, quad) {
+	quad.onclick = function() {
+		showQuad(quad);
+		return false;
+	}
+});
+
+<% if (special) { %>
+showPhoto('/user/<%- user._id -%>/photo/<%- user.data.photo[index]._id -%>');
+<% } %>
+</script>

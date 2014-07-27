@@ -1,0 +1,166 @@
+<% if (!ajax) {layout('./layout/page')} -%>
+<% block('title', "Регистрация") -%>
+
+<form class="form-horizontal registration-form" name="registration-form" autocomplete="off">
+	<div class="form-group">
+		<label for="input-username" class="col-xs-2 col-xs-offset-2 control-label">Имя пользователя</label>
+		
+		<div class="col-xs-4">
+			<input name="username" type="text" class="form-control" id="input-username" placeholder="Имя пользователя">
+		</div>
+		<label for="input-username" class="col-xs-2 form-control-static" id="status-username">
+			<span></span>
+		</label>
+	</div>
+	<div class="form-group">
+		<label for="input-password1" class="col-xs-2 col-xs-offset-2 control-label">Пароль</label>
+		
+		<div class="col-xs-4">
+			<input name="password1" type="password" class="form-control" id="input-password1" placeholder="Пароль">
+		</div>
+		<label for="input-password1" class="col-xs-2 form-control-static" id="status-password1">
+			<span></span>
+		</label>
+	</div>
+	<div class="form-group">
+		<label for="input-password2" class="col-xs-2 col-xs-offset-2 control-label">Повторите пароль</label>
+		
+		<div class="col-xs-4">
+			<input name="password2" type="password" class="form-control" id="input-password2" placeholder="Пароль">
+		</div>
+		<label for="input-password2" class="col-xs-2 form-control-static" id="status-password2">
+			<span></span>
+		</label>
+	</div>
+	<div class="form-group">
+		<div class="col-xs-offset-2 col-xs-8 text-center">
+			<button type="submit" class="btn btn-primary" data-loading-text="Отправляю...">Регистрация</button>
+			<div class="help-block error"></div>
+		</div>
+	</div>
+</form>
+
+<script>
+	socket = io(location.host+'/registration', {'reconnection':false,
+												'forceNew': true,
+												'transport':['websocket']});
+
+	var usernameForm = false;
+	var password1Form = false;
+	var password2Form = false;
+	var timeout;
+	
+	var submit = $(':submit', $(document.forms['registration-form']));
+	submit.prop('disabled', true);
+	
+	$(document.forms['registration-form']).on('submit', function() {
+		var form = $(this);
+		var error = $('.error', form);
+		error.html('');
+		
+		if ($('#input-username').val() == '') {
+			error.html('Вы не ввели имя пользователя').addClass('alert-warning');
+			return false;
+		}
+		
+		if ($('#input-password1').val() == '') {
+			error.html('Вы не ввели пароль').addClass('alert-warning');
+			return false;
+		}
+		
+		if ($('#input-password2').val() == '') {
+			error.html('Вы не ввели подтверждение пароля').addClass('alert-warning');
+			return false;
+		}
+		
+		if ($('#input-password1').val() != $('#input-password2').val()) {
+			error.html('Введенные Вами пароли не совпадают').addClass('alert-warning');
+			return false;
+		}
+		
+		submit.button('loading');
+		
+		$.ajax({
+			url: '/registration',
+			method: 'POST',
+			data: form.serialize(),
+			complete: function() {
+				submit.button('reset');
+			},
+			statusCode: {
+				403: function(jqXHR) {
+					var err = JSON.parse(jqXHR.responseText);
+					error.html(err.message).addClass('alert-danger');
+				},
+				200: function() {
+					form.html("Поздравляем, регистрация прошла успешно!").addClass('alert-success');
+					window.location.href = "/";
+				}
+			}
+		});
+		return false;
+	});
+	
+	socket
+	.on('connect', function() {
+		$('#input-username').on('input', function() {
+			clearTimeout(timeout);
+			if ($('#input-username').val() == '') {
+				$('#status-username span').html('<i class="glyphicon glyphicon-remove"></i>').removeClass().addClass('label label-warning');
+				submit.prop('disabled', true)
+				return
+			}
+			timeout = setTimeout(function() {
+				socket.emit('check', $('#input-username').val());
+			}, 500)
+		});
+	})
+	
+	.on('buzy', function() {
+		$('#status-username span').html('<i class="glyphicon glyphicon-remove"></i>').removeClass().addClass('label label-warning');
+		usernameForm = false;
+		submit.prop('disabled', true);
+	})
+	.on('free', function() {
+		$('#status-username span').html('<i class="glyphicon glyphicon-ok"></i>').removeClass().addClass('label label-success');
+		usernameForm = true;
+		if (password1Form && password2Form) submit.prop('disabled', false);
+	})
+	.on('error', function(err) {
+		$('.error', form).html(err).addClass('alert-danger');
+		usernameForm = false;
+		submit.prop('disabled', true);
+	});
+	
+	$('#input-password1').on('input', function() {
+		if ($(this).val().length < 4) {
+			$('#status-password1 span').html('<i class="glyphicon glyphicon-remove"></i>').removeClass().addClass('label label-warning');
+			password1Form = false;
+			submit.prop('disabled', true);
+		} else {
+			$('#status-password1 span').html('<i class="glyphicon glyphicon-ok"></i>').removeClass().addClass('label label-success');
+			password1Form = true;
+			if ($(this).val() != $('#input-password2').val()) {
+				$('#status-password2 span').html('<i class="glyphicon glyphicon-remove"></i>').removeClass().addClass('label label-warning');
+				password2Form = false;
+				submit.prop('disabled', true);
+			} else {
+				$('#status-password2 span').html('<i class="glyphicon glyphicon-ok"></i>').removeClass().addClass('label label-success');
+				password2Form = true;
+			}
+			if (password1Form && password2Form && usernameForm) submit.prop('disabled', false);
+		}
+	});
+	
+	$('#input-password2').on('input', function() {
+		if ($(this).val() != $('#input-password1').val()) {
+			$('#status-password2 span').html('<i class="glyphicon glyphicon-remove"></i>').removeClass().addClass('label label-warning');
+			password2Form = false;
+			submit.prop('disabled', true);
+		} else {
+			$('#status-password2 span').html('<i class="glyphicon glyphicon-ok"></i>').removeClass().addClass('label label-success');
+			password2Form = true;
+		}
+		if (password1Form && password2Form && usernameForm) submit.prop('disabled', false);
+	});
+</script>
