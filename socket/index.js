@@ -5,6 +5,7 @@ var users = require('./libs/usersCount').users;
 var windows = require('./libs/usersCount').windows;
 var User = require('../models/user').User;
 var ObjectID = require('mongodb').ObjectID;
+var tools = require('../libs/tools');
 
 module.exports = function (server) {
 
@@ -77,8 +78,92 @@ module.exports = function (server) {
 				socket.join(username);
 				socket.request.watch = username;
 			});
-			
-			
+
+            socket.on('subscribe', function(uId, type, dId){
+                tools.checkObjectID(uId, function(err) {
+                    if (err) socket.emit('error_', err.message);
+                    tools.checkObjectID(dId, function(err) {
+                        if (err) socket.emit('error_', err.message);
+
+                        if (socket.request.subscription) {
+                            socket.leave(socket.request.subscription);
+                        }
+
+                        socket.join(uId+"/"+type+"/"+dId);
+                        socket.request.subscription = uId+"/"+type+"/"+dId;
+
+                        User.findById(uId, function(err, user) {
+                            if (err) return socket.emit('error_', err.message);
+                            var content = user.data[type].id(dId);
+                            User.populate(content.comments, {path: 'author'}, function(err, comments) {
+                                var tag = "";
+                                var description = "";
+                                switch (type) {
+                                    case "photo":
+                                        tag = '<img src="' + content.link + '.jpg" class="fullSizeImg" id="fullSizeImg"></img>';
+                                        description = content.message;
+                                        break;
+                                    case "blog":
+                                        tag = '<p>'+content.message+'</p>';
+                                }
+                                var next, prev;
+                                var index = user.data[type].indexOf(content);
+                                if (user.data[type][index + 1]) {
+                                    next = {
+                                        type: type,
+                                        id: user.data[type][index + 1]._id
+                                    }
+                                }
+                                if (user.data[type][index - 1]) {
+                                    prev = {
+                                        type: type,
+                                        id: user.data[type][index - 1]._id
+                                    }
+                                }
+                                var ansComments = [];
+                                for (var i=0;i<comments.length;i++) {
+                                    var comment = comments[i];
+                                    ansComments.push({
+                                        message: comment.message,
+                                        date: comment.date,
+                                        commentator: {
+                                            id: comment.author._id,
+                                            name: comment.author.username
+                                        },
+                                        type: type,
+                                        id: content._id,
+                                        commentID: comment._id,
+                                        index: i
+                                    });
+                                }
+                                var answer = {
+                                    user: {
+                                        id: uId
+                                    },
+                                    content: {
+                                        tag: tag,
+                                        date: content.date,
+                                        description: description,
+                                        type: type,
+                                        id: dId,
+                                        isAvatar: content.id == user.info.avatar,
+                                        next: next,
+                                        prev: prev
+                                    },
+                                    comments: ansComments
+                                };
+                                socket.emit("subscription", answer);
+                            });
+                        });
+                    })
+                });
+            });
+            socket.on('unsubscribe', function() {
+                if (socket.request.subscription) {
+                    socket.leave(socket.request.subscription);
+                    socket.request.subscription = null;
+                }
+            });
 
 			socket.on('blog', function(message) {
 				User.findById(socket.request.session.user, function(err, user) {
@@ -120,7 +205,7 @@ module.exports = function (server) {
 							});
 							commentator.save(function(err) {
 								if (err) return socket.emit('error', err.message);
-								io.of('/user').to(socket.request.watch).emit('new comment', {
+								io.of('/user').to(socket.request.subscription).emit('new comment', {
 																							message:message,
 																							date:Date.now(),
 																							commentator: {
@@ -154,7 +239,7 @@ module.exports = function (server) {
 					user.data[type].id(id).markModified('comments');
 					user.save(function(err) {
 						if (err) return socket.emit('error', err.message);
-						io.of('/user').to(socket.request.watch).emit('remark comment', {
+						io.of('/user').to(socket.request.subscription).emit('remark comment', {
 																					message:message,
 																					date:Date.now(),
 																					type:type,
@@ -165,6 +250,7 @@ module.exports = function (server) {
 				});
 			});
 
+            socket.emit('ready');
 		});
 
 

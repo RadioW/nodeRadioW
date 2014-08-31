@@ -315,49 +315,10 @@ function launchLargeModal(message) {
 	$('#largeModalMessage').html(message);
 	$('#largeModal').modal();
 }
-/*
-function showPhoto(elem) {
-	modal = $('#largeModalMessage');
-	if ($('.fullSizeImg', modal).get(0)) {
-		$('.fullSizeImg', modal).css('opacity', 0);
-		$('.photoScrollArrow').remove();
-		setTimeout (function() {
-			$('.fullSizeImg', modal).attr('id', 'toRemove')
-			launch();
-		}, 200)
-	} else {
-		launch();
-	}
-	function launch() {
-		modal.append('<img class="fullSizeImg" id="photoToShow" src="'+elem.get(0).children[0].src.slice(0, -8)+'.jpg'+'">');
-		setTimeout(function() {
-			$('#photoToShow').css('opacity', 1);
-		}, 1)
-		$('#photoToShow').on('load', function() {
-			$('#toRemove').remove();
-		})
-		var arrowBack = document.createElement('div');
-		if (elem.prev().get(0)) {
-			arrowBack.className = "photoScrollArrow";
-			arrowBack.style.left = 0;
-			arrowBack.onclick = function() {
-				showPhoto(elem.prev());
-			}
-			modal.prepend(arrowBack);
-		}
-		if (elem.next().get(0)) {
-			var arrowForward = document.createElement('div');
-			arrowForward.className = "photoScrollArrow";
-			arrowForward.style.right = 0;
-			arrowForward.onclick = function() {
-				showPhoto(elem.next());
-			}
-			modal.append(arrowForward);
-		}
-	}
-}
-*/
-function showPhoto(link) {
+
+function showPhoto(userId, photoId) {
+    var link = '/user/'+userId+'/photo/'+photoId;
+
 	var modal = $('#largeModal');
 	if ($('#fullSizeImg').get(0)) {
 		var coords = getCoords($('#fullSizeImg').parent().get(0));
@@ -368,7 +329,7 @@ function showPhoto(link) {
 			
 			$('#fullSizeImg').attr('id', '');
 			launch();
-		}, 200)
+		}, 200);
 	} else {
 		launch();
 	}
@@ -384,8 +345,10 @@ function showPhoto(link) {
 						$('#fullSizeImg').css('opacity', 1);
 						$('#modal-delete').remove();
 						$('#largeModal').modal();
+//TODO
 						clickers();
-						history.pushState(null, null, link)
+                        socket.emit('subscribe', userId, "photo", photoId);
+						history.pushState(null, null, link);
 					});
 				},
 				404: function() {
@@ -399,6 +362,11 @@ function showPhoto(link) {
 	}
 }
 
+
+function subscribeContent (userId, type, contentId) {
+    socket.emit('subscribe', userId, type, contentId);
+}
+
 function makeThisAva(id) {
 	$.ajax({
 		url: '/user/makeAvatar/'+id,
@@ -407,6 +375,7 @@ function makeThisAva(id) {
 		statusCode: {
 			200: function() {
 				launchModal('Аватар успешно изменен');
+                window.content.refresh();
 			},
 			403: function() {
 				launchModal('Ошибка! Вам запрещена эта операция')
@@ -467,7 +436,7 @@ function transformInputToDiv(elem, id) {
 	$.ajax({
 		url: '/user/photoDescription/'+id,
 		method: 'POST',
-		data: $('#photoDescription').serialize(),
+		data: $('#contentDescription').serialize(),
 		statusCode: {
 			200: function(jqXHR) {
 				div.innerHTML = jqXHR;

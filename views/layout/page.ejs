@@ -10,6 +10,7 @@
   <script src="/vendor/bower_components/bootstrap/dist/js/bootstrap.js"></script>
   <script src="/vendor/bower_components/socket.io-client/socket.io.js"></script>
   <script src="/javascripts/script.js"></script>
+  <script src="/javascripts/classes.js"></script>
 </head>
 <body>
 
@@ -58,6 +59,13 @@
 
 <script>
 
+    var _myID = "";
+    <% if (self) { %>
+        _myID = "<%- self._id %>";
+    <% } %>
+
+    window._myID = _myID;
+
 	var main = io(location.host+'/main', {'multiplex':false});
 	main
 		.on('info', function(clients){
@@ -85,7 +93,7 @@ function supports_history_api() {
 }
 
 window.onload = function () {
-	if (!supports_history_api()) return
+	if (!supports_history_api()) return;
 	
 	clickers();
 	window.setTimeout (function () {
@@ -93,7 +101,7 @@ window.onload = function () {
 			goTo(location.pathname);
 		}, false)
 	}, 1);
-	}
+	};
 
 function clickers() {
 	$('a:not(.thumbnail-v)').each(function (index, link) {aJump(link)});
@@ -106,6 +114,10 @@ function aJump (link) {
 		history.pushState(null, null, link.href);
 		$('#largeModal').modal('hide');
 		$('#errorModal').modal('hide');
+        if (window.content) {
+            window.content.link = true;
+            window.content.wrapper.modal('hide');
+        }
 		$('#carett').html('');
 		$('#cover').css('display', 'none');
 		return false;
@@ -122,6 +134,12 @@ function goTo (link) {
 			socket.close();
 			socket = null;
 		  }
+            if (window.content) {
+                window.content.link = true;
+                window.content.wrapper.modal('hide');
+            }
+            $('#carett').html('');
+            $('#cover').css('display', 'none');
           pseudobody.innerHTML = jqXHR;
 		  var start = new Function ('callback', $('#pseudoBody script').get(0).innerHTML+'callback();');
 		  start(function (){

@@ -33,10 +33,6 @@
 </div>
 
 <script>
-var _myID = "";
-<% if (self) { %>
-	_myID = "<%- self._id -%>";
-<% } %>
 
 socket = io(location.host+'/user', {'reconnection':false,
 									'forceNew':true,
@@ -87,9 +83,9 @@ socket.on('new photo', function(files) {
 		var slot = document.createElement('div');
 		slot.className = 'photoPrev';
 		slot.onclick = function() {
-			var link = '/user/<%- user._id -%>/photo/'+files[i].slice(files[i].lastIndexOf('/')+1);
+			var file = files[i].slice(files[i].lastIndexOf('/')+1);
 			return function () {
-				showPhoto(link);
+				subscribeContent('<%- user._id -%>', 'photo', file);
 			}
 		}();
 		slot.appendChild(img);
@@ -103,7 +99,7 @@ socket.on('new avatar', function(avatarID) {
 		$('#avatar').get(0).parentNode.onclick = function() {
 			var link = '/user/<%- user._id -%>/photo/'+avatarID;
 			return function() {
-				showPhoto(link);
+				subscribeContent('<%- user._id -%>', 'photo', avatarID);
 			}
 		}();
 		changeAvatar();
@@ -146,62 +142,21 @@ socket.on('error_', function(err) {
 });
 
 socket.on('new comment', function(ans) {
-	if (ans.type == 'photo') {
-		if (window.location.href.slice(window.location.href.lastIndexOf('/')+1) == ans.id) {
-			var wrap = document.createElement('div');
-			wrap.className = 'comment';
-			wrap.id = ans.commentID;
-			
-			var avatar = document.createElement('div');
-			var avatarA = document.createElement('a');
-			avatarA.href = '/user/'+ans.commentator.id;
-			var avatarImg = document.createElement('img');
-			avatarImg.src = '/data/'+ans.commentator.id+'/avatar-xs.jpg';
-			
-			var wdiv = document.createElement('div');
-			wdiv.style.width = '90%';
-			var authDiv = document.createElement('div');
-			var authA = document.createElement('a');
-			authA.href = avatarA.href;
-			authA.innerHTML = ans.commentator.name;
-			
-			var comDiv = document.createElement('div');
-			comDiv.innerHTML = ans.message;
-			
-			document.getElementById('comments').insertBefore(wrap, document.getElementById('comments').children[0]);
-			wrap.appendChild(avatar);
-			wrap.appendChild(wdiv);
-			avatar.appendChild(avatarA);
-			avatarA.appendChild(avatarImg);
-			wdiv.appendChild(authDiv);
-			wdiv.appendChild(comDiv);
-			authDiv.appendChild(authA);
-			authDiv.innerHTML = authDiv.innerHTML+' '+datify(ans.date)+' ';
-			
-			if (ans.commentator.id == _myID) {
-				var button = document.createElement('button');
-				button.className = "btn btn-primary btn-xs";
-				button.onclick = function(id, i) {
-					return function() {
-						return remarkComment(this, 'photo', id, i);
-					}
-				}(ans.id, ans.index);
-				button.innerHTML = "<i class='glyphicon glyphicon-pencil'></i>";
-				authDiv.appendChild(button);
-			}
-			
-			clickers()
-		}
-	}
-	return;
+    if (window.content && window.content.comments) {
+        window.content.comments.add(ans);
+    }
 });
 
 socket.on('remark comment', function(ans){
 	if (ans.type == 'photo') {
-		if (window.location.href.slice(window.location.href.lastIndexOf('/')+1) == ans.id) {
-			$('#'+ans.commentID).children().last().append('<div>'+ans.message+'</div>');
+		if (window.content && window.content.comments && window.content.comments[ans.commentID]) {
+            window.content.comments[ans.commentID].remark(ans);
 		}
 	}
+});
+
+socket.on("subscription", function(ans) {
+    Content.getInstance(ans);
 });
 
 $('.thumbnail-v').each(function (i, quad) {
@@ -212,6 +167,8 @@ $('.thumbnail-v').each(function (i, quad) {
 });
 
 <% if (special) { %>
-showPhoto('/user/<%- user._id -%>/photo/<%- user.data.photo[index]._id -%>');
+socket.on('ready', function() {
+    subscribeContent('<%- user._id -%>', '<%- type -%>', '<%- photo._id -%>');
+});
 <% } %>
 </script>

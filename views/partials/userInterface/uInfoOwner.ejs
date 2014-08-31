@@ -123,8 +123,8 @@
 		</form>
 	</div>
 	<div class="col-xs-6 col-xs-12-vp text-right">
-		<div onclick="showPhoto('/user/<%- user._id -%>/photo/<%- user.info.avatar -%>')">
-			<img src="/data/<%- user._id -%>/avatar.jpg" style="max-width:100%" id="avatar">
+		<div onclick="subscribeContent('<%- user._id -%>', 'photo', '<%- user.info.avatar -%>')">
+			<img src="/data/<%- user._id %>/avatar.jpg" style="max-width:100%" id="avatar">
 		</div>
 		<form id="photoForm" enctype="multipart/form-data" method="POST">
 			<span class="btn btn-primary btn-file">Browse<input type="file" name="photo[]"></span>

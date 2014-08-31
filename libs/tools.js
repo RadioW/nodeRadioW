@@ -1,10 +1,13 @@
+"use strict";
+
 var fs = require('fs');
 var ObjectID = require('mongodb').ObjectID;
 var HttpError = require('../error').HttpError;
+var log = require ('./logs')(module);
 
 exports.convertDate = function(date) {
 	return date.getFullYear()+'-'+(date.getMonth()+1 > 9 ? date.getMonth()+1 : '0' + (date.getMonth() + 1))+'-'+(date.getDate() > 9 ? date.getDate() : '0'+date.getDate());
-}
+};
 
 exports.checkDir = function(req, dirName, callback) {
 	
@@ -40,7 +43,7 @@ exports.checkDir = function(req, dirName, callback) {
 			}
 		});
 		
-}
+};
 
 exports.checkObjectID = function(id, callback) {
 	try {
@@ -48,5 +51,5 @@ exports.checkObjectID = function(id, callback) {
 	} catch (e) {
 		return callback(new HttpError(404, 'Wrong ID'));
 	}
-	return callback(null)
-}
+	return callback(null);
+};

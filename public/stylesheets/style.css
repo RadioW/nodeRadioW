@@ -315,7 +315,7 @@ div.photoWrap {
 }
 
 div.photoScrollArrow {
-	background-color:transperent;
+	background-color: transparent;
 	opacity:0.3;
 	position: absolute;
 	height:100%;
@@ -405,7 +405,7 @@ form.comment > input {
 div.comment {
 	width: 100%;
 	float: left;
-	margin: 10px;
+	margin: 10px 10px 10px 0;
 	border-bottom: 1px solid #cccccc;
 	padding-bottom: 10px;
 }
@@ -417,4 +417,31 @@ div.comment > div {
 div.comment > div > div {
 	width: 100%;
 	text-align: left;
+}
+
+div.contentWrap {
+    max-width:100%;
+    text-align: center;
+    width: 850px;
+    position: relative;
+    overflow: hidden;
+    -webkit-transition: height .3s ease-in-out;
+    transition: height .3s ease-in-out;
+}
+
+div.contentScrollArrow {
+    background-color: transparent;
+    opacity:0.3;
+    position: absolute;
+    height:100%;
+    margin: 0;
+    width: 100px;
+    float:left;
+    top: 0px;
+    -webkit-transition: background-color .3s ease-in-out;
+    transition: background-color .3s ease-in-out;
+}
+
+div.contentScrollArrow:hover  {
+    background-color:grey;
 }
