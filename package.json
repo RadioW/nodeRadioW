@@ -8,14 +8,19 @@
   "dependencies": {
     "express": "3.3.8",
     "ejs": "*",
-	"socket.io": "1.x.x",
-	"async": "*",
-	"connect": "2.x.x",
-	"connect-mongo": "*",
-	"mongodb": "1.4.*",
-	"mongoose": "3.8.8",
-	"nconf": "*",
-	"winston": "*",
-	"gm": "1.16.0"
+    "ejs-locals": "*",
+    "socket.io": "1.x.x",
+    "async": "*",
+    "connect": "2.x.x",
+    "connect-mongo": "*",
+    "mongodb": "1.x.x",
+    "mongoose": "3.x.x",
+    "bson": "*",
+    "nconf": "*",
+    "winston": "*",
+    "gm": "1.16.0",
+    "rimraf": "*",
+    "cookie": "*",
+    "cookie-parser": "*"
   }
 }

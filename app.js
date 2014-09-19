@@ -44,7 +44,7 @@ app.use(require('./middleware/imageChanger')); // это миддвэр, кот�
 
 app.use(function (req, res, next) {
 	return next(new HttpError(404, 'Page not found!'));
-})
+});
 
 app.use(function (err, req, res, next) {
   if (typeof err == 'number') {
