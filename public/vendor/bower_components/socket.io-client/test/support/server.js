@@ -5,6 +5,22 @@ var io = require('socket.io');
 var server = io(process.env.ZUUL_PORT);
 var expect = require('expect.js');
 
+server.of('/foo').on('connection', function(){
+  // register namespace
+});
+
+server.of('/timeout_socket').on('connection', function(){
+  // register namespace
+});
+
+server.of('/valid').on('connection', function(){
+  // register namespace
+});
+
+server.of('/asd').on('connection', function(){
+  // register namespace
+});
+
 server.on('connection', function(socket){
   // simple test
   socket.on('hi', function(){
@@ -30,6 +46,14 @@ server.on('connection', function(socket){
 
   socket.on('getDateObj', function(){
     socket.emit('takeDateObj', { date: new Date() });
+  });
+
+  socket.on('getUtf8', function() {
+    socket.emit('takeUtf8', 'てすと');
+    socket.emit('takeUtf8', 'Я Б Г Д Ж Й');
+    socket.emit('takeUtf8', 'Ä ä Ü ü ß');
+    socket.emit('takeUtf8', 'utf8 — string');
+    socket.emit('takeUtf8', 'utf8 — string');
   });
 
   // false test

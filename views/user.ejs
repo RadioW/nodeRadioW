@@ -142,17 +142,27 @@ socket.on('error_', function(err) {
 });
 
 socket.on('new comment', function(ans) {
-    if (window.content && window.content.comments) {
-        window.content.comments.add(ans);
+    if (window.contentrW && window.contentrW.comments) {
+        window.contentrW.comments.add(ans);
     }
 });
 
 socket.on('remark comment', function(ans){
-	if (ans.type == 'photo') {
-		if (window.content && window.content.comments && window.content.comments[ans.commentID]) {
-            window.content.comments[ans.commentID].remark(ans);
-		}
+	if (window.contentrW && window.contentrW.comments && window.contentrW.comments[ans.commentID]) {
+        window.contentrW.comments[ans.commentID].remark(ans);
 	}
+
+});
+
+socket.on('remove comment', function(ans){
+    if (window.contentrW && window.contentrW.comments && window.contentrW.comments[ans]) {
+        var comment = window.contentrW.comments[ans];
+        if (comment.author == _myID) {
+            comment.pseudoRemove();
+        } else {
+            window.contentrW.comments.remove(ans);
+        }
+    }
 });
 
 socket.on("subscription", function(ans) {

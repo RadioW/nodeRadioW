@@ -3,56 +3,113 @@
  */
 "use strict";
 function Comment(_opts) {
-    var main = this.wrapper = document.createElement("div");
+    var that = this;
+    that.author = _opts.commentator.id;
+    that.type = _opts.type;
+    var main = that.wrapper = document.createElement("div");
     main.className = "comment";
-    main.id = this.id = _opts.commentID;
+    main.id = that.id = _opts.commentID;
+    that.status = _opts.status; //todo
 
     var leftLayout = document.createElement("div");
     var authorPicture = document.createElement("a");
-    authorPicture.href = "/user/" + _opts.commentator.id;
+    authorPicture.href = "/user/" + that.author;
     var authorImg = document.createElement("img");
-    authorImg.src = "/data/" + _opts.commentator.id + "/avatar-xs.jpg";
+    authorImg.src = "/data/" + that.author + "/avatar-xs.jpg";
     authorPicture.appendChild(authorImg);
     leftLayout.appendChild(authorPicture);
 
-
-    var rightLayout = this.rLayout = document.createElement("div");
+    var rightLayout = that.rLayout = document.createElement("div");
     rightLayout.style.width = "90%";
     var infoDiv = document.createElement("div");
     var authorLink = document.createElement("a");
-    authorLink.href = "/user/" + _opts.commentator.id;
+    authorLink.href = "/user/" + that.author;
     authorLink.innerHTML = _opts.commentator.name;
     infoDiv.appendChild(authorLink);
-    var date = this.dateWrapper = document.createElement("span");
+    var date = that.dateWrapper = document.createElement("span");
     date.innerHTML = " " + datify(_opts.date) + " ";
     infoDiv.appendChild(date);
 
-    if (_opts.commentator.id == _myID) {
-        var button = document.createElement('button');
-        button.className = "btn btn-primary btn-xs";
-        button.onclick = function(id, i) {
+    if (that.author == _myID) {
+        var editButton = document.createElement('button');
+        editButton.className = "btn btn-primary btn-xs";
+        editButton.onclick = function () {
+            that.initRemark();
+        };
+        editButton.innerHTML = "<i class='glyphicon glyphicon-pencil'></i>";
+
+        var removeButton = document.createElement('button');
+        removeButton.className = "btn btn-danger btn-xs";
+        removeButton.onclick = function(type, id, oid) {
             return function() {
-                return remarkComment(this, 'photo', id, i);
-            };
-        }(_opts.id, _opts.index);
-        button.innerHTML = "<i class='glyphicon glyphicon-pencil'></i>";
-        infoDiv.appendChild(button);
+                socket.emit("comment remove", type, id, oid);
+            }
+        }(_opts.type, _opts.id, _opts.commentID);
+        removeButton.innerHTML = "<i class='glyphicon glyphicon-remove'></i>";
+
+        infoDiv.appendChild(editButton);
+        infoDiv.appendChild(removeButton);
     }
     // TODO buttons
 
-    var message = this.messageWrapper = document.createElement("div");
-    message.innerHTML = this.message = _opts.message;
+    var message = that.messageWrapper = document.createElement("div");
+    message.innerHTML = that.message = _opts.message;
     rightLayout.appendChild(infoDiv);
     rightLayout.appendChild(message);
 
     main.appendChild(leftLayout);
     main.appendChild(rightLayout);
 
-    this.remark = function(_params) {
-        this.messageWrapper = document.createElement("div");
-        this.messageWrapper.innerHTML = this.message = _params.message;
-        this.rLayout.appendChild(this.messageWrapper);
-        this.dateWrapper.innerHTML = " " + datify(_params.date) + " ";
+    that.initRemark = function() {
+        that.messageWrapper.style.display = "none";
+            var form = document.createElement('form');
+            form.onsubmit = function(){return false};
+            form.className = 'comment';
+            that.rLayout.appendChild(form);
+
+            var area = document.createElement('textarea');
+            area.innerHTML = that.message.replace(/<br\/>/g, "\n");
+            area.className = 'form-control';
+            form.appendChild(area);
+
+            var button = document.createElement('input');
+            button.type = "submit";
+            button.value = "Сохранить";
+            button.className = "btn btn-primary";
+            button.onclick = function() {
+                socket.emit('comment remark', area.value, that.type, _opts.id, _opts.index);
+                that.rLayout.removeChild(form);
+                that.messageWrapper.style.display = "block";
+            };
+            form.appendChild(button);
+    };
+
+    that.remark = function(_params) {
+        that.messageWrapper.innerHTML = that.message = _params.message;
+        that.dateWrapper.innerHTML = " " + datify(_params.date) + " ";
+    };
+
+    that.pseudoRemove = function() {
+        that.status = "removed";
+        //that.wrapper.style.backgroundColor = "#DDDDDD"; that looks not so good =(
+        that.message = "";
+        message.innerHTML = "";
+        message.style.display = "none";
+        if (removeButton)
+            removeButton.style.display = "none";
+        if (editButton)
+            editButton.style.display = "none";
+        var removedMessage = document.createElement("span");
+        removedMessage.innerHTML = "Сообщение удалено";
+        infoDiv.appendChild(removedMessage);
+    };
+
+    that.remove = function() {
+        that.wrapper.remove();
+    };
+
+    if (that.status == "removed") {
+        that.pseudoRemove();
     }
 }
 
@@ -65,6 +122,11 @@ function CommentRoll(_opts) {
         var comment = that[_comment.commentID] = new Comment(_comment);
         that.wrapper.prepend(comment.wrapper);
         clickers();
+    };
+
+    that.remove = function(_commentID) {
+        that[_commentID].remove();
+        delete that[_commentID];
     };
 
     if (_opts && _opts instanceof Array) {
@@ -209,7 +271,7 @@ function Content(_opts) {
 
     $('body').prepend(that.wrapper);
     that.wrapper.modal('show');
-    window.content = that;
+    window.contentrW = that;
     history.pushState(null, null, '/user/'+that.user.id+'/'+that.content.type+'/'+that.content.id);
     clickers();
 
@@ -267,7 +329,7 @@ function Content(_opts) {
 }
 $.extend(Content, {
     "getInstance": function(_opts) {
-        var that = window.content;
+        var that = window.contentrW;
         if (that) {
             that.rebuild(_opts);
             if (that.isHidden) {

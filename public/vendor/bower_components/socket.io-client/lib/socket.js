@@ -4,12 +4,12 @@
  */
 
 var parser = require('socket.io-parser');
-var Emitter = require('emitter');
+var Emitter = require('component-emitter');
 var toArray = require('to-array');
 var on = require('./on');
-var bind = require('bind');
+var bind = require('component-bind');
 var debug = require('debug')('socket.io-client:socket');
-var hasBin = require('has-binary-data');
+var hasBin = require('has-binary');
 var indexOf = require('indexof');
 
 /**
@@ -27,8 +27,15 @@ module.exports = exports = Socket;
 
 var events = {
   connect: 1,
+  connect_error: 1,
+  connect_timeout: 1,
   disconnect: 1,
-  error: 1
+  error: 1,
+  reconnect: 1,
+  reconnect_attempt: 1,
+  reconnect_failed: 1,
+  reconnect_error: 1,
+  reconnecting: 1
 };
 
 /**
@@ -49,8 +56,9 @@ function Socket(io, nsp){
   this.json = this; // compat
   this.ids = 0;
   this.acks = {};
-  this.open();
-  this.buffer = [];
+  if (this.io.autoConnect) this.open();
+  this.receiveBuffer = [];
+  this.sendBuffer = [];
   this.connected = false;
   this.disconnected = true;
 }
@@ -62,22 +70,34 @@ function Socket(io, nsp){
 Emitter(Socket.prototype);
 
 /**
- * Called upon engine `open`.
+ * Subscribe to open, close and packet events
  *
  * @api private
+ */
+
+Socket.prototype.subEvents = function() {
+  if (this.subs) return;
+
+  var io = this.io;
+  this.subs = [
+    on(io, 'open', bind(this, 'onopen')),
+    on(io, 'packet', bind(this, 'onpacket')),
+    on(io, 'close', bind(this, 'onclose'))
+  ];
+};
+
+/**
+ * "Opens" the socket.
+ *
+ * @api public
  */
 
 Socket.prototype.open =
 Socket.prototype.connect = function(){
   if (this.connected) return this;
-  var io = this.io;
-  io.open(); // ensure open
-  this.subs = [
-    on(io, 'open', bind(this, 'onopen')),
-    on(io, 'error', bind(this, 'onerror')),
-    on(io, 'packet', bind(this, 'onpacket')),
-    on(io, 'close', bind(this, 'onclose'))
-  ];
+
+  this.subEvents();
+  this.io.open(); // ensure open
   if ('open' == this.io.readyState) this.onopen();
   return this;
 };
@@ -123,7 +143,11 @@ Socket.prototype.emit = function(ev){
     packet.id = this.ids++;
   }
 
-  this.packet(packet);
+  if (this.connected) {
+    this.packet(packet);
+  } else {
+    this.sendBuffer.push(packet);
+  }
 
   return this;
 };
@@ -141,18 +165,7 @@ Socket.prototype.packet = function(packet){
 };
 
 /**
- * Called upon `error`.
- *
- * @param {Object} data
- * @api private
- */
-
-Socket.prototype.onerror = function(data){
-  this.emit('error', data);
-};
-
-/**
- * "Opens" the socket.
+ * Called upon engine `open`.
  *
  * @api private
  */
@@ -207,6 +220,10 @@ Socket.prototype.onpacket = function(packet){
       this.onack(packet);
       break;
 
+    case parser.BINARY_ACK:
+      this.onack(packet);
+      break;
+
     case parser.DISCONNECT:
       this.ondisconnect();
       break;
@@ -236,7 +253,7 @@ Socket.prototype.onevent = function(packet){
   if (this.connected) {
     emit.apply(this, args);
   } else {
-    this.buffer.push(args);
+    this.receiveBuffer.push(args);
   }
 };
 
@@ -255,8 +272,10 @@ Socket.prototype.ack = function(id){
     sent = true;
     var args = toArray(arguments);
     debug('sending ack %j', args);
+
+    var type = hasBin(args) ? parser.BINARY_ACK : parser.ACK;
     self.packet({
-      type: parser.ACK,
+      type: type,
       id: id,
       data: args
     });
@@ -291,16 +310,22 @@ Socket.prototype.onconnect = function(){
 };
 
 /**
- * Emit buffered events.
+ * Emit buffered events (received and emitted).
  *
  * @api private
  */
 
 Socket.prototype.emitBuffered = function(){
-  for (var i = 0; i < this.buffer.length; i++) {
-    emit.apply(this, this.buffer[i]);
+  var i;
+  for (i = 0; i < this.receiveBuffer.length; i++) {
+    emit.apply(this, this.receiveBuffer[i]);
   }
-  this.buffer = [];
+  this.receiveBuffer = [];
+
+  for (i = 0; i < this.sendBuffer.length; i++) {
+    this.packet(this.sendBuffer[i]);
+  }
+  this.sendBuffer = [];
 };
 
 /**
@@ -328,6 +353,7 @@ Socket.prototype.destroy = function(){
   for (var i = 0; i < this.subs.length; i++) {
     this.subs[i].destroy();
   }
+  this.subs = null;
 
   this.io.destroy(this);
 };

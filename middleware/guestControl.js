@@ -1,4 +1,4 @@
-var Guest = require('../models/guest').Guest
+var Guest = require('../models/guest').Guest;
 var log = require ('../libs/logs')(module);
 
 module.exports = function (req, res, next) {

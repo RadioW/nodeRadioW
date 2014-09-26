@@ -480,30 +480,4 @@ function buildPostRequest (data, boundary) {
 	
 }
 
-function remarkComment(elem, type, id, i) {
-	var message = elem.parentNode.parentNode.children[1].innerHTML;
-	elem.parentNode.parentNode.children[1].innerHTML = "";
-	elem.disabled = true;
-	var form = document.createElement('form');
-	form.onsubmit = function(){return false}
-	form.className = 'comment';
-	elem.parentNode.parentNode.children[1].appendChild(form);
-	
-	var area = document.createElement('textarea');
-	area.innerHTML = message.replace(/<br>/g, "\n");;
-	area.className = 'form-control';
-	form.appendChild(area);
-	
-	var button = document.createElement('input');
-	button.type = "submit";
-	button.value = "Сохранить";
-	button.className = "btn btn-primary";
-	button.onclick = function() {
-		socket.emit('comment remark', area.value, type, id, i);
-		form.parentNode.parentNode.removeChild(form.parentNode);
-		elem.disabled = false;
-	}
-	form.appendChild(button);
-	
-	
-}
+

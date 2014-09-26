@@ -15,7 +15,7 @@ schema.statics.create = function (sid, callback) {
 		function (callback) {
 			Guest.find({}, callback);
 		}, function (guests, callback) {
-			var buzy = []
+			var buzy = [];
 			guests.forEach(function (guest) {
 			buzy.push (guest.guestID);
 			});

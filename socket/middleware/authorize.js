@@ -13,7 +13,7 @@ module.exports = function(socket, next) {
 			function (callback) {
 				handshake.cookies = cookie.parse(handshake.headers.cookie || '');
 				var sidCookie = handshake.cookies[config.get('session:key')];
-				var sid = connect.utils.parseSignedCookie(sidCookie, config.get('session:secret'));
+				var sid = connect.utils.parseSignedCookie(sidCookie, config.get('session:secret')); //todo migrate
 				
 				loadSession(sid, callback);
 			},
@@ -60,7 +60,7 @@ function loadUser(session, callback) {
 		//log.debug("Session %s is anonymous", session.id);
 		return callback(null, null);
 	}
-	var username = "Гость " + session.gid;
+	var username = "Guest " + session.gid;
 	var user = new User({username: username, password: "123"});
 	return callback(null, user); 
   }

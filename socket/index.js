@@ -1,3 +1,4 @@
+"use strict";
 var log = require ('../libs/logs')(module);
 var async = require('async');
 var config = require('../config');
@@ -11,7 +12,7 @@ module.exports = function (server) {
 
 	
 	
-	var io = require('socket.io')(server, {'origins': '*:*'})
+	var io = require('socket.io')(server, {'origins': '*:*'});
 	log.info('socket.io server is running');
 	
 	io.use(require('./middleware/authorize'));
@@ -123,6 +124,8 @@ module.exports = function (server) {
                                 var ansComments = [];
                                 for (var i=0;i<comments.length;i++) {
                                     var comment = comments[i];
+                                    if (comment.meta[comment.meta.length-1].status == "removed" && comment.author._id != socket.request.session.user)
+                                        continue;
                                     ansComments.push({
                                         message: comment.message,
                                         date: comment.date,
@@ -133,7 +136,8 @@ module.exports = function (server) {
                                         type: type,
                                         id: content._id,
                                         commentID: comment._id,
-                                        index: i
+                                        index: i,
+                                        status: comment.meta[comment.meta.length-1].status
                                     });
                                 }
                                 var answer = {
@@ -190,7 +194,11 @@ module.exports = function (server) {
 														author:socket.request.session.user, 
 														date:Date.now(), 
 														message:message,
-														_id: oid
+														_id: oid,
+                                                        meta: [{
+                                                            status: "normal",
+                                                            date: Date.now()
+                                                        }]
 					});
 					user.save(function(err) {
 						if (err) return socket.emit('error', err.message);
@@ -201,7 +209,11 @@ module.exports = function (server) {
 														author:socket.request.session.user, 
 														date:Date.now(), 
 														message:message,
-														_id: oid
+														_id: oid,
+                                                        meta: [{
+                                                            status: "normal",
+                                                            date: Date.now()
+                                                        }]
 							});
 							commentator.save(function(err) {
 								if (err) return socket.emit('error', err.message);
@@ -215,7 +227,8 @@ module.exports = function (server) {
 																							type:type,
 																							id:id,
 																							commentID:oid, 
-																							index:user.data[type].id(id).comments.length-1
+																							index:user.data[type].id(id).comments.length-1,
+                                                                                            status: "normal"
 								});
 							});
 						});
@@ -234,8 +247,10 @@ module.exports = function (server) {
 					if (user.data[type].id(id).comments[index].author != socket.request.session.user) return socket.emit('error_', 'You\'ve got no permitions for that!');
 					user.data[type].id(id).comments[index].message = message;
 					user.data[type].id(id).comments[index].date = Date.now();
-					if (!user.data[type].id(id).comments[index].meta) user.data[type].id(id).comments[index].meta = [];
-					user.data[type].id(id).comments[index].meta.push("rem");
+					user.data[type].id(id).comments[index].meta.push({
+                        status: "remarked",
+                        date: Date.now()
+                    });
 					user.data[type].id(id).markModified('comments');
 					user.save(function(err) {
 						if (err) return socket.emit('error', err.message);
@@ -249,6 +264,37 @@ module.exports = function (server) {
 					});
 				});
 			});
+
+            socket.on('comment remove', function(type, id, oid) {
+                if (!socket.request.session.user) return socket.emit('error_', 'Мне очень жаль, но комментарии могут удалять только авторизованные пользователи');
+                User.findById(socket.request.watch, function(err, user) {
+                    if (err) return socket.emit('error_', err.message);
+                    var data = user.data[type];
+                    if (!data) return socket.emit('error_', 'Wrong data type!');
+                    var content = data.id(id);
+                    if (!content) return socket.emit('error_', 'Can\'t find what to comment!');
+                    var comment;
+                    for (var i=0; i<content.comments.length; i++) {
+                        if (content.comments[i]._id == oid) {
+                            comment = content.comments[i];
+                            break;
+                        }
+                    }
+                    if (!comment) return socket.emit('error_', 'There is no such comment!');
+                    comment.message = "";
+                    comment.data = Date.now();
+                    comment.meta.push({
+                        status: "removed",
+                        date: Date.now()
+                    });
+
+                    content.markModified('comments');
+                    user.save(function(err) {
+                        if (err) return socket.emit('error', err.message);
+                        io.of('/user').to(socket.request.subscription).emit('remove comment', comment._id);
+                    });
+                });
+            });
 
             socket.emit('ready');
 		});

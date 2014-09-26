@@ -2,7 +2,7 @@
 
 exports.users = function users(io) {
 		var user = {};
-		var clients = io.of('/main').connected
+		var clients = io.of('/main').connected;
 	
 		for (var key in clients) {
 			if (user[clients[key].request.session.id]) {
@@ -13,13 +13,13 @@ exports.users = function users(io) {
 												count: 1,
 												isGuest: false
 				};
-				if (user[clients[key].request.session.id].username.slice(0, 6) == 'Гость ') {
+				if (user[clients[key].request.session.id].username.slice(0, 6) == 'Guest ') {
 					user[clients[key].request.session.id].isGuest = true;
 				}
 			}
 		}
 		return getUsersAndGuests(user);
-	}
+	};
 
 
 function getUsersAndGuests(user) {

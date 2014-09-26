@@ -18,7 +18,10 @@ var userData = new Schema ({
 	},
 	message: String,
 	comments: [userData],
-	meta: [String]
+	meta: [{
+        status: String,
+        date: Date
+    }]
 });
 
 var schema = new Schema({

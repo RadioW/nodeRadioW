@@ -31,7 +31,9 @@ function url(uri, loc){
   // relative path support
   if ('string' == typeof uri) {
     if ('/' == uri.charAt(0)) {
-      if ('undefined' != typeof loc) {
+      if ('/' == uri.charAt(1)) {
+        uri = loc.protocol + uri;
+      } else {
         uri = loc.hostname + uri;
       }
     }
@@ -51,18 +53,21 @@ function url(uri, loc){
   }
 
   // make sure we treat `localhost:80` and `localhost` equally
-  if ((/(http|ws)/.test(obj.protocol) && 80 == obj.port) ||
-     (/(http|ws)s/.test(obj.protocol) && 443 == obj.port)) {
-    delete obj.port;
+  if (!obj.port) {
+    if (/^(http|ws)$/.test(obj.protocol)) {
+      obj.port = '80';
+    }
+    else if (/^(http|ws)s$/.test(obj.protocol)) {
+      obj.port = '443';
+    }
   }
 
   obj.path = obj.path || '/';
 
   // define unique id
-  obj.id = obj.protocol + obj.host + (obj.port ? (':' + obj.port) : '');
-
+  obj.id = obj.protocol + '://' + obj.host + ':' + obj.port;
   // define href
-  obj.href = obj.protocol + '://' + obj.host + (obj.port ? (':' + obj.port) : '');
+  obj.href = obj.protocol + '://' + obj.host + (loc && loc.port == obj.port ? '' : (':' + obj.port));
 
   return obj;
 }
