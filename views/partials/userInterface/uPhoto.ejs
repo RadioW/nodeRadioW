@@ -4,7 +4,7 @@
 			<div class="row">
 				<% for (var i=user.data.photo.length-1; i>-1; i--) { %>
 					<div class="photoPrev" id="<%- user.data.photo[i]._id -%>" onclick="subscribeContent('<%- user._id -%>', 'photo', '<%- user.data.photo[i]._id -%>')">
-						<img src='<%- user.data.photo[i].link -%>prev.jpg'>
+						<img src='<%- user.data.photo[i].link %>prev.jpg'>
 					</div>
 				<% } %>
 			</div>

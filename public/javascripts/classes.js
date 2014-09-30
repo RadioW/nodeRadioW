@@ -181,6 +181,9 @@ function Content(_opts) {
         }
 
         content.append(_params.content.tag);  //todo binary
+        if (that.content.type != "photo") {
+            that.contentWrapper.css("height", "");
+        }
 
         if (_params.content.prev) {
             var rightBar = $('<div class="contentScrollArrow" style="right:0">');
@@ -213,20 +216,26 @@ function Content(_opts) {
     var descriptionForm = $('<form id="contentDescription">');
     _subWrapb21.append(descriptionForm);
 
-    that.setDescription = function(_params) {
+    that.setDescription = function(_description) {
+        if (that.content.type == "blog") {
+            return;
+        }
+        if (that.descriptionWrapper) {
+            that.descriptionWrapper.remove();
+        }
         that.descriptionWrapper = $('<div>');
-        that.description = _params.content.description;
-        that.descriptionWrapper.html(_params.content.description);
+        that.description = _description;
+        that.descriptionWrapper.html(_description);
 
-        if (_myID == _params.user.id) {
+        if (_myID == that.user.id) {
             that.descriptionWrapper.on("click", function () {
-                transformDivToInput(this, _params.content.id)
+                that.editDescription()
             });
-            that.descriptionWrapper.html(_params.content.description || "редактировать описание");
+            that.descriptionWrapper.html(_description || "Редактировать описание");
+            descriptionForm.append(that.descriptionWrapper);
         }
     };
-    that.setDescription(_opts);
-    descriptionForm.append(that.descriptionWrapper);
+    that.setDescription(_opts.content.description);
 
     var subWrap3 = $('<div class="row">');
     var buttonsBar = that.buttons = $('<div class="col-xs-12 text-right">');
@@ -310,7 +319,7 @@ function Content(_opts) {
 
         that.appendContent(_params);
         that.setUploadDate(_params);
-        that.setDescription(_params);
+        that.setDescription(_params.content.description);
         that.buttons.empty();
         that.setButtons(_params);
         that.comments.wrapper.remove();
@@ -325,6 +334,42 @@ function Content(_opts) {
     };
     that.refresh = function() {
         subscribeContent(that.user.id, that.content.type, that.content.id);
+    };
+    that.editDescription = function() {
+        that.descriptionWrapper.remove();
+        var area = that.descriptionArea =  $('<textarea placeholder="Введите описание" class="description" name="description">');
+        if (that.description && that.description.toLowerCase() != 'редактировать описание') {
+            area.val(that.description);
+        }
+        area.blur(function() {
+            that.dropDescriptionEditing();
+        });
+        descriptionForm.append(area);
+        area.focus();
+    };
+
+    that.dropDescriptionEditing = function() {
+        $.ajax({
+            url: '/user/photoDescription/'+that.content.id,
+            method: 'POST',
+            data: $('#contentDescription').serialize(),
+            statusCode: {
+                200: function(jqXHR) {
+                    that.setDescription(jqXHR);
+                },
+                404: function () {
+                    launchModal('Фотография не найдена!');
+                },
+                403: function () {
+                    launchModal('Вам запрещена данная операция');
+                },
+                500: function () {
+                    launchModal('Ошибка! Что-то пошло не так.');
+                }
+            }
+        });
+        that.descriptionArea.remove();
+        delete that.descriptionArea;
     }
 }
 $.extend(Content, {

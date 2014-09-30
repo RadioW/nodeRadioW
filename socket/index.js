@@ -105,7 +105,7 @@ module.exports = function (server) {
                                         description = content.message;
                                         break;
                                     case "blog":
-                                        tag = '<p>'+content.message+'</p>';
+                                        tag = '<p class="contentText">'+content.message+'</p>';
                                 }
                                 var next, prev;
                                 var index = user.data[type].indexOf(content);
@@ -176,7 +176,7 @@ module.exports = function (server) {
 					user.data.blog.push({link:'none', message: message});
 					user.save(function(err) {
 						if (err) return socket.emit ('error_', err.message);
-						io.of('/user').to(socket.request.watch).emit('newBlog', message, Date.now(), user.username);
+						io.of('/user').to(socket.request.watch).emit('newBlog', message, Date.now(), user.username, user.data.blog[user.data.blog.length-1]._id);
 					});
 				});
 			});

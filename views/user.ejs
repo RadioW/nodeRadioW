@@ -55,19 +55,22 @@ socket.on('buzy', function() {
 	div.children[1].className = 'xs form-control-feedback glyphicon glyphicon-remove';
 });
 
-socket.on('newBlog', function(message, date, user) {
+socket.on('newBlog', function(message, date, user, id) {
 
 	var blog = document.createElement('div');
 	blog.className = "blogPost";
 	blog.style.height = 0;
 	blog.innerHTML = "<div class='row'><div class='col-xs-12'><p>"+message+"</p></div></div>";
 	$('#miniBlogRoll').prepend(blog);
-	setTimeout(function() {blog.style.height = "";}, 50)
+	setTimeout(function() {blog.style.height = "";}, 50);
 	
 	if ($('#blogRoll').get(0)) {
 		var bigBlog = document.createElement('div');
 		bigBlog.className = "blogPost";
 		bigBlog.style.height = 0;
+        bigBlog.onclick = function() {
+            subscribeContent('<%- user._id -%>', 'blog', id);
+        };
 		bigBlog.innerHTML = "<div class='row'><div class='col-xs-12'><p>"+message+"</p></div><div class='col-xs-12'><em>"+user+" "+datify(date)+"</em></div></div>";
 		$('#blogRoll').children().prepend(bigBlog);
 		setTimeout(function() {bigBlog.style.height = '';}, 50)
@@ -112,7 +115,7 @@ socket.on('new avatar', function(avatarID) {
 		oAva.style.opacity = 0;
 		oAva.id = '';
 		var ava = document.createElement('img');
-		ava.src = "/data/<%- user._id -%>/avatar"+size+".jpg?";
+		ava.src = "/data/<%- user._id %>/avatar"+size+".jpg?";
 		ava.id = 'avatar'+size;
 		ava.style.position = 'absolute';
 		ava.style.left = 0;
@@ -178,7 +181,7 @@ $('.thumbnail-v').each(function (i, quad) {
 
 <% if (special) { %>
 socket.on('ready', function() {
-    subscribeContent('<%- user._id -%>', '<%- type -%>', '<%- photo._id -%>');
+    subscribeContent('<%- user._id -%>', '<%- type -%>', '<%- photo._id %>');
 });
 <% } %>
 </script>

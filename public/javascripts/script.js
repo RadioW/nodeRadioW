@@ -375,7 +375,7 @@ function makeThisAva(id) {
 		statusCode: {
 			200: function() {
 				launchModal('Аватар успешно изменен');
-                window.content.refresh();
+                window.contentrW.refresh();
 			},
 			403: function() {
 				launchModal('Ошибка! Вам запрещена эта операция')
@@ -413,53 +413,6 @@ function removePhoto(id) {
 			}
 		}
 	});
-}
-
-function transformDivToInput(elem, id) {
-	var parent = elem.parentNode;
-	elem.parentNode.removeChild(elem);
-	var area = document.createElement('textarea');
-	if (elem.innerHTML != 'Редактировать описание') area.value = elem.innerHTML;
-	area.placeholder = 'Введите описание';
-	area.className = 'description';
-	area.onblur = function() {
-		transformInputToDiv(this, id);
-	}
-	area.name = 'description';
-	parent.appendChild(area);
-	area.focus();
-}
-
-function transformInputToDiv(elem, id) {
-	var parent = elem.parentNode;
-	var div = document.createElement('div');
-	$.ajax({
-		url: '/user/photoDescription/'+id,
-		method: 'POST',
-		data: $('#contentDescription').serialize(),
-		statusCode: {
-			200: function(jqXHR) {
-				div.innerHTML = jqXHR;
-				if (jqXHR == '') {
-					div.innerHTML = "Редактировать описание";
-				}
-			},
-			404: function () {
-				launchModal('Фотография не найдена!');
-			},
-			403: function () {
-				launchModal('Вам запрещена данная операция');
-			},
-			500: function () {
-				launchModal('Ошибка! Что-то пошло не так.');
-			}
-		}
-	});
-	div.onclick = function() {
-		transformDivToInput(this, id);
-	}
-	elem.parentNode.removeChild(elem);
-	parent.appendChild(div);
 }
 
 function comment(form, type, id) {

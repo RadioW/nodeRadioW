@@ -445,3 +445,9 @@ div.contentScrollArrow {
 div.contentScrollArrow:hover  {
     background-color:grey;
 }
+
+p.contentText {
+    word-wrap: break-word;
+    word-break: break-all;
+    text-align: left;
+}
