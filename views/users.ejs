@@ -1,5 +1,5 @@
 <% if (!ajax) {layout('./layout/page')} -%>
-<% block('title', "Пользователи") -%>
+<% block('title', "Пользователи") %>
 
 <p class="lead">Зарегистрированные пользователи</p>
 <% for (var user in users) { %>
@@ -7,7 +7,7 @@
 <div class="row">
 	<a href="/user/<%-  users[user]._id -%>" class="userIcon">
 		<img src="/data/<%-  users[user]._id -%>/avatar-md.jpg" class="img-responsive">
-		<div class="userIconName"><%- users[user].username -%></div>
+		<div class="userIconName"><%- users[user].username %></div>
 	</a>
 	
 </div>

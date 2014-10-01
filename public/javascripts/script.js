@@ -311,58 +311,6 @@ function launchModal(message) {
 	$('#errorModal').modal();
 }
 
-function launchLargeModal(message) {
-	$('#largeModalMessage').html(message);
-	$('#largeModal').modal();
-}
-
-function showPhoto(userId, photoId) {
-    var link = '/user/'+userId+'/photo/'+photoId;
-
-	var modal = $('#largeModal');
-	if ($('#fullSizeImg').get(0)) {
-		var coords = getCoords($('#fullSizeImg').parent().get(0));
-		$('#fullSizeImg').css({'opacity': 0, 'max-width': coords.right-coords.left});
-		$('.modal-content', modal).get(0).children[0].id = 'modal-delete';
-		setTimeout(function() {
-			$('.modal-content', modal).children().css('width', '1px');
-			
-			$('#fullSizeImg').attr('id', '');
-			launch();
-		}, 200);
-	} else {
-		launch();
-	}
-	function launch() { 
-		$.ajax({
-			url: link,
-			method: 'GET',
-			data: null,
-			statusCode: {
-				200: function(jqXHR) {
-					$('.modal-content', modal).append(jqXHR);
-					$('#fullSizeImg').on('load', function() {
-						$('#fullSizeImg').css('opacity', 1);
-						$('#modal-delete').remove();
-						$('#largeModal').modal();
-//TODO
-						clickers();
-                        socket.emit('subscribe', userId, "photo", photoId);
-						history.pushState(null, null, link);
-					});
-				},
-				404: function() {
-					launchModal('Мне очень жаль, но такой фотографии нет')
-				},
-				500: function() {
-					launchModal('Произошла ошибка, скорее всего Вы неверно скопировали адрес ссылки')
-				}
-			}
-		});
-	}
-}
-
-
 function subscribeContent (userId, type, contentId) {
     socket.emit('subscribe', userId, type, contentId);
 }
