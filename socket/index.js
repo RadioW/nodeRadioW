@@ -7,6 +7,7 @@ var windows = require('./libs/usersCount').windows;
 var User = require('../models/user').User;
 var ObjectID = require('mongodb').ObjectID;
 var tools = require('../libs/tools');
+var router = require('./routes');
 
 module.exports = function (server) {
 
@@ -41,13 +42,36 @@ module.exports = function (server) {
 	var main = io
 		.of('/main')
 		.on('connection', function(socket) {
-		
-			socket.broadcast.emit('info', users(io));
-			socket.emit('info', users(io));
-			
-			socket.on('disconnect', function () {
-				socket.broadcast.emit('info', users(io));
-			});
+
+            socket.emit('event', {
+                route: "main",
+                event: "connected",
+                data: {
+                    id: socket.request.session.user
+                }
+            });
+			socket.emit('event', {
+                route: "main",
+                event: "info",
+                data: users(io)
+            });
+            socket.broadcast.emit('event', {
+                route: "main",
+                event: "info",
+                data: users(io)
+            });
+
+            socket.on('event', function(params) {
+                router(socket, params);
+            });
+
+            socket.on('disconnect', function () {
+                socket.broadcast.emit('event', {
+                    route: "main",
+                    event: "info",
+                    data: users(io)
+                });
+            });
 		});
 
 

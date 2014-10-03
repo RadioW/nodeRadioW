@@ -41,7 +41,7 @@ module.exports = function(socket, next) {
 			return next(err);
 		}
 		);
-}
+};
 	
 function loadSession(sid, callback) {
 	sessionStore.load(sid, function(err, session) {

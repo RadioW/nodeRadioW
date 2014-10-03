@@ -30,7 +30,7 @@ function Comment(_opts) {
     date.innerHTML = " " + datify(_opts.date) + " ";
     infoDiv.appendChild(date);
 
-    if (that.author == _myID) {
+    if (that.author == core.id) {
         var editButton = document.createElement('button');
         editButton.className = "btn btn-primary btn-xs";
         editButton.onclick = function () {
@@ -227,7 +227,7 @@ function Content(_opts) {
         that.description = _description;
         that.descriptionWrapper.html(_description);
 
-        if (_myID == that.user.id) {
+        if (core.id == that.user.id) {
             that.descriptionWrapper.on("click", function () {
                 that.editDescription()
             });
@@ -245,7 +245,7 @@ function Content(_opts) {
     that.setButtons = function(_params) {
         switch (_params.content.type) {
             case 'photo':
-                if (window._myID == _params.user.id && !_params.content.isAvatar) {
+                if (core.id == _params.user.id && !_params.content.isAvatar) {
                     var buttonRemove = $('<button type="button" class="btn btn-danger">');
                     buttonRemove.on('click', function () {
                         removePhoto(that.content.id);
@@ -264,7 +264,7 @@ function Content(_opts) {
     };
     that.setButtons(_opts);
 
-    if (window._myID) {
+    if (core.id) {
         var commentForm = $('<form class="comment">');
         commentForm.on('submit', function(e) {
             comment(commentForm.get(0), 'photo', that.content.id);

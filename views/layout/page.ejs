@@ -6,13 +6,10 @@
   <link rel="stylesheet" href="/vendor/bower_components/bootstrap/dist/css/bootstrap.css"/>
   <link rel="stylesheet" href="/stylesheets/style.css"/>
 
-  <script src="/vendor/bower_components/jquery/dist/jquery.js"></script>
-  <script src="/vendor/bower_components/bootstrap/dist/js/bootstrap.js"></script>
-  <script src="/vendor/bower_components/socket.io-client/socket.io.js"></script>
   <script src="/javascripts/script.js"></script>
-  <script src="/javascripts/classes.js"></script>
 </head>
 <body>
+<script data-main="/javascripts/main" src="/vendor/bower_components/require/require.js"></script>
 
 <div class="modal fade" id="largeModal" tabindex="-1" role="dialog" aria-hidden="true" aria-labelledby="largeModalLabel">
 	<div class="modal-dialog modal-lg">
@@ -56,102 +53,6 @@
 <div id="pseudoBody">
   <%-body %>
 </div>
-
-<script>
-
-    var _myID = "";
-    <% if (self) { %>
-        _myID = "<%- self._id %>";
-    <% } %>
-
-    window._myID = _myID;
-
-	var main = io(location.host+'/main', {'multiplex':false});
-    main.on('info', function(clients) {
-			info.style.display = 'block';
-			$('span', info).get(0).innerHTML = clients.users.length;
-			$('span', info).get(1).innerHTML = clients.guests.length;
-		});
-    main.on('logout', function() {
-			location.href = "/";
-		});
-    main.on('login', function() {
-			if (window.location.href == "http://"+location.host+"/login") {
-				window.location.href = "/";
-			} else { 
-				window.location.reload();
-			}
-		});
-	var socket;
-	
-	var info = $('#infoBar').get(0);
-
-var pseudobody = $('#pseudoBody').get(0);
-function supports_history_api() {
-  return !!(window.history && history.pushState);
-}
-
-window.onload = function () {
-	if (!supports_history_api()) return;
-	
-	clickers();
-	window.setTimeout (function () {
-		window.addEventListener("popstate", function(e) {
-			goTo(location.pathname);
-		}, false)
-	}, 1);
-	};
-
-function clickers() {
-	$('a:not(.thumbnail-v)').each(function (index, link) {aJump(link)});
-}
-
-function aJump (link) {
-	if (link.href == "http://"+location.host+"/log") return;
-	link.onclick = function () {
-		goTo (link.href);
-		history.pushState(null, null, link.href);
-		$('#largeModal').modal('hide');
-		$('#errorModal').modal('hide');
-        if (window.contentrW) {
-            window.contentrW.link = true;
-            window.contentrW.wrapper.modal('hide');
-        }
-		$('#carett').html('');
-		$('#cover').css('display', 'none');
-		return false;
-	}
-}
-function goTo (link) {
-	$.ajax({
-      url: link,
-      method: "GET",
-      data: null,
-      statusCode: {
-        200: function(jqXHR) {
-		  if (socket) {
-			socket.close();
-			socket = null;
-		  }
-            if (window.contentrW) {
-                window.contentrW.link = true;
-                window.contentrW.wrapper.modal('hide');
-            }
-            $('#carett').html('');
-            $('#cover').css('display', 'none');
-          pseudobody.innerHTML = jqXHR;
-		  var start = new Function ('callback', $('#pseudoBody script').get(0).innerHTML+'callback();');
-		  start(function (){
-			
-		  });
-		  clickers();
-		  
-        }
-      }
-	});
-}
-</script>
-
 </section>
 
 <div id="cover"></div>

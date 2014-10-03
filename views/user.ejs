@@ -160,7 +160,7 @@ socket.on('remark comment', function(ans){
 socket.on('remove comment', function(ans){
     if (window.contentrW && window.contentrW.comments && window.contentrW.comments[ans]) {
         var comment = window.contentrW.comments[ans];
-        if (comment.author == _myID) {
+        if (comment.author == core.id) {
             comment.pseudoRemove();
         } else {
             window.contentrW.comments.remove(ans);

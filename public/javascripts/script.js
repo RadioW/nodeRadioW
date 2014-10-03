@@ -380,5 +380,3 @@ function buildPostRequest (data, boundary) {
 	return body;
 	
 }
-
-

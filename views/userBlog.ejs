@@ -1,14 +1,14 @@
 <% if (!ajax) {layout('./layout/page')} -%>
-<% block('title', user.username) -%>
+<% block('title', user.username) %>
 <% if (!ajax) {%>
-<p class="lead text-center">Страница пользователя <%- user.username -%></p>
+<p class="lead text-center">Страница пользователя <%- user.username %></p>
 
 
 <div class="col-xs-12 col-lg-12-v col-md-12-v col-sm-12-v col-xs-12-v">
 	<div class="thumbnail thumbnail-v" style="height:100%">
 		<div class="container-fluid" style="height:100%">
 <% } %>
-				<%- self && user._id.toString() == self._id.toString() ? partial('./partials/userInterface/uBlogOwner') : partial('./partials/userInterface/uBlog') -%>
+        	<%- self && user._id.toString() == self._id.toString() ? partial('./partials/userInterface/uBlogOwner') : partial('./partials/userInterface/uBlog') %>
 <% if (!ajax) {%>		
 		</div>
 	</div>
