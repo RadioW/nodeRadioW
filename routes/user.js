@@ -121,7 +121,11 @@ exports.savePhoto = function(req, res, next) {
 			return next(new HttpError(500));
 		}
 		var io = req.app.get('io');
-		io.of('/user').to(user._id).emit('new photo', files);
+		io.of('/main').to(user._id).emit('event', {
+            event: "new photo",
+            route: "user",
+            data: files
+        });
 		req.files = files;
 		next();
 	});
@@ -353,7 +357,11 @@ exports.makeAvatar = function(req, res, next) {
 											if (err) {
                                                 return next(err);
                                             }
-											io.of('/user').to(req.self._id).emit('new avatar', req.self.info.avatar);
+											io.of('/main').to(req.self._id).emit('event', {
+                                                route: "user",
+                                                event: "new avatar",
+                                                data: req.self.info.avatar
+                                            });
 											return next();
 										});
 									});
@@ -388,7 +396,11 @@ exports.removePhoto = function(req, res, next) {
                         next(err);
                     }
 					var io = req.app.get('io');
-					io.of('/user').to(req.self._id).emit('removed photo', photo._id);
+					io.of('/main').to(req.self._id).emit('event', {
+                        route: "user",
+                        event: "removed photo",
+                        data: photo._id
+                    });
 					return next();
 				});
 			});

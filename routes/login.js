@@ -33,7 +33,10 @@ exports.post = function (req, res, next) {
 				for (var key in clients) {
 					if (clients[key].request.session.id == req.session.id) {
 						if (clients[key]) {
-							clients[key].emit('login');
+							clients[key].emit('event', {
+                                route: 'main',
+                                event: 'login'
+                            });
 						}
 					}
 				}

@@ -9,31 +9,57 @@
 
     var defineArray = [];
     defineArray.push(m.$class);
+    defineArray.push(m.$page);
 
     define(moduleName, defineArray, function widget_module() {
         var Class = require(m.$class);
+        var Page = require(m.$page);
 
         var Widget = Class.inherit({
             "className": "Widget",
+            "title": "user",
             "constructor": function(options) {
                 var that = this;
 
+                var baseOptions = {
+                    "name": "Widget",
+                    "path": "",
+                    "userId": ""
+                };
+                $.extend(baseOptions, options);
+                that.options = baseOptions;
+
                 Class.call(that);
 
-                that.href = "/";
+                that.href = "/user/" + that.options.userId + "/" + that.options.path + "/";
 
                 that.initWrapper();
-                that.initroxy();
+                that.initProxy();
+                that.initContent();
                 that.initHandlers();
+
+            },
+            "destructor": function() {
+                var that = this;
+
+                that.container.remove();
+                that.border.remove();
+                that.wrapper.remove();
             },
             "initWrapper": function() {
                 var that = this;
                 that.wrapper = $('<div class="col-lg-4 col-md-6 col-lg-4-v col-md-6-v col-sm-6 col-sm-6-v">');
-                var border = that.border = $('<div class="widgetBorder">');
+                var border = that.border = $('<div class="thumbnail widgetBorder">');
                 that.wrapper.append(border);
-                var container = that.container = $('<div class="container-fluid" id="userBlogMini" style="height:100%">');
+                var container = that.container = $('<div class="container-fluid" id="widget_'+ that.options.route +'" style="height:100%">');
                 border.append(container);
                 $("#pseudoBody").append(that.wrapper);
+            },
+            "initContent": function() {
+                var that = this;
+
+                var header = that.header = $('<p class="text-center lead">').html(that.options.name);
+                that.container.append(header);
             },
             "initHandlers": function() {
                 var that = this;
@@ -41,26 +67,12 @@
             },
             "expand": function() {
                 var that = this;
+                that.fullSized = true;
                 that.wrapper.off("click", that.proxy.expand);
 
                 var tool = that.expanded = $('<div class="container-fluid op">');
                 tool.css("height", "100%");
-                $.ajax({
-                    url: that.href || "/",
-                    method: 'GET',
-                    data: null,
-                    statusCode:{
-                        200: function(jqXHR) {
-                            tool.html(jqXHR);
-                            tool.css("opacity", 1);
-                            var script = $('script', tool.get(0)).get(0); // Если в инструменте есть тег скрипт - эта приписка его запустит
-                            if (script) {
-                                var start = new Function ('', script.innerHTML);
-                                start();
-                            }
-                        }
-                    }
-                });
+                that.getExpandedContent(tool);
                 that.container.css('display', 'none');
                 that.container.after(tool);
 
@@ -93,11 +105,13 @@
                         top: '0px',
                         left: '0px'
                     });
+                    history.pushState(null, null, that.href);
                     cover.on("click", that.proxy.collapse);
                 }, 1)
             },
             "collapse": function() {
                 var that = this;
+                that.fullSized = false;
                 var cover = $('#cover');
                 cover.off("click", that.proxy.collapse);
                 var carett = $('#carett');
@@ -120,8 +134,8 @@
                     car.remove();
                     delete that.expanded;
                     that.container.css("display", 'block');
-                    history.pushState(null, null, that.href.slice(0, that.href.lastIndexOf('/')));
-                    that.wrapper.off("click", that.proxy.expand);
+                    history.pushState(null, null, "/user/" + that.options.userId + "/");
+                    that.wrapper.on("click", that.proxy.expand);
                 }, 500)
             },
             "initProxy": function() {
@@ -130,6 +144,37 @@
                     "expand": $.proxy(that.expand, that),
                     "collapse": $.proxy(that.collapse, that)
                 }
+            },
+            "on": function() {
+                Page.fn.on.apply(this, arguments);
+            },
+            "off": function() {
+                Page.fn.off.apply(this, arguments);
+            },
+            "emit": function() {
+                Page.fn.emit.apply(this, arguments);
+            },
+            "subscribeContent": function(id) {
+                core.activePage.subscribeContent(this.options.userId, this.options.path, id);
+            },
+            "getExpandedContent": function(container) {
+                var that = this;
+                $.ajax({
+                    url: that.href || "/",
+                    method: 'GET',
+                    data: null,
+                    statusCode:{
+                        200: function(jqXHR) {
+                            container.html(jqXHR);
+                            container.css("opacity", 1);
+                            var script = $('script', container.get(0)).get(0); // Если в инструменте есть тег скрипт - эта приписка его запустит
+                            if (script) {
+                                var start = new Function ('', script.innerHTML);
+                                start();
+                            }
+                        }
+                    }
+                });
             }
         });
 

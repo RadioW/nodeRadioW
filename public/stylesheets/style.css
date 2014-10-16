@@ -338,11 +338,6 @@ img.fullSizeImg {
 			transition: opacity .3s ease-in-out;
 }
 
-#avatar-sm {
-	-webkit-transition: opacity .3s ease-in-out;
-			transition: opacity .3s ease-in-out;
-}
-
 #avatar {
 	-webkit-transition: opacity .3s ease-in-out;
 			transition: opacity .3s ease-in-out;
@@ -467,9 +462,22 @@ div.widgetBorder {
     cursor: pointer;
     -webkit-transition: all .5s ease-in-out;
     transition: all .5s ease-in-out;
-    border-radius: 4px;
     background-color: #FFFFFF;
 }
 div.widgetBorder:hover {
     border-color: #428BCA;
+}
+
+#pseudoBody {
+    opacity: 0;
+    -webkit-transition: opacity 0.3s ease-out;
+    -moz-transition: opacity 0.3s ease-out;
+    -ms-transition: opacity 0.3s ease-out;
+    -o-transition: opacity 0.3s ease-out;
+    transition: opacity 0.3s ease-out;
+}
+.avatar-sm {
+    -webkit-transition: opacity .3s ease-in-out;
+    transition: opacity .3s ease-in-out;
+    width: 100%
 }

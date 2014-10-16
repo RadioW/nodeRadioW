@@ -10,7 +10,7 @@
     defineArray.push(m.framawork.$socketio);
     defineArray.push(m.$class);
 
-    define(moduleName, defineArray, function connection_module(){
+    define(moduleName, defineArray, function connection_module() {
         var io = require(m.framawork.$socketio);
         var Class = require(m.$class);
 
@@ -68,10 +68,11 @@
                     delete that.routes[listen.route][listen.event];
                 } else if (listen.route ||  typeof listen == "string") {
                     that.socket.emit('event', {
-                        route: listen.route,
+                        route: listen.route || listen,
                         event: "disconnect",
                         data: listen.data
                     });
+                    delete that.routes[listen.route || listen];
                 } else {
                     console.error("Can't forget \n"+ JSON.stringify(listen));
                 }
@@ -97,7 +98,8 @@
                     event: "connected",
                     handler: function(data) {
                         core.user = {
-                            "id": data.id
+                            "id": data.id,
+                            "name": data.username
                         }
                     }
                 });

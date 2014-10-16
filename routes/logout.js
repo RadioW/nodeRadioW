@@ -19,12 +19,13 @@ exports.post = function (req, res, next) {
 		loadSession(sid, function(err, session) {
 			if (err) {
 			clients[key].emit("error", "server error");
-			clients[key].disconnect();
 			}
 			if (!session) {
 				if (!clients[key]) return;
-			clients[key].emit("logout");
-			clients[key].disconnect();
+			clients[key].emit("event", {
+                    route: "main",
+                    event: "logout"
+                });
 			}
 			clients[key].request.session = session;
 		});

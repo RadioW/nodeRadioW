@@ -1,4 +1,4 @@
-<nav class="navbar navbar-default" role="navigation">
+<nav class="navbar navbar-inverse" role="navigation">
 <div class="navbar-inner">
 	<ul class="nav navbar-nav">
 		<li><a id="homeLink" href="/">Главная</a></li>
@@ -7,9 +7,9 @@
 		<li><a id="chatLink" href="/chat">Чат</a></li>
 		<% } %>
 	</ul>
-	<ul class="nav navbar-nav navbar-right">
+	<ul class="nav navbar-nav navbar-right" style="margin-right: 0">
 		<% if (self) {%>
-		<li><a href="/log" onclick="$('<form method=POST action=/logout>').submit();return false">Выйти</a></li>
+		<li><a href="/log" id="logoutHref">Выйти</a></li>
 		<% } else {%>
 		<li><a id="loginLink" href="/login">Войти</a></li>
 		<li><a id="regLink" href="/registration">Регистрация</a></li>

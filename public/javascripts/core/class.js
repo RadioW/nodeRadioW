@@ -28,7 +28,7 @@
             for (lMember in proto) {
                 if (typeof proto[lMember] === "object" && !(proto[lMember] instanceof Array) && proto[lMember] !== undefined) {
                     // Merge object members
-                    lFn[lMember] = Object.extend(true, {}, lBase.prototype[lMember], proto[lMember]);
+                    lFn[lMember] = $.extend(true, {}, lBase.prototype[lMember], proto[lMember]);
                 } else {
                     lFn[lMember] = proto[lMember];
                 }

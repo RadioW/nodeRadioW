@@ -311,10 +311,6 @@ function launchModal(message) {
 	$('#errorModal').modal();
 }
 
-function subscribeContent (userId, type, contentId) {
-    socket.emit('subscribe', userId, type, contentId);
-}
-
 function makeThisAva(id) {
 	$.ajax({
 		url: '/user/makeAvatar/'+id,
@@ -361,13 +357,6 @@ function removePhoto(id) {
 			}
 		}
 	});
-}
-
-function comment(form, type, id) {
-	var message = form.children[0].value;
-	form.children[0].value = "";
-	socket.emit('comment', message, type, id);
-	return false;
 }
 
 function buildPostRequest (data, boundary) {

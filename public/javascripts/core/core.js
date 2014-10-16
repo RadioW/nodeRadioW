@@ -10,11 +10,13 @@
     defineArray.push(m.$class);
     defineArray.push(m.$asyncExplorer);
     defineArray.push(m.$connection);
+    defineArray.push(m.$content);
 
     define(moduleName, defineArray, function core_module() {
         var Class = require(m.$class);
         var AsyncExplorer = require(m.$asyncExplorer);
         var Connection = require(m.$connection);
+        var Content = require(m.$content);
 
         var Core = Class.inherit({
             "className": "Core",
@@ -23,8 +25,9 @@
 
                 Class.call(that);
 
-                that.connetion = new Connection();
+                that.connection = new Connection();
                 that.explorer = new AsyncExplorer();
+                that.content = new Content();
             }
         });
 
