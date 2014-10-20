@@ -16,13 +16,14 @@
 
         var Content = Class.inherit({
             "className": "Content",
-            "constructor": function() {
+            "constructor": function(core) {
                 var that = this;
 
                 Class.call(that);
 
                 that.initWrapper();
                 that.initHandlers();
+                that.initSubscription(core);
                 that.isHidden = true;
                 that.content = {};
                 that.user = {};
@@ -65,7 +66,7 @@
                 modalBody.append(subWrap3);
                 subWrap3.append(buttonsBar);
 
-                var commentForm = $('<form class="comment">');
+                var commentForm = that.commentForm = $('<form class="comment">');
                 commentForm.on('submit', function (e) {
                     core.activePage.emit("comment", {
                         type: that.content.type,
@@ -78,6 +79,7 @@
                 that.commentArea = $('<textarea class="form-control">');
                 commentForm.append(that.commentArea);
                 commentForm.append($('<input type="submit" class="btn btn-primary">'));
+                commentForm.css("display", "none");
                 modalFooter.append(commentForm);
 
                 var commentsWrapper = that.commentsWrapper = $('<div id="comments">');
@@ -152,7 +154,7 @@
                             buttonRemove.html('Удалить');
                             var buttonMakeAvatar = $('<button type="button" class="btn btn-primary">');
                             buttonMakeAvatar.on('click', function () {
-                                makeThisAva(that.content.id);
+                                that.makeThisAva();
                             });
                             buttonMakeAvatar.html('Сделать аватаркой');
                             that.buttons.append(buttonRemove);
@@ -169,7 +171,10 @@
                     that.clear();
                     core.activePage.emit('unsubscribe');
                     if (!that.notPushState) {
-                        history.pushState(null, null, '/user/' + that.user.id + "/" + that.content.type + "/"); //todo it's a mistake!
+                        var temp = that.user.id + "/" + that.content.type + "/";
+                        var link = that.savedLink || temp;
+                        history.pushState(null, null, link); //todo it's a mistake!
+                        that.savedLink = undefined;
                     }
                     that.notPushState = false;
                 });
@@ -193,14 +198,18 @@
                 that.setButtons(_params);
 
                 if (!notPushState) {
+                    that.savedLink = window.location.href;
                     history.pushState(null, null, '/user/' + that.user.id + '/' + that.content.type + '/' + that.content.id);
                 }
-                that.link = false;
 
                 if (that.isHidden) {
                     that.wrapper.modal('show');
                 }
                 core.explorer.clickers($('a', that.wrapper[0]));
+
+                if(core.user.id) {
+                    that.commentForm.css("display", "block");
+                }
 
                 switch (_params.content.type) {
                     case 'photo':
@@ -285,6 +294,73 @@
                         that.commentsWrapper.prepend(newComment.wrapper);
                     }
                 }
+            },
+            "initSubscription": function(core) {
+                var that = this;
+
+                core.connection.listen({
+                    route: "user",
+                    event: "new comment",
+                    handler: function(data) {
+                        that.addComment(data);
+                    }
+                });
+
+                core.connection.listen({
+                    route: "user",
+                    event: "remark comment",
+                    handler: function(data) {
+                        if (that.comments[data.commentID]) {
+                            that.comments[data.commentID].remark(data);
+                        }
+                    }
+                });
+
+                core.connection.listen({
+                    route: "user",
+                    event: "remove comment",
+                    handler: function(data) {
+                        var comment = that.comments[data];
+                        if (comment) {
+                            if (comment.author == core.user.id) {
+                                comment.pseudoRemove();
+                            } else {
+                                comment.remove()
+                            }
+                        }
+                    }
+                });
+                core.connection.listen({
+                    route: "user",
+                    event: "subscription",
+                    handler: function(data) {
+                        that.show(data);
+                    }
+                });
+
+            },
+            "makeThisAva": function() {
+                var that = this;
+                $.ajax({
+                    url: '/user/makeAvatar/'+that.content.id,
+                    method: 'POST',
+                    data: null,
+                    statusCode: {
+                        200: function() {
+                            launchModal('Аватар успешно изменен');
+                            core.activePage.subscribeContent(that.user.id, that.content.type, that.content.id);
+                        },
+                        403: function() {
+                            launchModal('Ошибка! Вам запрещена эта операция')
+                        },
+                        404: function() {
+                            launchModal('Ошибка! В Вашей коллекции нет такой фотографии')
+                        },
+                        500: function() {
+                            launchModal('Ошибка! Что-то пошло не так!')
+                        }
+                    }
+                });
             }
         });
 

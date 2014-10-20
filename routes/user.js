@@ -341,7 +341,11 @@ exports.makeAvatar = function(req, res, next) {
 											if (err) {
                                                 return next(err);
                                             }
-											io.of('/user').to(req.self._id).emit('new avatar', req.self.info.avatar);
+                                            io.of('/main').to(req.self._id).emit('event', {
+                                                route: "user",
+                                                event: "new avatar",
+                                                data: req.self.info.avatar
+                                            });
 											return next();
 										});
 									});

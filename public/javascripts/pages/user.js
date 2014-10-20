@@ -37,17 +37,6 @@
                 that.on('connection', function() {
                     that.emit('join', core.user.id);
                 });
-                that.on('free', function() {
-                    var div = $('#usernameInput').get(0);
-                    div.className = 'form-group has-success has-feedback';
-                    div.children[1].className = 'xs form-control-feedback glyphicon glyphicon-ok';
-                });
-
-                that.on('buzy', function() {
-                    var div = $('#usernameInput').get(0);
-                    div.className = 'form-group has-error has-feedback';
-                    div.children[1].className = 'xs form-control-feedback glyphicon glyphicon-remove';
-                });
 
                 that.on('newBlog', function(data) {
                     var message = data.message, date = data.date, user = data.author, id = data.id;
@@ -99,31 +88,6 @@
 
                 that.on('error', function(err) {
                     launchModal('Извините, произошла ошибка!</br>'+err);
-                });
-
-                that.on('new comment', function(ans) {
-                    core.content.addComment(ans);
-                });
-
-                that.on('remark comment', function(ans){
-                    if (window.contentrW && window.contentrW.comments && window.contentrW.comments[ans.commentID]) {
-                        window.contentrW.comments[ans.commentID].remark(ans);
-                    }
-                });
-
-                that.on('remove comment', function(ans){
-                    if (window.contentrW && window.contentrW.comments && window.contentrW.comments[ans]) {
-                        var comment = window.contentrW.comments[ans];
-                        if (comment.author == core.user.id) {
-                            comment.pseudoRemove();
-                        } else {
-                            window.contentrW.comments.remove(ans);
-                        }
-                    }
-                });
-
-                that.on("subscription", function(ans) {
-                    core.content.show(ans);
                 });
 
                 $('.thumbnail-v').each(function (i, quad) {

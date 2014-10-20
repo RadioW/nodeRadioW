@@ -32,12 +32,11 @@
                 Class.call(that);
 
                 that.href = "/user/" + that.options.userId + "/" + that.options.path + "/";
-
+                that.listeners = [];
                 that.initWrapper();
                 that.initProxy();
                 that.initContent();
                 that.initHandlers();
-
             },
             "destructor": function() {
                 var that = this;
@@ -136,7 +135,8 @@
                     that.container.css("display", 'block');
                     history.pushState(null, null, "/user/" + that.options.userId + "/");
                     that.wrapper.on("click", that.proxy.expand);
-                }, 500)
+                }, 500);
+                that.standBy();
             },
             "initProxy": function() {
                 var that = this;
@@ -145,8 +145,12 @@
                     "collapse": $.proxy(that.collapse, that)
                 }
             },
-            "on": function() {
-                Page.fn.on.apply(this, arguments);
+            "on": function(event, handler, bothStates) {
+                var that = this;
+                if (!bothStates) {
+                    that.listeners.push(event);
+                }
+                Page.fn.on.apply(this, [event, handler]);
             },
             "off": function() {
                 Page.fn.off.apply(this, arguments);
@@ -175,6 +179,16 @@
                         }
                     }
                 });
+            },
+            "standBy": function() {
+                var that = this;
+                for(var i=0; i<that.listeners.length; i++) {
+                    that.off({
+                        route: that.options.path,
+                        event: that.listeners[i]
+                    });
+                }
+                that.listeners = [];
             }
         });
 

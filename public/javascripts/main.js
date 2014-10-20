@@ -40,6 +40,7 @@
                 $user: "/javascripts/pages/user.js",
                 $login: "/javascripts/pages/login.js"
             },
+            $fileinput: "/javascripts/ui/fileinput.js",
             $content: "/javascripts/content/content.js",
             $comment: "/javascripts/content/comment.js"
 

@@ -258,7 +258,7 @@ function checkUsername(elem, defaultName) {
 	socket.emit('check', elem.value);
 }
 
-function datify(timestamp) {
+function datify(timestamp, dateOnly) {
 	var date = new Date(timestamp);
 	var year = date.getFullYear();
 	var month = date.getMonth();
@@ -303,35 +303,16 @@ function datify(timestamp) {
 	var day = date.getDate();
 	var minute = date.getMinutes() > 9 ? date.getMinutes() : '0'+date.getMinutes();
 	var hour = date.getHours() > 9 ? date.getHours() : '0'+date.getHours();
-	return day+" "+month+" "+year+" в "+hour+":"+minute;
+    if (dateOnly) {
+        return day+" "+month+" "+year;
+    } else {
+        return day + " " + month + " " + year + " в " + hour + ":" + minute;
+    }
 }
 
 function launchModal(message) {
 	$('#errorModalMessage').html(message);
 	$('#errorModal').modal();
-}
-
-function makeThisAva(id) {
-	$.ajax({
-		url: '/user/makeAvatar/'+id,
-		method: 'POST',
-		data: null,
-		statusCode: {
-			200: function() {
-				launchModal('Аватар успешно изменен');
-                window.contentrW.refresh();
-			},
-			403: function() {
-				launchModal('Ошибка! Вам запрещена эта операция')
-			},
-			404: function() {
-				launchModal('Ошибка! В Вашей коллекции нет такой фотографии')
-			},
-			500: function() {
-				launchModal('Ошибка! Что-то пошло не так!')
-			}
-		}
-	});
 }
 
 function removePhoto(id) {

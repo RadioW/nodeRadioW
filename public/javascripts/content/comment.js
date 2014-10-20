@@ -54,6 +54,7 @@
                 if (that.author == core.user.id) {
                     var editButton = that.editButton = $('<button class="btn btn-primary btn-xs">');
                     editButton.on("click", function () {
+                        editButton.prop("disabled", true);
                         that.initRemark();
                     });
                     editButton.html("<i class='glyphicon glyphicon-pencil'></i>");
@@ -63,7 +64,7 @@
                         core.activePage.emit("comment remove", {
                             type: that.type,
                             id: that.contentId,
-                            oid: that.commentID
+                            oid: that.id
                         });
                     });
                     removeButton.html("<i class='glyphicon glyphicon-remove'></i>");
@@ -90,8 +91,11 @@
                 var area = $('<textarea class="form-control">');
                 area.html(that.message.replace(/<br\/>/g, "\n"));
                 form.append(area);
+                form[0].onsubmit = function() {
+                    return false;
+                };
 
-                var button = $('<button value="Сохранить" class="btn btn-primary">');
+                var button = $('<button class="btn btn-primary">').html("Сохранить");
                 button.on("click", function() {
                     core.activePage.emit('comment remark', {
                         type: that.type,
@@ -101,6 +105,7 @@
                     });
                     form.remove();
                     that.messageWrapper.css("display", "block");
+                    that.editButton.prop("disabled", false);
                 });
                 form.append(button);
             },

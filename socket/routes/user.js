@@ -257,10 +257,10 @@ var UserRoute = Route_io.inherit({
             User.findById(socket.request.watch, function (err, user) {
                 if (err)
                     return that.emit('error', socket, err.message);
-                var data = user.data[data.type];
-                if (!data)
+                var lData = user.data[data.type];
+                if (!lData)
                     return that.emit('error', socket, 'Wrong data type!');
-                var content = data.id(data.id);
+                var content = lData.id(data.id);
                 if (!content)
                     return that.emit('error', socket, 'Can\'t find what to comment!');
                 var comment;

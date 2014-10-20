@@ -27,7 +27,7 @@
 
                 that.connection = new Connection();
                 that.explorer = new AsyncExplorer();
-                that.content = new Content();
+                that.content = new Content(that); //need to create subscription;
             }
         });
 
