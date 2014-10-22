@@ -50,7 +50,7 @@
                 that.wrapper = $('<div class="col-lg-4 col-md-6 col-lg-4-v col-md-6-v col-sm-6 col-sm-6-v">');
                 var border = that.border = $('<div class="thumbnail widgetBorder">');
                 that.wrapper.append(border);
-                var container = that.container = $('<div class="container-fluid" id="widget_'+ that.options.route +'" style="height:100%">');
+                var container = that.container = $('<div class="container-fluid" id="widget_'+ that.options.path +'" style="height:100%; overflow:hidden">');
                 border.append(container);
                 $("#pseudoBody").append(that.wrapper);
             },

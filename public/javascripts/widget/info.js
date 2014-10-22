@@ -38,43 +38,21 @@
                 that.container.append($('<div class="col-xs-6">').append(that.leftLayout));
                 that.container.append(that.rightLayout);
                 that.emit("requestInfoShort", that.options.userId);
-                that.on("responseInfoShort", function(user) {
-                    that.userInfo = user.info;
-                    that.userInfo.username = user.username;
-                    that.setContent();
-                }, true);
                 that.rightLayout.append($('<img src="/data/' + that.options.userId + '/avatar-sm.jpg?'+ Math.random() +'" id="avatar-sm" class="avatar-sm">'));
             },
             "initSockets": function() {
                 var that = this;
 
+                that.on("responseInfoShort", function(user) {
+                    that.userInfo = user.info;
+                    that.userInfo.username = user.username;
+                    that.setContent();
+                }, true);
+
                 that.on('new avatar', function(avatarID) {
                     that.refreshAvatar();
                     that.userInfo.avatar = avatarID;
-                });
-            },
-            "changeAvatar": function (size) {
-                var that = this;
-                size = size || '';
-                if (size !== '') size = '-'+size;
-                var oAva = $('#avatar'+size).get(0);
-                oAva.style.opacity = 0;
-                oAva.id = '';
-                var ava = document.createElement('img');
-                ava.src = "/data/<%- user._id %>/avatar"+size+".jpg?";
-                ava.id = 'avatar'+size;
-                ava.style.position = 'absolute';
-                ava.style.left = 0;
-                ava.style.right = 0;
-                ava.style.opacity = 0;
-                setTimeout(function() {
-                    oAva.parentNode.appendChild(ava);
-                    oAva.parentNode.removeChild(oAva);
-                    ava.style.position = '';
-                    setTimeout(function() {
-                        ava.style.opacity = 1;
-                    }, 1)
-                }, 300);
+                }, true);
             },
             "wrap": function(name, value) {
                 var wrapper = $('<div class="row">');
@@ -112,16 +90,18 @@
                     var newAvaFull = $('<img src="/data/' + that.options.userId + '/avatar.jpg?'+ Math.random() +'" class="avatar">').css({
                         "position": "absolute",
                         "top": 0,
-                        "opacity": 0
+                        "opacity": 0,
+                        "left": 0
                     });
                     avaFull.parent().append(newAvaFull);
                     avaFull.css("opacity", 0);
                     setTimeout(function() {
                         newAvaFull.css("opacity", 1);
-                    } ,1);
+                    } ,10);
                     setTimeout(function() {
                         newAvaFull.css({
                             "top": "",
+                            "left": "",
                             "position": "static"
                         });
                         avaFull.remove();

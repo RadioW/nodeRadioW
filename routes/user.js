@@ -26,17 +26,26 @@ exports.get = function (req, res, next) {
 			if (!user) {
                 return next(new HttpError(404, 'There is no user with same id in my base!'));
             }
-			res.render('user', {ajax:ajax, user:user, special:false}); //special - этот параметр тру - когда пользователь переходит по ссылке на этот шаблон, при копировании ссылки фотографии.
+			res.render('user', {ajax:ajax, user:user});
 		});
 	});
 };
 
 exports.saveInfo = function(req, res, next) {
+    var io = req.app.get('io');
 	if (req.body.username === req.self.username) {  //если пользователь меняет о себе инфу, не меняя username
 		req.self.changeInfo(req.body, function(err, user) {
 			if (err) {
                 return next(err);
             }
+            io.of('/main').to(user._id).emit('event', {
+                "route": "user",
+                "event": "responseInfoShort",
+                "data": {
+                    "info": user.info,
+                    "username": user.username
+                }
+            });
 			res.send('Done!');
 		});
 	} else {
@@ -52,6 +61,14 @@ exports.saveInfo = function(req, res, next) {
 				if (err) {
                     return next(err);
                 }
+                io.of('/main').to(user._id).emit('event', {
+                    "route": "user",
+                    "event": "responseInfoShort",
+                    "data": {
+                        "info": user.info,
+                        "username": user.username
+                    }
+                });
 				res.send('Done!');
 			});
 		});
@@ -151,18 +168,18 @@ exports.tool = function (req, res, next) {
 					res.render('./partials/userInterface/uInfoMini', {user:user});
 					break;
 				case 'info':
-					res.render('userInfo', {ajax:ajax, user:user});
+                    res.render('user', {ajax:ajax, user:user});
 					break;
 					
 				case 'blog':
-					res.render('userBlog', {ajax:ajax, user:user});
+					res.render('user', {ajax:ajax, user:user});
 					break;
 				case 'blogMini':
 						res.render('./partials/userInterface/uBlogMini', {user:user});
 					break;
 					
 				case 'photo':
-					res.render('userPhoto', {ajax:ajax, user:user});
+					res.render('user', {ajax:ajax, user:user});
 					break;
 				case 'photoMini':
 					res.render('./partials/userInterface/uPhotoMini', {user:user});

@@ -135,7 +135,7 @@ var UserRoute = Route_io.inherit({
                     that.to(socket.request.watch, 'newBlog', {
                         message: message,
                         date: Date.now(),
-                        author: user.username,
+                        author: user._id,
                         contentId: user.data.blog[user.data.blog.length - 1]._id
                     });
                 });
@@ -295,6 +295,51 @@ var UserRoute = Route_io.inherit({
                 that.emit('responseInfoShort', socket, {
                     username: user.username,
                     info: user.info
+                });
+            });
+        });
+
+        that.on('requestBlogShort', function(socket, data) {
+            User.findById(data, function(err, user) {
+                if(err) {
+                    return that.emit('error', socket, err.message);
+                }
+                var limit = 0;
+                var array = [];
+                for (var i=user.data.blog.length-1; i>=0; i--) {
+                    array.push(user.data.blog[i].message);
+                    limit++;
+                    if (limit > 5) {
+                        break;
+                    }
+                }
+                that.emit('responseBlogListShort', socket, array);
+            });
+        });
+
+        that.on('requestBlogFull', function(socket, data) {
+            User.findById(data, function(err, user) {
+                if(err) {
+                    return that.emit('error', socket, err.message);
+                }
+                User.populate(user.data.blog, {path: "author"}, function(err, blog) {
+                    if(err) {
+                        return that.emit('error', socket, err.message);
+                    }
+                    var array = [];
+                    for (var i=blog.length-1; i>=0; i--) {
+
+                        array.push({
+                            message: blog[i].message,
+                            date: blog[i].date,
+                            _id: blog[i]._id,
+                            author: {
+                                _id: blog[i].author._id,
+                                username: blog[i].author.username
+                            }
+                        });
+                    }
+                    that.emit('responseBlogListFull', socket, array);
                 });
             });
         });

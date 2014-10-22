@@ -10,10 +10,12 @@
     var defineArray = [];
     defineArray.push(m.$page);
     defineArray.push(m.widget.$info);
+    defineArray.push(m.widget.$blog);
 
     define(moduleName, defineArray, function registration_module(){
         var Page = require(m.$page);
         var Info = require(m.widget.$info);
+        var Blog = require(m.widget.$blog);
         var User = Page.inherit({
             "className": "User",
             "websocket": true,
@@ -27,39 +29,28 @@
                 that.widgets = {
                     info: new Info({
                         userId: params.id
+                    }),
+                    blog: new Blog({
+                        userId: params.id
                     })
-                }
+                };
+                that.jobs = [];
+                that.openWidgets(params);
+                that.executeJobs();
+            },
+            "destructor": function() {
+                var that = this;
 
+                that.jobs = undefined;
+                that.widgets = undefined;
+
+                Page.fn.destructor.call(that);
             },
             "run": function() {
                 var that = this;
 
                 that.on('connection', function() {
                     that.emit('join', core.user.id);
-                });
-
-                that.on('newBlog', function(data) {
-                    var message = data.message, date = data.date, user = data.author, id = data.id;
-
-                    var blog = document.createElement('div');
-                    blog.className = "blogPost";
-                    blog.style.height = 0;
-                    blog.innerHTML = "<div class='row'><div class='col-xs-12'><p>"+message+"</p></div></div>";
-                    $('#miniBlogRoll').prepend(blog);
-                    setTimeout(function() {blog.style.height = "";}, 50);
-
-                    if ($('#blogRoll').get(0)) {
-                        var bigBlog = document.createElement('div');
-                        bigBlog.className = "blogPost";
-                        bigBlog.style.height = 0;
-                        bigBlog.onclick = function() {
-                            subscribeContent('<%- user._id -%>', 'blog', id);
-                        };
-                        bigBlog.innerHTML = "<div class='row'><div class='col-xs-12'><p>"+message+"</p></div><div class='col-xs-12'><em>"+user+" "+datify(date)+"</em></div></div>";
-                        $('#blogRoll').children().prepend(bigBlog);
-                        setTimeout(function() {bigBlog.style.height = '';}, 50)
-                    }
-
                 });
 
                 that.on('new photo', function(files) {
@@ -106,12 +97,30 @@
                     contentId: contentId
                 });
             },
-            "comment": function (form, type, id) {
+            "openWidgets": function(param) {
                 var that = this;
-                var message = form.children[0].value;
-                form.children[0].value = "";
-                that.emit('comment', message, type, id);
-                return false;
+
+                switch (param.type) {
+                    case "info":
+                        that.jobs.push(function() {
+                            that.widgets.info.expand();
+                        });
+                        break;
+                    case "blog":
+                        that.jobs.push(function() {
+                            that.widgets.blog.expand();
+                        });
+                }
+            },
+            "executeJobs": function() {
+                var that = this;
+                var timer = 500;
+
+                for (var i=0; i<that.jobs.length; i++) {
+                    setTimeout((function(i) {
+                        return that.jobs[i];
+                    })(i), (i+1)*timer);
+                }
             }
         });
 

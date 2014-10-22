@@ -42,7 +42,8 @@
             },
             $fileinput: "/javascripts/ui/fileinput.js",
             $content: "/javascripts/content/content.js",
-            $comment: "/javascripts/content/comment.js"
+            $comment: "/javascripts/content/comment.js",
+            $blog: "/javascripts/content/blog.js"
 
         };
         var defineArray = [];

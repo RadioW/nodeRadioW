@@ -240,24 +240,7 @@ function showElement() {
 			showButton.prop('disabled', true);
 		}, 340);
 	}
-};
-
-function checkUsername(elem, defaultName) {
-	if (elem.value.length < 3) {
-		var div = $('#usernameInput').get(0);
-		div.className = 'form-group has-error has-feedback';
-		div.children[1].className = 'xs form-control-feedback glyphicon glyphicon-remove';
-		return;
-	}
-	if (elem.value == defaultName) {
-		var div = $('#usernameInput').get(0);
-		div.className = 'form-group has-success has-feedback';
-		div.children[1].className = 'xs form-control-feedback glyphicon glyphicon-ok';
-		return;
-	}
-	socket.emit('check', elem.value);
 }
-
 function datify(timestamp, dateOnly) {
 	var date = new Date(timestamp);
 	var year = date.getFullYear();
