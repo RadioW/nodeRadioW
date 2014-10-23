@@ -24,10 +24,19 @@
                 };
                 $.extend(baseOptions, params);
                 that.options = baseOptions;
+                that.writerModeOn = false;
 
                 Widget.fn.constructor.call(that, baseOptions);
                 that.blogs = [];
                 that.initSockets();
+            },
+            "appendLittleBlog": function(data) {
+                var that = this;
+                var blogs = $('p.blog-little', that.container[0]);
+                blogs.first().before($('<p class="bg-info blog-little">').html(data.message));
+                if (blogs.length == 5) {
+                    blogs.last().remove();
+                }
             },
             "initContent": function() {
                 var that = this;
@@ -48,33 +57,17 @@
                 }, true);
 
                 that.on('newBlog', function(data) {
-                    var message = data.message, date = data.date, user = data.author, id = data.id;
-
-                    var blog = document.createElement('div');
-                    blog.className = "blogPost";
-                    blog.style.height = 0;
-                    blog.innerHTML = "<div class='row'><div class='col-xs-12'><p>"+message+"</p></div></div>";
-                    $('#miniBlogRoll').prepend(blog);
-                    setTimeout(function() {blog.style.height = "";}, 50);
-
-                    if ($('#blogRoll').get(0)) {
-                        var bigBlog = document.createElement('div');
-                        bigBlog.className = "blogPost";
-                        bigBlog.style.height = 0;
-                        bigBlog.onclick = function() {
-                            core.activePage.subscribeContent(that.options.userId, that.options.path, id);
-                        };
-                        bigBlog.innerHTML = "<div class='row'><div class='col-xs-12'><p>"+message+"</p></div><div class='col-xs-12'><em>"+user+" "+datify(date)+"</em></div></div>";
-                        $('#blogRoll').children().prepend(bigBlog);
-                        setTimeout(function() {bigBlog.style.height = '';}, 50)
+                    that.appendLittleBlog(data);
+                    if (that.fullSized) {
+                        that.blogRoll.prepend(that.wrapBlog(data));
                     }
-
                 }, true);
             },
             "getExpandedContent":function(container) {
                 var that = this;
 
-                container.append($('<p class="text-center lead">').html(that.options.name));
+                that.expandedHeader = $('<p class="text-center lead">').html(that.options.name);
+                container.append(that.expandedHeader);
                 var roll = that.blogRoll = $('<div class="col-xs-12" style="overflow-y:auto; float:right;" id="blogRoll">');
                 container.append($('<div class="row">').append(roll));
 
@@ -87,7 +80,10 @@
                         top: 0,
                         right: 0
                     });
-                    container.append(buttonEdit)
+                    container.append(buttonEdit);
+                    buttonEdit.on("click", function() {
+                        that.writerMode();
+                    });
                 }
 
                 setTimeout(function() {
@@ -99,16 +95,79 @@
 
                 that.on('responseBlogListFull', function(data) {
                     for (var i=0; i<data.length; i++) {
-                        that.blogRoll.append(wrap(data[i]));
+                        that.blogRoll.append(that.wrapBlog(data[i]));
                     }
                 });
+            },
+            "standBy": function() {
+                var that = this;
 
-                function wrap(data) {
-                    var wrapper = $('<div class="bg-info blog-full">');
-                    wrapper.append($('<p>').html(data.message));
-                    wrapper.append($('<em>').html(data.author.username +' '+datify(data.date)));
-                    return wrapper;
+                Widget.fn.standBy.call(that);
+                if (that.writerModeOn) {
+                    that.writerMode();
                 }
+
+            },
+            "writerMode": function() {
+                var that = this;
+
+                if (that.writerModeOn) {
+                    that.expanded.css("height", "100%");
+                    setTimeout(function() {
+                        that.editor.css("display", "none");
+                        that.writerModeOn = false;
+                    }, 500);
+                } else {
+                    var editor = that.editor;
+                    if (!editor) {
+                        editor = that.editor = $('<div class="container-fluid">');
+                        editor.css({
+                            "position": "relative",
+                            "height": "100%",
+                            "display": "none",
+                            "background-color": "white"
+                        });
+                        that.border.append(editor);
+                        editor.append($('<p class="text-center lead">').html('Новый блог'));
+                        var area = $('<textarea class="form-control blogArea" name="message">');
+                        editor.append(area.height(that.expanded.height() - that.expandedHeader.height() - parseFloat(that.expandedHeader.css("margin-bottom")) - 2));
+                        var closeButton = $('<button class="btn btn-primary">').append($('<i class="glyphicon glyphicon-pencil">')).css({
+                            position: "absolute",
+                            top: 0,
+                            right: 0
+                        }).on("click", function() {
+                            that.writerMode();
+                        });
+                        var submitButton = $('<button class="btn btn-primary">').append($('<i class="glyphicon glyphicon-ok">')).css({
+                            position: "absolute",
+                            top: 0,
+                            right: "45px"
+                        }).on("click", function() {
+                            that.emit('blog', area.val());
+                            area.val("");
+                            that.writerMode();
+                        });
+                        editor.append(closeButton);
+                        editor.append(submitButton);
+                    }
+                    that.writerModeOn = true;
+                    editor.css({
+                        "display": "block"
+                    });
+                    that.expanded.css("height", 0);
+                }
+            },
+            "wrapBlog": function(data) {
+                var that = this;
+                var wrapper = $('<div class="bg-info blog-full">');
+                wrapper.append($('<p>').html(data.message));
+                wrapper.append($('<em>').html(data.author.username +' '+datify(data.date)));
+                wrapper.on('click', (function(id) {
+                    return function() {
+                        core.activePage.subscribeContent(that.options.userId, "blog", id);
+                    }
+                })(data._id));
+                return wrapper;
             }
         });
 

@@ -129,14 +129,21 @@ var UserRoute = Route_io.inherit({
             User.findById(socket.request.session.user, function (err, user) {
                 if (err) return that.emit('error', socket, err.message);
                 message = message.replace(/\n/g, "<br/>");
-                user.data.blog.push({link: 'none', message: message});
+                user.data.blog.push({
+                    link: 'none',
+                    message: message,
+                    author: user._id
+                });
                 user.save(function (err) {
                     if (err) return that.emit('error', socket, err.message);
                     that.to(socket.request.watch, 'newBlog', {
                         message: message,
                         date: Date.now(),
-                        author: user._id,
-                        contentId: user.data.blog[user.data.blog.length - 1]._id
+                        author: {
+                            username: user.username,
+                            _id: user._id
+                        },
+                        _id: user.data.blog[user.data.blog.length - 1]._id
                     });
                 });
             });
@@ -309,7 +316,7 @@ var UserRoute = Route_io.inherit({
                 for (var i=user.data.blog.length-1; i>=0; i--) {
                     array.push(user.data.blog[i].message);
                     limit++;
-                    if (limit > 5) {
+                    if (limit == 5) {
                         break;
                     }
                 }

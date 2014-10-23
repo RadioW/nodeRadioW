@@ -49,6 +49,7 @@
                 var that = this;
                 that.wrapper = $('<div class="col-lg-4 col-md-6 col-lg-4-v col-md-6-v col-sm-6 col-sm-6-v">');
                 var border = that.border = $('<div class="thumbnail widgetBorder">');
+                border.css("overflow", "hidden");
                 that.wrapper.append(border);
                 var container = that.container = $('<div class="container-fluid" id="widget_'+ that.options.path +'" style="height:100%; overflow:hidden">');
                 border.append(container);
@@ -70,7 +71,12 @@
                 that.wrapper.off("click", that.proxy.expand);
 
                 var tool = that.expanded = $('<div class="container-fluid op">');
-                tool.css("height", "100%");
+                tool.css({
+                    "height": "100%",
+                    "transition": "height .5s ease-in-out",
+                    "-webkit-transition": "height .5s ease-in-out",
+                    "overflow": "hidden"
+                });
                 that.getExpandedContent(tool);
                 that.container.css('display', 'none');
                 that.container.after(tool);
@@ -183,10 +189,7 @@
             "standBy": function() {
                 var that = this;
                 for(var i=0; i<that.listeners.length; i++) {
-                    that.off({
-                        route: that.options.path,
-                        event: that.listeners[i]
-                    });
+                    that.off(that.listeners[i]);
                 }
                 that.listeners = [];
             }
