@@ -350,6 +350,38 @@ var UserRoute = Route_io.inherit({
                 });
             });
         });
+
+        that.on("photoShortRequest", function(socket, data) {
+            User.findById(data, function(err, user) {
+                if (err) {
+                    return that.emit('error', socket, err.message);
+                }
+                var photos = user.data.photo;
+                var answer = [];
+                for (var i=0; i<6; i++) {
+                    if (photos.length == 0) {
+                        break;
+                    }
+                    var random = Math.floor(Math.random()*photos.length);
+                    answer.push(photos.splice(random, 1)[0]._id);
+                }
+                that.emit('photoShortResponse', socket, answer);
+            });
+        });
+
+        that.on("photoRequest", function(socket, data) {
+            User.findById(data, function(err, user) {
+                if (err) {
+                    return that.emit('error', socket, err.message);
+                }
+                var photos = user.data.photo;
+                var answer = [];
+                for (var i=0; i<photos.length; i++) {
+                    answer.push(photos[i]._id);
+                }
+                that.emit('photoResponse', socket, answer);
+            });
+        });
     }
 });
 

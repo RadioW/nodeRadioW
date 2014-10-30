@@ -11,11 +11,13 @@
     defineArray.push(m.$page);
     defineArray.push(m.widget.$info);
     defineArray.push(m.widget.$blog);
+    defineArray.push(m.widget.$photo);
 
     define(moduleName, defineArray, function registration_module(){
         var Page = require(m.$page);
         var Info = require(m.widget.$info);
         var Blog = require(m.widget.$blog);
+        var Photo = require(m.widget.$photo);
         var User = Page.inherit({
             "className": "User",
             "websocket": true,
@@ -31,6 +33,9 @@
                         userId: params.id
                     }),
                     blog: new Blog({
+                        userId: params.id
+                    }),
+                    photo: new Photo({
                         userId: params.id
                     })
                 };
@@ -109,6 +114,11 @@
                     case "blog":
                         that.jobs.push(function() {
                             that.widgets.blog.expand();
+                        });
+                        break;
+                    case "photo":
+                        that.jobs.push(function() {
+                            that.widgets.photo.expand();
                         });
                 }
             },

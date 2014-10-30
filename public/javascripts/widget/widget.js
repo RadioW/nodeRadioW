@@ -35,6 +35,7 @@
                 that.listeners = [];
                 that.initWrapper();
                 that.initProxy();
+                that.initSockets();
                 that.initContent();
                 that.initHandlers();
             },
@@ -65,18 +66,17 @@
                 var that = this;
                 that.wrapper.on("click", that.proxy.expand)
             },
+            "initSockets": function() {
+                var that = this;
+
+                console.log("Sockets for widget "+ that.options.path +" are ready");
+            },
             "expand": function() {
                 var that = this;
                 that.fullSized = true;
                 that.wrapper.off("click", that.proxy.expand);
 
-                var tool = that.expanded = $('<div class="container-fluid op">');
-                tool.css({
-                    "height": "100%",
-                    "transition": "height .5s ease-in-out",
-                    "-webkit-transition": "height .5s ease-in-out",
-                    "overflow": "hidden"
-                });
+                var tool = that.expanded = $('<div class="container-fluid widget-container">');
                 that.getExpandedContent(tool);
                 that.container.css('display', 'none');
                 that.container.after(tool);

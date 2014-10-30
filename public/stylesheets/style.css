@@ -500,3 +500,12 @@ div.widgetBorder:hover {
     word-break: break-word;
     word-wrap: break-word;
 }
+
+.widget-container {
+    opacity: 0;
+    position: relative;
+    -webkit-transition: opacity .5s ease-in-out, height .5s ease-in-out;
+    transition: opacity .5s ease-in-out, height .5s ease-in-out;
+    height: 100%;
+    overflow: hidden;
+}

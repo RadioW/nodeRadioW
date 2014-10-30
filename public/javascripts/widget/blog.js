@@ -28,7 +28,6 @@
 
                 Widget.fn.constructor.call(that, baseOptions);
                 that.blogs = [];
-                that.initSockets();
             },
             "appendLittleBlog": function(data) {
                 var that = this;
@@ -62,6 +61,7 @@
                         that.blogRoll.prepend(that.wrapBlog(data));
                     }
                 }, true);
+                Widget.fn.initSockets.call(that);
             },
             "getExpandedContent":function(container) {
                 var that = this;

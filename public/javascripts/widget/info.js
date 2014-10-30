@@ -26,7 +26,6 @@
 
                 $.extend(baseOptions, params);
                 Widget.fn.constructor.call(that, baseOptions);
-                that.initSockets();
             },
             "initContent": function() {
                 var that = this;
@@ -53,6 +52,7 @@
                     that.refreshAvatar();
                     that.userInfo.avatar = avatarID;
                 }, true);
+                Widget.fn.initSockets.call(that);
             },
             "wrap": function(name, value) {
                 var wrapper = $('<div class="row">');

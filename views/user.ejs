@@ -1,33 +1,3 @@
 <% if (!ajax) {layout('./layout/page')} -%>
 <% block('title', user.username) -%>
-<p class="lead text-center">Страница пользователя <%- user.username -%></p>
-
-<div class="col-lg-4 col-md-6 col-lg-4-v col-md-6-v col-sm-6 col-sm-6-v">
-	<a class="thumbnail thumbnail-v" href="/user/<%- user._id -%>/info">
-		<div class="container-fluid" id="userInfoMini">
-			<%- partial('./partials/userInterface/uInfoMini') -%>
-		</div>
-	</a>
-</div>
-
-<div class="col-lg-4 col-md-6 col-lg-4-v col-md-6-v col-sm-6 col-sm-6-v">
-	<a class="thumbnail thumbnail-v" href="/user/<%- user._id -%>/blog" style="overflow:hidden;">
-		<div class="container-fluid" id="userBlogMini" style="height:100%">
-			<%- partial('./partials/userInterface/uBlogMini') -%>
-		</div>
-	</a>
-</div>
-
-<div class="col-lg-4 col-md-6 col-lg-4-v col-md-6-v col-sm-6 col-sm-6-v">
-	<a class="thumbnail thumbnail-v" href="/user/<%- user._id -%>/photo" style="overflow:hidden;">
-		<div class="container-fluid" id="userPhotoMini">
-			<%- partial('./partials/userInterface/uPhotoMini') -%>
-		</div>
-	</a>
-</div>
-
-<div class="col-lg-4 col-md-6 col-lg-4-v col-md-6-v col-sm-6 col-sm-6-v">
-	<a class="thumbnail thumbnail-v" href="/#">
-		<div class="container-fluid" style="overflow:hidden;"></div>
-	</a>
-</div>
+<p class="lead text-center">Страница пользователя <%- user.username %></p>
