@@ -116,7 +116,7 @@ exports.savePhoto = function(req, res, next) {
 									if (err) {
                                         return callback({'err': err, 'fm': 'Failed to unlnk temp'});
                                     }
-									callback(null, user.data.photo.id(oID).link);
+									callback(null, oID);
 								});
 							});
 					});
@@ -162,32 +162,7 @@ exports.tool = function (req, res, next) {
 			if (err) {
                 return next(err);
             }
-		
-			switch (req.params.tool) {
-				case 'infoMini':
-					res.render('./partials/userInterface/uInfoMini', {user:user});
-					break;
-				case 'info':
-                    res.render('user', {ajax:ajax, user:user});
-					break;
-					
-				case 'blog':
-					res.render('user', {ajax:ajax, user:user});
-					break;
-				case 'blogMini':
-						res.render('./partials/userInterface/uBlogMini', {user:user});
-					break;
-					
-				case 'photo':
-					res.render('user', {ajax:ajax, user:user});
-					break;
-				case 'photoMini':
-					res.render('./partials/userInterface/uPhotoMini', {user:user});
-					break;	
-				
-				default:
-					return next(new HttpError(404, "There is no such tool"));
-			}
+            res.render('user', {ajax:ajax, user:user});
 		});
 	});
 };

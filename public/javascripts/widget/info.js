@@ -174,7 +174,8 @@
 
                 if (core.user.id == that.options.userId) {
                     var file = that.file = new Fileinput({
-                        "url": "/user/saveAvatar"
+                        "url": "/user/saveAvatar",
+                        "successMessage": "Аватар успешно загружен"
                     });
                     secondSection.append(file.wrapper);
                 }

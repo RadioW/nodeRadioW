@@ -509,3 +509,19 @@ div.widgetBorder:hover {
     height: 100%;
     overflow: hidden;
 }
+
+#miniPhotoRoll {
+    height:95%;
+    overflow:hidden;
+    -webkit-transition: opacity .3s ease-in-out;
+    transition: opacity .3s ease-in-out;
+}
+
+footer {
+    width: 100%;
+    height: 20px;
+    position: fixed;
+    bottom:0;
+    background-color: #ddddee ;
+    text-align: center;
+}

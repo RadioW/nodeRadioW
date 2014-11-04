@@ -9,9 +9,11 @@
 
     var defineArray = [];
     defineArray.push(m.$widget);
+    defineArray.push(m.$fileinput);
 
     define(moduleName, defineArray, function photo_module() {
         var Widget = require(m.$widget);
+        var Fileinput = require(m.$fileinput);
 
         var Photo = Widget.inherit({
             "className": "Photo",
@@ -31,10 +33,13 @@
                 var that = this;
                 Widget.fn.initContent.call(that);
 
-                var littlePhotos = that.littlePhotos = $('<div class="col-xs-12" style="height:95%; overflow:hidden" id="miniPhotoRoll">'); //todo
+                var littlePhotos = that.littlePhotos = $('<div class="col-xs-12" id="miniPhotoRoll">'); //todo
                 that.container.append($('<div class="row">').append(littlePhotos));
 
                 that.emit("photoShortRequest", that.options.userId);
+                setInterval(function() {
+                    that.emit("photoShortRequest", that.options.userId);
+                }, 60000);
             },
             "initSockets": function() {
                 var that = this;
@@ -43,7 +48,13 @@
                     setTimeout(function() {
                         that.littlePhotos.empty();
                         for (var i=0; i<data.length; i++) {
-                            that.littlePhotos.append($('<div class="photoPrev">').append($('<img src="/data/' + that.options.userId + '/photo/'+ data[i] +'prev.jpg">')));
+                            that.littlePhotos
+                                .append($('<div class="col-xs-6">')
+                                    .append($('<div class="row">').append($('<div class="photoPrev">').css({
+                                        "position": "relative",
+                                        "left": "11px"
+                                    })
+                                        .append($('<img src="/data/' + that.options.userId + '/photo/'+ data[i] +'prev.jpg">')))));
                         }
                         that.littlePhotos.css("opacity", 1);
                     }, 300);
@@ -52,6 +63,11 @@
             },
             "getExpandedContent": function(container) {
                 var that = this;
+
+                container.css({
+                    "padding-left": "10px",
+                    "padding-right": 0
+                });
 
                 that.expandedHeader = $('<p class="text-center lead">').html(that.options.name);
                 container.append(that.expandedHeader);
@@ -62,7 +78,7 @@
                 that.on("photoResponse", function(data) {
                     that.photoRoll.empty();
                     for (var i=0; i<data.length; i++) {
-                        that.photoRoll.append($('<div class="photoPrev">')
+                        that.photoRoll.append($('<div class="photoPrev" id="'+data[i]+'">')
                             .append($('<img src="/data/' + that.options.userId + '/photo/'+ data[i] +'prev.jpg">'))
                             .on("click", (function(i){
                                     return function() {
@@ -72,11 +88,56 @@
                         );
                     }
                 });
+
+                that.on('new photo', function(data) {
+                    for (var i=0; i<data.length; i++) {
+                        that.photoRoll.prepend($('<div class="photoPrev" id="'+data[i]+'">')
+                                .append($('<img src="/data/' + that.options.userId + '/photo/'+ data[i] +'prev.jpg">'))
+                                .on("click", (function(i){
+                                    return function() {
+                                        core.activePage.subscribeContent(that.options.userId, "photo", data[i]);
+                                    }
+                                })(i))
+                        );
+                    }
+                });
+
+                that.on('removed photo', function(id) {
+                    if ($('#'+id, that.expanded[0])[0]) {
+                        $('#'+id).remove();
+                    }
+                });
+
                 that.emit('photoRequest', that.options.userId);
+
+                if (core.user.id == that.options.userId) {
+                    var file = that.file = new Fileinput({
+                        "url": "/user/savePhoto",
+                        "multiple": true
+                    });
+                    container.append(file.wrapper);
+                    file.wrapper.css({
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        "text-align": "right"
+                    })
+                }
 
                 setTimeout(function() {
                     container.css("opacity", 1)
                 }, 300);
+            },
+            "standBy": function() {
+                var that = this;
+
+                Widget.fn.standBy.call(that);
+
+                if (that.file) {
+                    that.file.destructor();
+                    delete that.file;
+                }
             }
         });
 

@@ -20,7 +20,9 @@
                 var baseOptions = {
                     "title": "Browse",
                     "inputName": "file",
-                    "url": "/"
+                    "url": "/",
+                    "multiple": false,
+                    "successMessage": 'Фотография успешно загружена'
                 };
                 $.extend(baseOptions, params);
                 that.options = baseOptions;
@@ -38,7 +40,7 @@
                 var that = this;
 
                 var wrapper = that.wrapper = $('<div>');
-                var input = that.input = $('<input type="file" name="'+ that.options.inputName +'">');
+                var input = that.input = $('<input type="file" name="'+ that.options.inputName +'"'+ (that.options.multiple ? "multiple": "") +'>');
                 var form = that.form = $('<form enctype="multipart/form-data" method="POST">');
                 form.append($('<span class="btn btn-primary btn-file">').html(that.options.title)
                     .append(input));
@@ -91,7 +93,7 @@
                         statusCode: {
                             200: function() {
                                 progressBar.parent().css('display', 'none');
-                                launchModal('Аватар успешно загружен');
+                                launchModal(that.options.successMessage);
                             },
                             500: function(jqXHR) {
                                 var ans = JSON.parse(jqXHR.responseText);

@@ -376,7 +376,7 @@ var UserRoute = Route_io.inherit({
                 }
                 var photos = user.data.photo;
                 var answer = [];
-                for (var i=0; i<photos.length; i++) {
+                for (var i=photos.length-1; i>=0; i--) {
                     answer.push(photos[i]._id);
                 }
                 that.emit('photoResponse', socket, answer);

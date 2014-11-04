@@ -57,40 +57,8 @@
                 that.on('connection', function() {
                     that.emit('join', core.user.id);
                 });
-
-                that.on('new photo', function(files) {
-                    if (!$('#photoRoll').get(0)) return;
-                    for (var i=0; i<files.length; i++) {
-                        var img = document.createElement('img');
-                        img.src = files[i]+'prev.jpg';
-                        var slot = document.createElement('div');
-                        slot.className = 'photoPrev';
-                        slot.onclick = function() {
-                            var file = files[i].slice(files[i].lastIndexOf('/')+1);
-                            return function () {
-                                that.subscribeContent('<%- user._id -%>', 'photo', file);
-                            }
-                        }();
-                        slot.appendChild(img);
-                        $('#photoRoll').children('.row').prepend(slot);
-                    }
-                });
-
-
-
-                that.on('removed photo', function(id) {
-                    if ($('#'+id).get(0)) $('#'+id).remove();
-                });
-
                 that.on('error', function(err) {
                     launchModal('Извините, произошла ошибка!</br>'+err);
-                });
-
-                $('.thumbnail-v').each(function (i, quad) {
-                    quad.onclick = function() {
-                        showQuad(quad);
-                        return false;
-                    }
                 });
 
                 Page.fn.run.call(that);
@@ -120,6 +88,14 @@
                         that.jobs.push(function() {
                             that.widgets.photo.expand();
                         });
+                        break;
+                    default:
+                        return;
+                }
+                if (param.oid) {
+                    that.jobs.push(function() {
+                        that.subscribeContent(param.id, param.type, param.oid);
+                    });
                 }
             },
             "executeJobs": function() {
