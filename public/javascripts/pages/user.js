@@ -23,11 +23,12 @@
             "websocket": true,
             "constructor": function(params) {
                 var that = this;
-
+                that.userId = params.id;
                 Page.fn.constructor.call(that, {
                     html: params.html,
                     route: "user"
                 });
+
                 that.widgets = {
                     info: new Info({
                         userId: params.id
@@ -55,7 +56,7 @@
                 var that = this;
 
                 that.on('connection', function() {
-                    that.emit('join', core.user.id);
+                    that.emit('join', that.userId);
                 });
                 that.on('error', function(err) {
                     launchModal('Извините, произошла ошибка!</br>'+err);

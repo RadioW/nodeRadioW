@@ -124,31 +124,6 @@ function launchModal(message) {
 	$('#errorModal').modal();
 }
 
-function removePhoto(id) {
-		$.ajax({
-		url: '/user/removePhoto/'+id,
-		method: 'POST',
-		data: null,
-		statusCode: {
-			200: function() {
-				launchModal('Фотография успешно удалена');
-				if($('.photoScrollArrow').get(1)) return $('.photoScrollArrow').eq(1).trigger('click');
-				if($('.photoScrollArrow').get(0)) return $('.photoScrollArrow').eq(0).trigger('click');
-				//предусмотреть, что произойдет, если у пользователя не осталось фотографий после удаления
-			},
-			403: function() {
-				launchModal('Ошибка! Вам запрещена эта операция')
-			},
-			404: function() {
-				launchModal('Ошибка! В Вашей коллекции нет такой фотографии')
-			},
-			500: function() {
-				launchModal('Ошибка! Что-то пошло не так!')
-			}
-		}
-	});
-}
-
 function buildPostRequest (data, boundary) {
 	var boundaryMiddle = '--'+boundary+'\r\n';
 	var boundaryLast = '--'+boundary+'--\r\n';

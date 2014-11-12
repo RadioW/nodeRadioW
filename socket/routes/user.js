@@ -9,6 +9,7 @@ var User = require('../../models/user').User;
 var tools = require('../../libs/tools');
 var ObjectID = require('mongodb').ObjectID;
 var extend = require('extend');
+var fs = require('fs');
 
 var UserRoute = Route_io.inherit({
     "className": "UserRoute_io",
@@ -125,27 +126,56 @@ var UserRoute = Route_io.inherit({
             }
         });
 
-        that.on('blog', function (socket, message) {
+        that.on('blog', function (socket, data) {
             User.findById(socket.request.session.user, function (err, user) {
                 if (err) return that.emit('error', socket, err.message);
-                message = message.replace(/\n/g, "<br/>");
-                user.data.blog.push({
-                    link: 'none',
-                    message: message,
-                    author: user._id
-                });
-                user.save(function (err) {
-                    if (err) return that.emit('error', socket, err.message);
-                    that.to(socket.request.watch, 'newBlog', {
-                        message: message,
-                        date: Date.now(),
-                        author: {
-                            username: user.username,
-                            _id: user._id
-                        },
-                        _id: user.data.blog[user.data.blog.length - 1]._id
+                data.message = data.message.replace(/\n/g, "<br/>");
+                if (data.editing) {
+                    var post = user.data.blog.id(data.editing);
+                    post.message = data.message;
+                    post.date = Date.now();
+                    post.meta.push({
+                        status: "remarked",
+                        date: Date.now()
                     });
-                });
+                    user.save(function (err) {
+                        if (err) return that.emit('error', socket, err.message);
+                        that.to(socket.request.watch, 'remarkedBlog', {
+                            message: data.message,
+                            date: Date.now(),
+                            author: {
+                                username: user.username,
+                                _id: user._id
+                            },
+                            _id: data.editing
+                        });
+                    });
+                } else {
+                    user.data.blog.push({
+                        link: 'none',
+                        message: data.message,
+                        author: user._id,
+                        meta: [
+                            {
+                                status: "normal",
+                                date: Date.now()
+                            }
+                        ]
+                    });
+
+                    user.save(function (err) {
+                        if (err) return that.emit('error', socket, err.message);
+                        that.to(socket.request.watch, 'newBlog', {
+                            message: data.message,
+                            date: Date.now(),
+                            author: {
+                                username: user.username,
+                                _id: user._id
+                            },
+                            _id: user.data.blog[user.data.blog.length - 1]._id
+                        });
+                    });
+                }
             });
         });
 
@@ -380,6 +410,46 @@ var UserRoute = Route_io.inherit({
                     answer.push(photos[i]._id);
                 }
                 that.emit('photoResponse', socket, answer);
+            });
+        });
+
+        that.on("contentRemove", function(socket, data) {
+            User.findById(data.uid, function(err, user) {
+                if (err) {
+                    return that.emit('error', socket, err.message);
+                }
+                if (user._id != socket.request.session.user) {
+                    return that.emit('error', socket, "You have no permission to remove that content");
+                }
+                var content = user.data[data.type].id(data.oid);
+                if (!content) {
+                    return that.emit('error', socket, "There is no such content");
+                }
+                user.data[data.type].splice(user.data[data.type].indexOf(content), 1);
+                user.save(function(err) {
+                    if (err) {
+                        return that.emit('error', socket, "Unable to save element in database");
+                    }
+                    that.to(socket.request.subscription, "contentRemoved", content._id);
+                    switch (data.type) {
+                        case "photo":
+                            fs.unlink('./public' + content.link + '.jpg', function (err) {
+                                if (err) {
+                                    return that.emit('error', socket, err.message);
+                                }
+                                fs.unlink('./public' + content.link + 'prev.jpg', function (err) {
+                                    if (err) {
+                                        return that.emit('error', socket, err.message);
+                                    }
+                                    that.to(socket.request.watch, "removed photo", content._id);
+                                });
+                            });
+                            break;
+                        case "blog":
+                            that.to(socket.request.watch, "removed blog", content._id);
+                            break;
+                    }
+                });
             });
         });
     }

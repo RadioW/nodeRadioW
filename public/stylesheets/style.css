@@ -452,6 +452,7 @@ p.contentText {
     word-wrap: break-word;
     word-break: break-all;
     text-align: left;
+    min-height: 160px;
 }
 
 div.widgetBorder {

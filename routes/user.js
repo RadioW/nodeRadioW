@@ -215,7 +215,7 @@ exports.tool = function (req, res, next) {
 	});
 };*/
 
-exports.photo = function (req, res, next) {
+/*exports.photo = function (req, res, next) {
     var objectToRender = {};
     tool.checkObjectID(req.params.id, function(err) {
         if (err) {
@@ -244,7 +244,7 @@ exports.photo = function (req, res, next) {
             });
         });
     });
-};
+};*/
 
 exports.photoDescription = function (req, res, next) {
 	tool.checkObjectID(req.params.id, function(err) {
@@ -366,40 +366,4 @@ exports.makeAvatar = function(req, res, next) {
 					});
 			});
 		});
-};
-
-exports.removePhoto = function(req, res, next) {
-	tool.checkObjectID(req.params.id, function(err) {
-		if (err) {
-            return next(err);
-        }
-		var photo = req.self.data.photo.id(req.params.id);
-		if (!photo) {
-            return next(new HttpError(404, 'No such photo registred'));
-        }
-		var index = req.self.data.photo.indexOf(photo);
-		req.self.data.photo.splice(index, 1);
-		req.self.save(function(err) {
-            if (err) {
-                return next(new HttpError(500, 'Unable to save element in database'));
-            }
-			fs.unlink('./public'+photo.link+'.jpg', function(err) {
-				if (err) {
-                    next(err);
-                }
-				fs.unlink('./public'+photo.link+'prev.jpg', function(err) {
-					if (err) {
-                        next(err);
-                    }
-					var io = req.app.get('io');
-					io.of('/main').to(req.self._id).emit('event', {
-                        route: "user",
-                        event: "removed photo",
-                        data: photo._id
-                    });
-					return next();
-				});
-			});
-		});
-	});
 };

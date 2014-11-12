@@ -9,9 +9,11 @@
 
     var defineArray = [];
     defineArray.push(m.$widget);
+    defineArray.push(m.$blog);
 
     define(moduleName, defineArray, function blog_module() {
         var Widget = require(m.$widget);
+        var CBlog = require(m.$blog);
 
         var Blog = Widget.inherit({
             "className": "Blog",
@@ -24,6 +26,7 @@
                 };
                 $.extend(baseOptions, params);
                 that.options = baseOptions;
+                that.blogs = {};
                 that.writerModeOn = false;
 
                 Widget.fn.constructor.call(that, baseOptions);
@@ -58,7 +61,23 @@
                 that.on('newBlog', function(data) {
                     that.appendLittleBlog(data);
                     if (that.fullSized) {
-                        that.blogRoll.prepend(that.wrapBlog(data));
+                        that.blogs[data._id] = new CBlog(data);
+                        that.blogRoll.prepend(that.blogs[data._id].wrapper);
+                    }
+                }, true);
+
+                that.on('remarkedBlog', function(data) {
+                    that.emit('requestBlogShort', that.options.userId);
+                    if (that.fullSized) {
+                        that.blogs[data._id].set(data);
+                    }
+
+                }, true);
+
+                that.on('removed blog', function(data) {
+                    that.emit('requestBlogShort', that.options.userId);
+                    if (that.fullSized) {
+                        $('#'+data, that.expanded[0]).remove();
                     }
                 }, true);
                 Widget.fn.initSockets.call(that);
@@ -95,7 +114,8 @@
 
                 that.on('responseBlogListFull', function(data) {
                     for (var i=0; i<data.length; i++) {
-                        that.blogRoll.append(that.wrapBlog(data[i]));
+                        that.blogs[data[i]._id] = new CBlog(data[i]);
+                        that.blogRoll.prepend(that.blogs[data[i]._id].wrapper);
                     }
                 });
             },
@@ -107,6 +127,12 @@
                     that.writerMode();
                 }
 
+                for (var key in that.blogs) {
+                    if (that.blogs.hasOwnProperty(key)) {
+                        that.blogs[key].destructor();
+                    }
+                }
+                that.blogs = {};
             },
             "writerMode": function() {
                 var that = this;
@@ -116,6 +142,10 @@
                     setTimeout(function() {
                         that.editor.css("display", "none");
                         that.writerModeOn = false;
+                        if (that.editingBlog) {
+                            that.textarea.val("");
+                            that.editingBlog = undefined;
+                        }
                     }, 500);
                 } else {
                     var editor = that.editor;
@@ -129,7 +159,7 @@
                         });
                         that.border.append(editor);
                         editor.append($('<p class="text-center lead">').html('Новый блог'));
-                        var area = $('<textarea class="form-control blogArea" name="message">');
+                        var area = that.textarea = $('<textarea class="form-control blogArea" name="message">');
                         editor.append(area.height(that.expanded.height() - that.expandedHeader.height() - parseFloat(that.expandedHeader.css("margin-bottom")) - 2));
                         var closeButton = $('<button class="btn btn-primary">').append($('<i class="glyphicon glyphicon-pencil">')).css({
                             position: "absolute",
@@ -143,7 +173,10 @@
                             top: 0,
                             right: "45px"
                         }).on("click", function() {
-                            that.emit('blog', area.val());
+                            that.emit('blog', {
+                                message: area.val(),
+                                editing: that.editingBlog
+                            });
                             area.val("");
                             that.writerMode();
                         });
@@ -156,18 +189,6 @@
                     });
                     that.expanded.css("height", 0);
                 }
-            },
-            "wrapBlog": function(data) {
-                var that = this;
-                var wrapper = $('<div class="bg-info blog-full">');
-                wrapper.append($('<p>').html(data.message));
-                wrapper.append($('<em>').html(data.author.username +' '+datify(data.date)));
-                wrapper.on('click', (function(id) {
-                    return function() {
-                        core.activePage.subscribeContent(that.options.userId, "blog", id);
-                    }
-                })(data._id));
-                return wrapper;
             }
         });
 

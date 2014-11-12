@@ -21,10 +21,9 @@ module.exports = function (app) {
 	app.post('/user/savePhoto', express.multipart({uploadDir: './temp'}), forAuth, userRoute.savePhoto, answerOK);
 	app.post('/user/saveAvatar', express.multipart({uploadDir: './temp'}), forAuth, userRoute.savePhoto, userRoute.makeAvatar, answerOK);
 	app.post('/user/makeAvatar/:id', forAuth, userRoute.prepareAva, userRoute.makeAvatar, answerOK);
-	app.post('/user/removePhoto/:id', forAuth, userRoute.removePhoto, answerOK);
 	app.post('/user/photoDescription/:id', forAuth, userRoute.photoDescription);
-	app.get('/user/:id/photo/:pid', userRoute.photo);
-	app.get('/user/:id/:tool', userRoute.tool);
+	app.get('/user/:id/:tool/:pid', userRoute.tool);
+    app.get('/user/:id/:tool', userRoute.tool);
 	
 	app.get('/conclave', forAuth, forAdmin, require('./conclave').get);
 	app.post('/conclave/give', forAuth, forAdmin, require('./conclave').give);

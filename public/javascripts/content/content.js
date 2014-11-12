@@ -88,8 +88,9 @@
             },
             "appendContent": function(_params) {
                 var that = this;
+                that.bars = {};
                 if (_params.content.next) {
-                    var leftBar = $('<div class="contentScrollArrow" style="left:0">');
+                    var leftBar = that.bars.left = $('<div class="contentScrollArrow" style="left:0">');
                     leftBar.on('click', function () {
                         core.activePage.subscribeContent(_params.user.id, _params.content.next.type, _params.content.next.id);
                     });
@@ -100,7 +101,7 @@
                     that.contentWrapper.css("height", "");
                 }
                 if (_params.content.prev) {
-                    var rightBar = $('<div class="contentScrollArrow" style="right:0">');
+                    var rightBar = that.bars.right = $('<div class="contentScrollArrow" style="right:0">');
                     rightBar.on('click', function () {
                         core.activePage.subscribeContent(_params.user.id, _params.content.prev.type, _params.content.prev.id);
                     });
@@ -124,11 +125,13 @@
             },
             "setDescription": function(_description) {
                 var that = this;
-                if (that.content.type == "blog") {
-                    return;
-                }
+
                 if (that.descriptionWrapper) {
                     that.descriptionWrapper.remove();
+                }
+
+                if (that.content.type == "blog") {
+                    return;
                 }
                 that.descriptionWrapper = $('<div>');
                 that.description = _description;
@@ -144,23 +147,47 @@
             },
             "setButtons": function(_params) {
                 var that = this;
+                if (core.user.id !== _params.user.id) {
+                    return;
+                }
+                if (!_params.content.isAvatar) {
+                    var buttonRemove = $('<button type="button" class="btn btn-danger">');
+                    buttonRemove.on('click', function () {
+                        that.removeContent();
+                    });
+                    buttonRemove.html('Удалить');
+                    that.buttons.append(buttonRemove);
+                }
+
                 switch (_params.content.type) {
                     case 'photo':
-                        if (core.user.id == _params.user.id && !_params.content.isAvatar) {
-                            var buttonRemove = $('<button type="button" class="btn btn-danger">');
-                            buttonRemove.on('click', function () {
-                                removePhoto(that.content.id);
-                            });
-                            buttonRemove.html('Удалить');
+                        if (!_params.content.isAvatar) {
                             var buttonMakeAvatar = $('<button type="button" class="btn btn-primary">');
                             buttonMakeAvatar.on('click', function () {
                                 that.makeThisAva();
                             });
                             buttonMakeAvatar.html('Сделать аватаркой');
-                            that.buttons.append(buttonRemove);
                             that.buttons.append(buttonMakeAvatar);
                         }
                         break;
+                    case 'blog':
+                        var buttonEditBlog = $('<button type="button" class="btn btn-primary">');
+                        buttonEditBlog.on('click', function () {
+                            if (core.activePage.title == "user") {
+                                var message = $('.contentText', that.contentWrapper[0]).html().replace(/<br\/>|<br>/g, "\n"); //todo - that's not good solution
+                                that.hide(true);
+                                if (!core.activePage.widgets.blog.fullSized) {
+                                    core.activePage.widgets.blog.expand();
+                                }
+                                if (!core.activePage.widgets.blog.writerModeOn) {
+                                    core.activePage.widgets.blog.writerMode();
+                                }
+                                core.activePage.widgets.blog.editingBlog = that.content.id; //TODO
+                                core.activePage.widgets.blog.textarea.val(message);
+                            }
+                        });
+                        buttonEditBlog.html('Редактировать');
+                        that.buttons.append(buttonEditBlog);
                 }
             },
             "initHandlers": function() {
@@ -184,7 +211,7 @@
             },
             "show": function(_params, notPushState) {
                 var that = this;
-                if (!that.hidden) {
+                if (!that.isHidden) {
                     that.clear();
                 }
                 that.content.id = _params.content.id;
@@ -198,7 +225,8 @@
                 that.setButtons(_params);
 
                 if (!notPushState) {
-                    that.savedLink = window.location.href;
+                    if (that.isHidden)
+                        that.savedLink = window.location.href;
                     history.pushState(null, null, '/user/' + that.user.id + '/' + that.content.type + '/' + that.content.id);
                 }
 
@@ -234,9 +262,11 @@
                     }
                 }
             },
-            "hide": function() {
+            "hide": function(pushState) {
                 var that = this;
-                that.notPushState = true;
+                if (!pushState) {
+                    that.notPushState = true;
+                }
                 that.wrapper.modal('hide');
             },
             "dropDescriptionEditing": function() {
@@ -338,6 +368,21 @@
                     }
                 });
 
+                core.connection.listen({
+                    route: "user",
+                    event: "contentRemoved",
+                    handler: function(data) {
+                        if (that.content.id == data) {
+                            if (that.bars.left) {
+                                that.bars.left.trigger("click");
+                            } else if (that.bars.right) {
+                                that.bars.right.trigger("click");
+                            } else {
+                                that.hide(true);
+                            }
+                        }
+                    }
+                });
             },
             "makeThisAva": function() {
                 var that = this;
@@ -359,6 +404,18 @@
                         500: function() {
                             launchModal('Ошибка! Что-то пошло не так!')
                         }
+                    }
+                });
+            },
+            "removeContent": function() {
+                var that = this;
+                core.connection.socket.emit('event', {
+                    route: "user",
+                    event: "contentRemove",
+                    data: {
+                        uid: that.user.id,
+                        type: that.content.type,
+                        oid: that.content.id
                     }
                 });
             }
