@@ -21,6 +21,7 @@
                 Class.call(that);
 
                 that.userId = core.activePage.userId;
+                that.commentCount = 0;
                 that.initWrapper();
                 that.set(params)
             },
@@ -40,19 +41,27 @@
                 wrapper.append(that.messageWrapper);
                 that.authorityWrapper = $('<em>');
                 wrapper.append(that.authorityWrapper);
+                that.commentsWrapper = $('<span>').css("margin-left", "5px");
+
+                wrapper.append($("<div>").append($('<i class="glyphicon glyphicon-comment">')).append(that.commentsWrapper).css({
+                    "position": "absolute",
+                    "bottom": 0,
+                    "right": 0
+                }));
                 wrapper.on('click', function() {
                     core.activePage.subscribeContent(that.userId, "blog", that.id);
                 });
             },
             "set": function(params) {
                 var that = this;
-                that.id = params._id;
-                that.message = params.message;
+                that.id = params._id || that.id;
+                that.message = params.message || that.message;
                 that.author = {
-                    username: params.author.username,
-                    id: params.author._id
+                    username: params.author.username || that.author.username,
+                    id: params.author._id || that.author.id
                 };
-                that.date = params.date;
+                that.date = params.date || that.date;
+                that.commentCount = params.comments || that.commentCount;
                 that.refresh();
             },
             "refresh": function() {
@@ -61,6 +70,7 @@
                 that.wrapper.attr('id', that.id);
                 that.messageWrapper.html(that.message);
                 that.authorityWrapper.html(that.author.username +' '+datify(that.date));
+                that.commentsWrapper.html(that.commentCount);
             }
         });
 

@@ -147,7 +147,8 @@ var UserRoute = Route_io.inherit({
                                 username: user.username,
                                 _id: user._id
                             },
-                            _id: data.editing
+                            _id: data.editing,
+                            comment: post.comments.length
                         });
                     });
                 } else {
@@ -373,7 +374,8 @@ var UserRoute = Route_io.inherit({
                             author: {
                                 _id: blog[i].author._id,
                                 username: blog[i].author.username
-                            }
+                            },
+                            comments: blog[i].comments.length
                         });
                     }
                     that.emit('responseBlogListFull', socket, array);
