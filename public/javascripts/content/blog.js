@@ -49,7 +49,7 @@
                     "right": 0
                 }));
                 wrapper.on('click', function() {
-                    core.activePage.subscribeContent(that.userId, "blog", that.id);
+                    core.content.subscribe(that.userId, "blog", that.id);
                 });
             },
             "set": function(params) {

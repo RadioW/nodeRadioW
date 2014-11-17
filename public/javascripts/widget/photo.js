@@ -29,6 +29,12 @@
 
                 Widget.fn.constructor.call(that, baseOptions);
             },
+            "destructor": function() {
+                var that = this;
+
+                clearInterval(that.requester);
+                Widget.fn.destructor.call(that);
+            },
             "initContent": function() {
                 var that = this;
                 Widget.fn.initContent.call(that);
@@ -37,7 +43,7 @@
                 that.container.append($('<div class="row">').append(littlePhotos));
 
                 that.emit("photoShortRequest", that.options.userId);
-                setInterval(function() {
+                that.requester = setInterval(function() {
                     that.emit("photoShortRequest", that.options.userId);
                 }, 60000);
             },
@@ -82,7 +88,7 @@
                             .append($('<img src="/data/' + that.options.userId + '/photo/'+ data[i] +'prev.jpg">'))
                             .on("click", (function(i){
                                     return function() {
-                                        core.activePage.subscribeContent(that.options.userId, "photo", data[i]);
+                                        core.content.subscribe(that.options.userId, "photo", data[i]);
                                     }
                                 })(i))
                         );
@@ -95,7 +101,7 @@
                                 .append($('<img src="/data/' + that.options.userId + '/photo/'+ data[i] +'prev.jpg">'))
                                 .on("click", (function(i){
                                     return function() {
-                                        core.activePage.subscribeContent(that.options.userId, "photo", data[i]);
+                                        core.content.subscribe(that.options.userId, "photo", data[i]);
                                     }
                                 })(i))
                         );

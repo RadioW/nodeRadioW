@@ -169,7 +169,7 @@
                     firstSection.append(wrap("Адрес в Twitter", that.userInfo.contacts.Twitter));
                 }
                 secondSection.append($('<div>').on('click', function() {
-                    core.activePage.subscribeContent(that.options.userId, "photo", that.userInfo.avatar);
+                    core.content.subscribe(that.options.userId, "photo", that.userInfo.avatar);
                 }).append('<img src="/data/'+ that.options.userId +'/avatar.jpg?'+ Math.random() +'" style="max-width:100%" id="avatar">'));
 
                 if (core.user.id == that.options.userId) {

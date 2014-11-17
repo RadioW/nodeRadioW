@@ -68,7 +68,7 @@
 
                 var commentForm = that.commentForm = $('<form class="comment">');
                 commentForm.on('submit', function (e) {
-                    core.activePage.emit("comment", {
+                    that.emit("comment", {
                         type: that.content.type,
                         id: that.content.id,
                         message: that.commentArea.val()
@@ -92,7 +92,7 @@
                 if (_params.content.next) {
                     var leftBar = that.bars.left = $('<div class="contentScrollArrow" style="left:0">');
                     leftBar.on('click', function () {
-                        core.activePage.subscribeContent(_params.user.id, _params.content.next.type, _params.content.next.id);
+                        that.subscribe(_params.user.id, _params.content.next.type, _params.content.next.id);
                     });
                     that.contentWrapper.append(leftBar);
                 }
@@ -103,7 +103,7 @@
                 if (_params.content.prev) {
                     var rightBar = that.bars.right = $('<div class="contentScrollArrow" style="right:0">');
                     rightBar.on('click', function () {
-                        core.activePage.subscribeContent(_params.user.id, _params.content.prev.type, _params.content.prev.id);
+                        that.subscribe(_params.user.id, _params.content.prev.type, _params.content.prev.id);
                     });
                     that.contentWrapper.append(rightBar);
                 }
@@ -196,11 +196,11 @@
                 that.wrapper.on('hidden.bs.modal', function() {
                     that.isHidden = true;
                     that.clear();
-                    core.activePage.emit('unsubscribe');
+                    that.emit('unsubscribe');
                     if (!that.notPushState) {
                         var temp = that.user.id + "/" + that.content.type + "/";
                         var link = that.savedLink || temp;
-                        history.pushState(null, null, link); //todo it's a mistake!
+                        history.pushState(null, null, link);
                         that.savedLink = undefined;
                     }
                     that.notPushState = false;
@@ -329,7 +329,7 @@
                 var that = this;
 
                 core.connection.listen({
-                    route: "user",
+                    route: "content",
                     event: "new comment",
                     handler: function(data) {
                         that.addComment(data);
@@ -337,7 +337,7 @@
                 });
 
                 core.connection.listen({
-                    route: "user",
+                    route: "content",
                     event: "remark comment",
                     handler: function(data) {
                         if (that.comments[data.commentID]) {
@@ -347,7 +347,7 @@
                 });
 
                 core.connection.listen({
-                    route: "user",
+                    route: "content",
                     event: "remove comment",
                     handler: function(data) {
                         var comment = that.comments[data];
@@ -361,7 +361,7 @@
                     }
                 });
                 core.connection.listen({
-                    route: "user",
+                    route: "content",
                     event: "subscription",
                     handler: function(data) {
                         that.show(data);
@@ -369,7 +369,7 @@
                 });
 
                 core.connection.listen({
-                    route: "user",
+                    route: "content",
                     event: "contentRemoved",
                     handler: function(data) {
                         if (that.content.id == data) {
@@ -383,6 +383,13 @@
                         }
                     }
                 });
+                core.connection.listen({
+                    route: "content",
+                    event: "error",
+                    handler: function(data) {
+                        launchModal('Извините, произошла ошибка!</br>'+data);
+                    }
+                });
             },
             "makeThisAva": function() {
                 var that = this;
@@ -393,7 +400,7 @@
                     statusCode: {
                         200: function() {
                             launchModal('Аватар успешно изменен');
-                            core.activePage.subscribeContent(that.user.id, that.content.type, that.content.id);
+                            that.subscribe(that.user.id, that.content.type, that.content.id);
                         },
                         403: function() {
                             launchModal('Ошибка! Вам запрещена эта операция')
@@ -409,15 +416,27 @@
             },
             "removeContent": function() {
                 var that = this;
-                core.connection.socket.emit('event', {
-                    route: "user",
-                    event: "contentRemove",
-                    data: {
-                        uid: that.user.id,
-                        type: that.content.type,
-                        oid: that.content.id
-                    }
+                that.emit("contentRemove", {
+                    uid: that.user.id,
+                    type: that.content.type,
+                    oid: that.content.id
                 });
+            },
+            "subscribe": function(userId, type, contentId) {
+                this.emit("subscribe", {
+                        userId: userId,
+                        contentType: type,
+                        contentId: contentId
+                    });
+                return this;
+            },
+            "emit": function(event, data) {
+                core.connection.socket.emit('event', {
+                    route: "content",
+                    event: event,
+                    data: data || {}
+                });
+                return this;
             }
         });
 

@@ -48,6 +48,11 @@
                 var that = this;
 
                 that.jobs = undefined;
+                for (var key in that.widgets) {
+                    if (that.widgets.hasOwnProperty(key)) {
+                        that.widgets[key].destructor();
+                    }
+                }
                 that.widgets = undefined;
 
                 Page.fn.destructor.call(that);
@@ -63,13 +68,6 @@
                 });
 
                 Page.fn.run.call(that);
-            },
-            "subscribeContent": function (userId, type, contentId) {
-                this.emit('subscribe', {
-                    userId: userId,
-                    contentType: type,
-                    contentId: contentId
-                });
             },
             "openWidgets": function(param) {
                 var that = this;

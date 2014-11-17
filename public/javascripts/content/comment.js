@@ -61,7 +61,7 @@
 
                     var removeButton = that.removeButton = $('<button class="btn btn-danger btn-xs">');
                     removeButton.on("click", function() {
-                        core.activePage.emit("comment remove", {
+                        core.content.emit("comment remove", {
                             type: that.type,
                             id: that.contentId,
                             oid: that.id
@@ -97,7 +97,7 @@
 
                 var button = $('<button class="btn btn-primary">').html("Сохранить");
                 button.on("click", function() {
-                    core.activePage.emit('comment remark', {
+                    core.content.emit('comment remark', {
                         type: that.type,
                         id: that.contentId,
                         oid: that.id,
