@@ -174,6 +174,24 @@ var UserRoute = Route_io.inherit({
                 that.emit('photoResponse', socket, answer);
             });
         });
+
+        that.on("messageListRequest", function(socket, data) {
+            if (!socket.request.session.user) return that.emit('error', socket, 'Ошибка! Вы не авторизованы! Отправка сообщений и просмотр диалогов невозможны!');
+            User.findById(socket.request.watch, function(err, user) {
+                if (err) {
+                    return that.emit('error', socket, err.message);
+                }
+                var dialogue = user.data.dialogues[socket.request.session.user];
+                if (dialogue && dialogue.length) {
+                    var answer = [];
+                    for (var i=dialogue.length - 1 - data.lastIndex; i >= 0; --i) {
+                        answer.push({
+
+                        })
+                    }
+                }
+            });
+        });
     }
 });
 

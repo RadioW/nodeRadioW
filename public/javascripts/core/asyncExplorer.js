@@ -90,7 +90,7 @@
                 address[address.length-1] = address[address.length-1].split("?")[0];
                 route = (address.length == 1) || (address.length == 3 && address[1] === "") ? "main" : address[address.length-1].length > 23 ? address[address.length-2] : address[address.length-1];
 
-                if (route == "blog" || route == "photo" || route == "info") {
+                if (route == "blog" || route == "photo" || route == "info" || route == "messages") {
                     core.activePage = new that.pages[ route == address[address.length - 1] ? address[address.length - 3] :address[address.length - 4] ]({
                         html: html,
                         type: route,

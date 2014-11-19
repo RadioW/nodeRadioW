@@ -4,54 +4,36 @@
 "use strict";
 
 (function commentjs(){
-    var moduleName = m.$comment;
+    var moduleName = m.message.$comment;
     requirejs._moduleLoad(moduleName);
 
     var defineArray = [];
-    defineArray.push(m.$class);
+    defineArray.push(m.$message);
 
     define(moduleName, defineArray, function comment_module(){
-        var Class = require(m.$class);
+        var Message = require(m.$message);
 
-        var Comment = Class.inherit({
+        var Comment = Message.inherit({
             "className": "Comment",
             "constructor": function(param) {
                 var that = this;
+                Message.fn.constructor.call(that, param);
 
-                Class.call(that);
+                $.extend(that.stateList, {
+                    "removed": that.pseudoRemove
+                });
 
-                that.author = param.commentator.id;
-                that.authorName = param.commentator.name;
-                that.type = param.type;
-                that.status = param.status;
-                that.id = param.commentID;
-                that.contentId = param.id;
-
-                that.initWrapper();
-                if (that.status == "removed") {
-                    that.pseudoRemove();
-                } else {
-                    that.remark(param);
-                }
+                that.status(that.state);
+            },
+            "initParams": function(params) {
+                Message.fn.initParams.call(this, params);
+                this.contentId = params.contentId
             },
             "initWrapper": function() {
                 var that = this;
-                var main = that.wrapper = $('<div class="comment" id="'+that.id+'">');
-                var leftLayout = $('<div>');
-                var authorPicture = $('<a href="/user/'+that.author+'/">');
-                var authorImg = $('<img src="/data/' + that.author + '/avatar-xs.jpg">');
-                authorPicture.append(authorImg);
-                leftLayout.append(authorPicture);
 
-                var rightLayout = that.rLayout = $('<div style="width:90%">');
-                var infoDiv = that.infoDiv = $('<div>');
-                var authorLink = $('<a href="/user/'+that.author+'/">');
-                authorLink.html( that.authorName);
-                infoDiv.append(authorLink);
-                var date = that.dateWrapper = $('<span>');
-                infoDiv.append(date);
-
-                if (that.author == core.user.id) {
+                Message.fn.initWrapper.call(that);
+                if (that.user.id == core.user.id) {
                     var editButton = that.editButton = $('<button class="btn btn-primary btn-xs">');
                     editButton.on("click", function () {
                         editButton.prop("disabled", true);
@@ -69,14 +51,9 @@
                     });
                     removeButton.html("<i class='glyphicon glyphicon-remove'></i>");
 
-                    infoDiv.append(editButton);
-                    infoDiv.append(removeButton);
+                    that.infoDiv.append(editButton);
+                    that.infoDiv.append(removeButton);
                 }
-                var message = that.messageWrapper = $('<div>');
-                rightLayout.append(infoDiv);
-                rightLayout.append(message);
-                main.append(leftLayout);
-                main.append(rightLayout);
             },
             "initRemark": function() {
                 var that = this;
@@ -110,14 +87,11 @@
                 form.append(button);
             },
             "remark": function(_params) {
-                var that = this;
-                that.message = _params.message;
-                that.messageWrapper.html(_params.message);
-                that.dateWrapper.html(" " + datify(_params.date) + " ");
+                this.initContent(_params);
             },
             "pseudoRemove": function() {
                 var that = this; //todo baaaad solution;
-                that.status = "removed";
+                that.state = "removed";
                 //that.wrapper.style.backgroundColor = "#DDDDDD"; that looks not so good =(
                 that.message = "";
                 that.messageWrapper.empty();

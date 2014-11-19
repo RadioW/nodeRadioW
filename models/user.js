@@ -73,7 +73,8 @@ var schema = new Schema({
   data: {
 	blog:[userData],
 	photo:[userData],
-	comments:[userData]
+	comments:[userData],
+    dialogues: {}
   }
 });
 

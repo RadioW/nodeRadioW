@@ -110,9 +110,10 @@
                         top: '0px',
                         left: '0px'
                     });
+
                     history.pushState(null, null, that.href);
                     cover.on("click", that.proxy.collapse);
-                }, 1)
+                }, 20);
             },
             "collapse": function() {
                 var that = this;
@@ -163,9 +164,6 @@
             },
             "emit": function() {
                 Page.fn.emit.apply(this, arguments);
-            },
-            "subscribeContent": function(id) {
-                core.activePage.subscribeContent(this.options.userId, this.options.path, id);
             },
             "getExpandedContent": function(container) {
                 var that = this;

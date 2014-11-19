@@ -73,15 +73,15 @@ var ContentRoute = Route_io.inherit({
                                 ansComments.push({
                                     message: comment.message,
                                     date: comment.date,
-                                    commentator: {
+                                    user: {
                                         id: comment.author._id,
                                         name: comment.author.username
                                     },
                                     type: data.contentType,
-                                    id: content._id,
-                                    commentID: comment._id,
+                                    contentId: content._id,
+                                    id: comment._id,
                                     index: i,
-                                    status: comment.meta[comment.meta.length - 1].status
+                                    state: comment.meta[comment.meta.length - 1].status
                                 });
                             }
                             var answer = {
@@ -163,15 +163,15 @@ var ContentRoute = Route_io.inherit({
                             that.to(socket.request.subscription, 'new comment', {
                                 message: message,
                                 date: Date.now(),
-                                commentator: {
+                                user: {
                                     id: commentator._id,
                                     name: commentator.username
                                 },
                                 type: data.type,
-                                id: data.id,
-                                commentID: oid,
+                                contentId: data.id,
+                                id: oid,
                                 index: user.data[data.type].id(data.id).comments.length - 1,
-                                status: "normal"
+                                state: "normal"
                             });
                         });
                     });
@@ -216,8 +216,8 @@ var ContentRoute = Route_io.inherit({
                         message: message,
                         date: Date.now(),
                         type: data.type,
-                        id: data.id,
-                        commentID: comment._id
+                        contentId: data.id,
+                        id: comment._id
                     });
                 });
             });

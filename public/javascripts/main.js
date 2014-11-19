@@ -23,7 +23,8 @@
             "widget": {
                 "$info": "/javascripts/widget/info.js",
                 "$blog": "/javascripts/widget/blog.js",
-                "$photo": "/javascripts/widget/photo.js"
+                "$photo": "/javascripts/widget/photo.js",
+                "$messages": "/javascripts/widget/messages.js"
             },
             $asyncExplorer : "/javascripts/core/asyncExplorer.js",
             $connection: "/javascripts/core/connection.js",
@@ -42,8 +43,11 @@
             },
             $fileinput: "/javascripts/ui/fileinput.js",
             $content: "/javascripts/content/content.js",
-            $comment: "/javascripts/content/comment.js",
-            $blog: "/javascripts/content/blog.js"
+            $blog: "/javascripts/content/blog.js",
+            $message: "/javascripts/message/message.js",
+            message: {
+                $comment: "/javascripts/message/comment.js"
+            }
 
         };
         var defineArray = [];

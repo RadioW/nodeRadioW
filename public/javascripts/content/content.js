@@ -8,11 +8,11 @@
 
     var defineArray = [];
     defineArray.push(m.$class);
-    defineArray.push(m.$comment);
+    defineArray.push(m.message.$comment);
 
     define(moduleName, defineArray, function content_module() {
         var Class = require(m.$class);
-        var Comment = require(m.$comment);
+        var Comment = require(m.message.$comment);
 
         var Content = Class.inherit({
             "className": "Content",
@@ -308,19 +308,19 @@
             },
             "addComment": function(comment) {
                 var that = this;
-                var newComment = that.comments[comment.commentID] = new Comment(comment);
+                var newComment = that.comments[comment.id] = new Comment(comment);
                 that.commentsWrapper.prepend(newComment.wrapper);
-                core.explorer.clickers(newComment.wrapper);
+                core.explorer.clickers($('a', newComment.wrapper));
             },
-            "removeComment": function(commentID) {
-                this.comments[commentID].remove();
-                delete this.comments[commentID];
+            "removeComment": function(id) {
+                this.comments[id].remove();
+                delete this.comments[id];
             },
             "initComments": function(_opts) {
                 var that = this;
                 if (_opts && _opts instanceof Array) {
                     for (var i=0; i<_opts.length; i++) {
-                        var newComment = that.comments[_opts[i].commentID] = new Comment(_opts[i]);
+                        var newComment = that.comments[_opts[i].id] = new Comment(_opts[i]);
                         that.commentsWrapper.prepend(newComment.wrapper);
                     }
                 }
@@ -340,8 +340,8 @@
                     route: "content",
                     event: "remark comment",
                     handler: function(data) {
-                        if (that.comments[data.commentID]) {
-                            that.comments[data.commentID].remark(data);
+                        if (that.comments[data.id]) {
+                            that.comments[data.id].remark(data);
                         }
                     }
                 });
@@ -352,8 +352,8 @@
                     handler: function(data) {
                         var comment = that.comments[data];
                         if (comment) {
-                            if (comment.author == core.user.id) {
-                                comment.pseudoRemove();
+                            if (comment.user.id == core.user.id) {
+                                comment.status("removed");
                             } else {
                                 comment.remove()
                             }

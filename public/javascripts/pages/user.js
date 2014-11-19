@@ -12,12 +12,14 @@
     defineArray.push(m.widget.$info);
     defineArray.push(m.widget.$blog);
     defineArray.push(m.widget.$photo);
+    defineArray.push(m.widget.$messages);
 
     define(moduleName, defineArray, function registration_module(){
         var Page = require(m.$page);
         var Info = require(m.widget.$info);
         var Blog = require(m.widget.$blog);
         var Photo = require(m.widget.$photo);
+        var Messages = require(m.widget.$messages);
         var User = Page.inherit({
             "className": "User",
             "websocket": true,
@@ -37,6 +39,9 @@
                         userId: params.id
                     }),
                     photo: new Photo({
+                        userId: params.id
+                    }),
+                    messages: new Messages({
                         userId: params.id
                     })
                 };
@@ -88,12 +93,17 @@
                             that.widgets.photo.expand();
                         });
                         break;
+                    case "messages":
+                        that.jobs.push(function() {
+                            that.widgets.messages.expand();
+                        });
+                        break;
                     default:
                         return;
                 }
                 if (param.oid) {
                     that.jobs.push(function() {
-                        that.subscribeContent(param.id, param.type, param.oid);
+                        core.content.subscribe(param.id, param.type, param.oid);
                     });
                 }
             },

@@ -45,8 +45,6 @@
 
                 Widget.fn.initContent.call(that);
                 that.emit('requestBlogShort', that.options.userId);
-
-
             },
             "initSockets": function() {
                 var that = this;

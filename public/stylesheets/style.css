@@ -527,3 +527,14 @@ footer {
     background-color: #ddddee ;
     text-align: center;
 }
+
+.messageRoll {
+    width: 100%;
+    background-color: #d3d3d3;
+    margin-bottom: 15px;
+}
+
+.widget-dialogue {
+    -webkit-transition: opacity .3s ease-in-out;
+    transition: opacity .3s ease-in-out;
+}
