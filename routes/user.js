@@ -289,6 +289,9 @@ exports.prepareAva = function(req, res, next) {
 };
 
 exports.makeAvatar = function(req, res, next) {
+    if (req.files[0].toString().indexOf('/data/') == -1) {
+        req.files[0] = '/data/' + req.self._id + '/photo/' + req.files[0]
+    }
 	gm('./public'+req.files[0]+'.jpg')
 		.resize(140, 280)
 		.write('./public/data/'+req.self._id+'/avatar-sm.jpg', function(err) {

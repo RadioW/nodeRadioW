@@ -410,6 +410,8 @@ div.comment {
 	margin: 10px 10px 10px 0;
 	border-bottom: 1px solid #cccccc;
 	padding-bottom: 10px;
+    max-height: 100%;
+    overflow: hidden;
 }
 div.comment > div {
 	float: left;
@@ -419,6 +421,9 @@ div.comment > div {
 div.comment > div > div {
 	width: 100%;
 	text-align: left;
+    -ms-word-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 div.contentWrap {
@@ -530,11 +535,17 @@ footer {
 
 .messageRoll {
     width: 100%;
-    background-color: #d3d3d3;
     margin-bottom: 15px;
+    overflow-y:auto;
 }
 
 .widget-dialogue {
     -webkit-transition: opacity .3s ease-in-out;
     transition: opacity .3s ease-in-out;
+}
+
+.dialogue {
+    float:left;
+    width: calc(50% - 10px);
+    margin-bottom: 15px;
 }

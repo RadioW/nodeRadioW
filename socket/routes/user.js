@@ -6,8 +6,10 @@
 var log = require('../../libs/logs')(module);
 var Route_io = require('../../libs/class/ioRoute');
 var User = require('../../models/user').User;
+var Dialogue = require('../../models/dialogue').Dialogue;
 var extend = require('extend');
 var fs = require('fs');
+var async = require('async');
 
 var UserRoute = Route_io.inherit({
     "className": "UserRoute_io",
@@ -30,6 +32,17 @@ var UserRoute = Route_io.inherit({
         that.on('join', function (socket, data) {
             socket.join(data);
             socket.request.watch = data;
+        });
+
+        that.on('disconnect', function (socket, data) {
+            if (socket.request.watch) {
+                socket.leave(socket.request.watch);
+                socket.request.watch = undefined;
+            }
+            if (socket.request.dialogue) {
+                socket.leave(socket.request.dialogue);
+                socket.request.dialogue = undefined;
+            }
         });
 
         that.on('blog', function (socket, data) {
@@ -177,22 +190,189 @@ var UserRoute = Route_io.inherit({
 
         that.on("messageListRequest", function(socket, data) {
             if (!socket.request.session.user) return that.emit('error', socket, 'Ошибка! Вы не авторизованы! Отправка сообщений и просмотр диалогов невозможны!');
-            User.findById(socket.request.watch, function(err, user) {
+            User.findById(data.receiver, function(err, user) {
                 if (err) {
                     return that.emit('error', socket, err.message);
                 }
-                var dialogue = user.data.dialogues[socket.request.session.user];
-                if (dialogue && dialogue.length) {
-                    var answer = [];
-                    for (var i=dialogue.length - 1 - data.lastIndex; i >= 0; --i) {
-                        answer.push({
+                var dialogueId = user.data.dialogues[socket.request.session.user];
+                if (dialogueId) {
+                    Dialogue.findById(dialogueId, function (err, dialogue) {
+                        if (err) {
+                            return that.emit('error', socket, err.message);
+                        }
+                        var users = {};
+                        if (socket.request.dialogue) {
+                            socket.leave(socket.request.dialogue);
+                        }
+                        socket.request.dialogue = dialogueId;
+                        socket.join(dialogueId);
 
-                        })
+                        User.findById(dialogue.users[0], function (err, user1) {
+                            if (err) {
+                                return that.emit('error', socket, err.message);
+                            }
+                            User.findById(dialogue.users[1], function (err, user2) {
+                                if (err) {
+                                    return that.emit('error', socket, err.message);
+                                }
+                                users[user1._id] = user1;
+                                users[user2._id] = user2;
+                                var answer = [];
+                                var counter = 0;
+                                dialogue = dialogue.messages;
+
+                                for (var i = dialogue.length - 1 - data.lastIndex; i >= 0; --i) {
+                                    answer.push({
+                                        message: dialogue[i].message,
+                                        date: dialogue[i].date,
+                                        user: {
+                                            id: dialogue[i].author,
+                                            name: users[dialogue[i].author].username
+                                        },
+                                        type: "message",
+                                        id: dialogue[i]._id,
+                                        state: dialogue[i].meta[dialogue[i].meta.length - 1].status
+                                    });
+                                    if (++counter > 20) {
+                                        break;
+                                    }
+                                }
+                                that.emit("messageListResponse", socket, {
+                                    messages: answer,
+                                    lastIndex: dialogue.length - i
+                                })
+                            });
+                        });
+                    });
+                }
+            });
+        });
+
+        that.on("newMessage", function(socket, data) {
+            var snd, rcv;
+            async.waterfall([
+                function(callback) {
+                    User.findById(socket.request.session.user, callback)
+                },
+                function(sender, callback) {
+                    User.findById(data.receiver, function(err, receiver) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+                        if (!receiver) {
+                            callback({message: "Не удалось найти адресата"});
+                            return;
+                        }
+                        callback(null, sender, receiver);
+                    });
+                },
+                function(sender, receiver, callback) {
+                    var dialogueId = sender.data.dialogues[receiver._id];
+                    var dialogue;
+                    snd = sender;
+                    rcv = receiver;
+                    if (!dialogueId) {
+                        dialogue = new Dialogue();
+                        sender.data.dialogues[receiver._id] = dialogue._id.toString();
+                        receiver.data.dialogues[sender._id] = dialogue._id.toString();
+                        sender.markModified('data.dialogues');
+                        receiver.markModified('data.dialogues');
+                        sender.save(function(err){
+                            if (err) {
+                                callback(err);
+                                return;
+                            }
+                            receiver.save(function(err) {
+                                if (err) {
+                                    callback(err);
+                                    return;
+                                }
+                                dialogue.users.push(sender._id);
+                                dialogue.users.push(receiver._id);
+                                callback(null, dialogue);
+                            });
+                        });
+                    } else {
+                        Dialogue.findById(dialogueId, callback);
+                    }
+                },
+                function(dialogue, callback) {
+                    dialogue.messages.push({
+                        author: socket.request.session.user,
+                        message: data.message,
+                        meta: [{
+                            status: "unreaded",
+                            date: new Date()
+                        }]
+                    });
+                    dialogue.save(function(err) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+                        callback(null, dialogue);
+                    });
+                }
+            ], function(err, result) {
+                if (err) {
+                    return that.emit("error", socket, err.message);
+                }
+                var message = result.messages[result.messages.length - 1];
+                that.to(socket.request.dialogue, "incomingMessage", {
+                    message: message.message,
+                    date: message.date,
+                    user: {
+                        id: snd._id,
+                        name: snd.username
+                    },
+                    type: "message",
+                    id: message._id,
+                    state: message.meta[message.meta.length - 1].status
+                });
+            });
+        });
+        that.on("leaveDialogue", function(socket, data){
+            if (socket.request.dialogue) {
+                socket.leave(socket.request.dialogue);
+                socket.request.dialogue = undefined;
+            }
+        });
+
+        that.on("dialoguesRequest", function(socket, data) {
+            User.findById(socket.request.session.user, function(err, user) {
+                if (err) {
+                    return that.emit('error', socket, err.message);
+                }
+                var answer = [];
+                for (var key in user.data.dialogues) {
+                    if (user.data.dialogues.hasOwnProperty(key) && key !== "test") {
+                        answer.push({
+                            id:key
+                        });
                     }
                 }
+                async.map(answer, function(obj, callback){
+                    User.findById(obj.id, function(err, user) {
+                        if (err) return callback(err);
+                        obj.username = user.username;
+                        Dialogue.findById(user.data.dialogues[socket.request.session.user], function(err, dialogue){
+                            obj.lastMessage = dialogue.messages[dialogue.messages.length-1];
+                            callback(null, obj);
+                        });
+                    });
+
+                }, function(err, answer) {
+                    if (err) {
+                        that.emit("error", socket, err.message);
+                    }
+                    that.emit("dialoguesResponse", socket, answer);
+                });
+
             });
         });
     }
 });
 
 module.exports = UserRoute;
+

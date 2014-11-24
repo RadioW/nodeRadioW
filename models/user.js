@@ -180,7 +180,7 @@ schema.methods.changeInfo = function(info, callback) {
 			if (err) return callback(err);
 			return callback(null, user);
 		})
-	}
+	};
 
 schema.statics.registrate = function (username, password, callback) {
 	var User = this;
@@ -191,8 +191,9 @@ schema.statics.registrate = function (username, password, callback) {
 		},
 		function (user, callback) {
 			if (!user) {
-				var user = new User({username: username, password: password});
+				user = new User({username: username, password: password});
 				user.info.online = true;
+                user.data.dialogues = {test: "test"};
 				user.save(function(err) {
 					if (err) return callback(err);
 					callback (null, user);
@@ -202,7 +203,7 @@ schema.statics.registrate = function (username, password, callback) {
 			}
 		}
 	], callback);
-}
+};
 
 schema.statics.authorize = function (username, password, callback) {
 	var User = this;

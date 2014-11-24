@@ -233,7 +233,6 @@
                 if (that.isHidden) {
                     that.wrapper.modal('show');
                 }
-                core.explorer.clickers($('a', that.wrapper[0]));
 
                 if(core.user.id) {
                     that.commentForm.css("display", "block");

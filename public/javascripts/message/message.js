@@ -23,6 +23,10 @@
                 that.initParams(param);
                 that.initWrapper();
                 that.initContent(param);
+                that.initHrefs();
+            },
+            "initHrefs": function() {
+                core.explorer.clickers($('a', this.wrapper[0]));
             },
             "initParams": function(param) {
                 var that = this;
@@ -44,7 +48,7 @@
                 authorPicture.append(authorImg);
                 leftLayout.append(authorPicture);
 
-                var rightLayout = that.rLayout = $('<div style="width:90%">');
+                var rightLayout = that.rLayout = $('<div>').css("width", "calc(100% - 70px)");
                 var infoDiv = that.infoDiv = $('<div>');
                 var authorLink = $('<a href="/user/'+that.user.id+'/">');
                 authorLink.html(that.user.name);

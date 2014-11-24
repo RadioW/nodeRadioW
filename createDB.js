@@ -24,13 +24,10 @@ function open (callback) {
  
 function createUsers (callback) {
 	var users = [
-		{username: 'Вася', password: 'supervasya'},
-		{username: 'Петя', password: 'supervasya'},
 		{username: 'Admin', password: '123'}
 	];
 	async.each (users, function (userData, callback) {
-		var user = new mongoose.models.User(userData);
-		user.save(callback);
+		mongoose.models.User.registrate(userData.username, userData.password, callback);
 	}, callback);
 }
 
