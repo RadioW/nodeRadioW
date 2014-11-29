@@ -441,7 +441,7 @@ var UserRoute = Route_io.inherit({
                 } else {
                     answer.owner = false;
                     answer.messages = array;
-                    var id = user.data.dialogues[socket.request.session.user].toString();
+                    var id = user.data.dialogues[socket.request.session.user];
                     if (id) {
                         Dialogue.findById(id, function(err, dialogue) {
                             if (err) {
