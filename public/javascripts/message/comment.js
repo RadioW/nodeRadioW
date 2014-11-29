@@ -18,16 +18,15 @@
             "constructor": function(param) {
                 var that = this;
                 Message.fn.constructor.call(that, param);
+            },
+            "initParams": function(params) {
+                var that = this;
+                Message.fn.initParams.call(that, params);
 
                 $.extend(that.stateList, {
                     "removed": that.pseudoRemove
                 });
-
-                that.status(that.state);
-            },
-            "initParams": function(params) {
-                Message.fn.initParams.call(this, params);
-                this.contentId = params.contentId
+                that.contentId = params.contentId
             },
             "initWrapper": function() {
                 var that = this;

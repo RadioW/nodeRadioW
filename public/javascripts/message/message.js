@@ -19,11 +19,11 @@
 
                 Class.call(that);
 
-                that.stateList = {};
                 that.initParams(param);
                 that.initWrapper();
                 that.initContent(param);
                 that.initHrefs();
+                that.status(that.state);
             },
             "initHrefs": function() {
                 core.explorer.clickers($('a', this.wrapper[0]));
@@ -31,24 +31,47 @@
             "initParams": function(param) {
                 var that = this;
 
+                that.stateList = {
+                    "unreaded": function() {
+                        that.wrapper.css("background-color", "#d9edf7");
+                        if (that.user.id != core.user.id && !that.notHandled) {
+                            that.wrapper.on("mouseover", function () {
+                                core.connection.socket.emit('event', {
+                                    route: 'user',
+                                    event: 'readMessage',
+                                    data: {
+                                        dialogue: that.dialogue,
+                                        id: that.id
+                                    }
+                                });
+                            });
+                        }
+                    },
+                    "normal": function() {
+                        that.wrapper.attr("style", "");
+                        that.wrapper.off();
+                    }
+                };
                 that.user = {
                     id: param.user.id,
                     name: param.user.name
                 };
                 that.type = param.type;
                 that.state = param.state;
-                that.id = param.id;
+                that.id = param.id || param._id;
+                that.dialogue = param.dialogue;
+                that.notHandled = param.notHandled || false;
             },
             "initWrapper": function() {
                 var that = this;
                 var main = that.wrapper = $('<div class="comment" id="'+that.id+'">');
-                var leftLayout = $('<div>');
+                var leftLayout = $('<div class="imageContainer">');
                 var authorPicture = $('<a href="/user/'+that.user.id+'/">');
                 var authorImg = $('<img src="/data/' + that.user.id + '/avatar-xs.jpg">');
                 authorPicture.append(authorImg);
                 leftLayout.append(authorPicture);
 
-                var rightLayout = that.rLayout = $('<div>').css("width", "calc(100% - 70px)");
+                var rightLayout = that.rLayout = $('<div class="messageContainer">');
                 var infoDiv = that.infoDiv = $('<div>');
                 var authorLink = $('<a href="/user/'+that.user.id+'/">');
                 authorLink.html(that.user.name);
@@ -56,7 +79,7 @@
                 var date = that.dateWrapper = $('<span>');
                 infoDiv.append(date);
 
-                var message = that.messageWrapper = $('<div>');
+                var message = that.messageWrapper = $('<div>').css("min-height", "33px");
                 rightLayout.append(infoDiv);
                 rightLayout.append(message);
                 main.append(leftLayout);

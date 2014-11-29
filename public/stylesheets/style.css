@@ -407,15 +407,26 @@ form.comment > input {
 div.comment {
 	width: 100%;
 	float: left;
-	margin: 10px 10px 10px 0;
+	margin: 10px 10px 0 0;
 	border-bottom: 1px solid #cccccc;
-	padding-bottom: 10px;
     max-height: 100%;
     overflow: hidden;
+    position: relative;
+    padding: 10px 0 10px 70px;
+
+    -webkit-transition: box-shadow 0.3s ease-in-out;
+    -moz-transition: box-shadow 0.3s ease-in-out;
+    -ms-transition: box-shadow 0.3s ease-in-out;
+    -o-transition: box-shadow 0.3s ease-in-out;
+    transition: box-shadow 0.3s ease-in-out;
 }
-div.comment > div {
-	float: left;
-	margin-left: 10px;
+div.comment > div.imageContainer {
+    position: absolute;
+    left: 10px;
+}
+
+div.comment > div.messageContainer {
+    width: 100%;
 }
 
 div.comment > div > div {
@@ -467,8 +478,8 @@ div.widgetBorder {
     position: relative;
     border: 1px solid #DDDDDD;
     cursor: pointer;
-    -webkit-transition: all .5s ease-in-out;
-    transition: all .5s ease-in-out;
+    -webkit-transition: all .3s ease-in-out;
+    transition: all .3s ease-in-out;
     background-color: #FFFFFF;
 }
 div.widgetBorder:hover {
@@ -546,6 +557,17 @@ footer {
 
 .dialogue {
     float:left;
-    width: calc(50% - 10px);
+    width: 50%;
     margin-bottom: 15px;
+    position: relative;
+    height: 100px;
+}
+.dialogue > img {
+    width: 100px;
+    position: absolute;
+}
+
+.dialogue > p {
+    width: 100%;
+    margin: 0;
 }

@@ -29,11 +29,10 @@
                 that.lastShownMessageIndex = 0;
                 that.receiver = "";
                 that.dialogues = [];
+                that.messages = {};
 
                 Widget.fn.constructor.call(that, baseOptions);
-                setTimeout(function() { //todo it's a bullshit! you've got to make it better!
-                    that.initDialogue();
-                }, 200);
+                that.initDialogue();
             },
             "destructor": function() {
                 var that = this;
@@ -57,7 +56,11 @@
                     for (var i=0; i<data.length; ++i) {
                         var dialogue = {
                             wrapper:$('<div class="dialogue" id="' + data[i].id + '">'),
-                            container:$('<div>').css("height", "61px")
+                            container:$('<div>').css({
+                                "height": "75px",
+                                "width": "100%",
+                                "margin-top": "-10px"
+                            })
                         };
                         if (data[i].lastMessage.author === core.user.id) {
                             data[i].lastMessage.user = {
@@ -73,27 +76,29 @@
                         data[i].lastMessage.type = "message";
                         data[i].lastMessage.id = data[i].lastMessage._id;
                         data[i].lastMessage.state = data[i].lastMessage.meta[data[i].lastMessage.meta.length-1].status;
+                        data[i].lastMessage.dialogue = data[i]._id;
+                        data[i].lastMessage.notHandled = true;
                         var message = new Message(data[i].lastMessage);
+                        that.messages[message.id] = message;
                         if (i/2 == Math.ceil(i/2)) {
                             dialogue.wrapper
-                                .append($('<img style="float:right;width:100px;margin-left:10px" src="/data/' + data[i].id + '/avatar-md.jpg?'+Math.random()+'">'))
-                                .append($('<p style="float:right; margin:0">').html(data[i].username));
+                                .append($('<img style="right:10px" src="/data/' + data[i].id + '/avatar-md.jpg?'+Math.random()+'">'))
+                                .append($('<p style="float:right;text-align: right">').html(data[i].username));
                             dialogue.container.css({
                                 "float": "right"
                             });
-                            dialogue.wrapper.css("margin-right", "10px");
+                            dialogue.wrapper.css("padding-right", "120px");
                         } else {
                             dialogue.wrapper
-                                .append($('<img style="float:left;width:100px;margin-right:10px" src="/data/' + data[i].id + '/avatar-md.jpg?'+Math.random()+'">'))
-                                .append($('<p style="float:left; width:75%; margin:0">').html(data[i].username));
+                                .append($('<img style="left:10px" src="/data/' + data[i].id + '/avatar-md.jpg?'+Math.random()+'">'))
+                                .append($('<p style="float:left;text-align: left">').html(data[i].username));
                             dialogue.container.css({
                                 "float": "left"
                             });
-                            dialogue.wrapper.css("margin-left", "10px");
+                            dialogue.wrapper.css("padding-left", "120px");
                         }
                         dialogue.wrapper.append(dialogue.container);
                         dialogue.container.append(message.wrapper);
-                        dialogue.container.css("width", "calc(100% - 110px)");
                         dialogue.wrapper.on("click", (function(id){
                             return function(){
                                 that.dialogueMode(id);
@@ -103,11 +108,44 @@
                         that.dialogues.push(dialogue);
                     }
                 });
+                that.on("messageListResponse", function(data) {
+                    for (var i=0; i<data.messages.length; ++i) {
+                        var message = new Message(data.messages[i]);
+                        that.messageRollContainer.prepend(message.wrapper);
+                        that.messages[message.id] = message;
+                    }
+                    setTimeout(function() {
+                        if (!that.lastShownMessageIndex) {
+                            that.messageRoll.scrollTop(that.messageRollContainer.height());
+                        }
+                        that.lastShownMessageIndex = data.lastIndex;
+                    }, 20);
+                });
+                that.on('readMessage', function(data) {
+                    if (that.messages[data] instanceof Message)
+                    that.messages[data].status("normal")
+                });
+
+                that.on("incomingMessage", function(data){
+                    var message = new Message(data);
+                    that.messages[message.id] = message;
+                    if (that.messageRollContainer.height() - that.messageRoll.height() == that.messageRoll.scrollTop()) {
+                        setTimeout(function(){
+                            that.messageRoll.scrollTop(that.messageRollContainer.height());
+                            ++that.lastShownMessageIndex;
+                        }, 20);
+                    }
+                    that.messageRollContainer.append(message.wrapper);
+
+                });
             },
             "initContent": function() {
                 var that = this;
 
+                that.emit("requestDialoguesShort", that.options.userId);
                 Widget.fn.initContent.call(that);
+                that.shortRoll = $("<div>");
+                that.container.append(that.shortRoll);
             },
             "initDialogue": function() {
                 var that = this;
@@ -162,29 +200,20 @@
             "initSockets": function() {
                 var that = this;
 
-                that.on("messageListResponse", function(data) {
-                    for (var i=0; i<data.messages.length; ++i) {
-                        var message = new Message(data.messages[i]);
-                        that.messageRollContainer.prepend(message.wrapper);
-                    }
-                    setTimeout(function(){
-                        if (!that.lastShownMessageIndex) {
-                            that.messageRoll.scrollTop(that.messageRollContainer.height());
+                that.on("responseDialoguesShort", function(data) {
+                    that.shortRoll.empty();
+                    if (data.owner == true) {
+                        that.shortRoll.append($('<p>').html("Здесь очень скоро будут отображаться Ваши последие диалоги"))
+                    } else {
+                        for (var i = 0; i<data.messages.length; ++i) {
+                            var message = new Message(data.messages[i]);
+                            that.shortRoll.append(message.wrapper);
                         }
-                        that.lastShownMessageIndex = data.lastIndex;
-                    }, 20);
-                }, true);
-                that.on("incomingMessage", function(data){
-                    var message = new Message(data);
-                    if (that.messageRollContainer.height() - that.messageRoll.height() == that.messageRoll.scrollTop()) {
-                        setTimeout(function(){
-                            that.messageRoll.scrollTop(that.messageRollContainer.height());
-                            ++that.lastShownMessageIndex;
-                        }, 20);
+                        if (data.messages.length == 0) {
+                            that.shortRoll.append($('<p>').html("Вы никогда прежде не вели переписку с этим пользователем"));
+                        }
                     }
-                    that.messageRollContainer.append(message.wrapper);
-
-                }, true);
+                });
                 Widget.fn.initSockets.call(that);
             },
             "getExpandedContent":function(container) {
@@ -192,9 +221,9 @@
 
                 that.expandedHeader = $('<p class="text-center lead">').html(that.options.name);
                 container.append(that.expandedHeader);
-
+                that.initAdditionalSockets();
                 if (that.options.userId == core.user.id) {
-                    that.initAdditionalSockets();
+
                     that.emit("dialoguesRequest");
                 } else {
                     that.dialogueMode();
@@ -208,6 +237,12 @@
             "dialogueMode": function(receiver) {
                 var that = this;
                 receiver = receiver || that.options.userId;
+                for (var key in that.messages) {
+                    if (that.messages.hasOwnProperty(key)) {
+                        that.messages[key].destructor();
+                        delete that.messages[key];
+                    }
+                }
 
                 if (that.dialogueModeOn) {
                     that.expanded.css("height", "100%");
@@ -246,6 +281,13 @@
                 if (that.dialogueModeOn) {
                     that.dialogue.css("opacity", 0);
                     that.dialogueMode();
+                } else {
+                    for (var key in that.messages) {
+                        if (that.messages.hasOwnProperty(key)) {
+                            that.messages[key].destructor();
+                            delete that.messages[key];
+                        }
+                    }
                 }
             },
             "requestMessages": function() {

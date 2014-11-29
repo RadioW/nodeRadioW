@@ -5,7 +5,28 @@ var util = require ('util');
 
 var mongoose = require('../libs/mongoose'),
   Schema = mongoose.Schema;
-  
+
+var widgetSchema = new Schema({
+    title: {
+        type: String,
+        required: true
+    },
+    options: {
+        size: {
+            width: Number,
+            height: Number
+        },
+        position: {
+            x: Number,
+            y: Number
+        },
+        public: {
+            type: Boolean,
+            default: true
+        }
+    }
+});
+
 var userData = new Schema ({
 	date: {
 		type: Date,
@@ -75,7 +96,8 @@ var schema = new Schema({
 	photo:[userData],
 	comments:[userData],
     dialogues: {}
-  }
+  },
+  widgetSettings: [widgetSchema]
 });
 
 schema.methods.encryptPassword = function(password) {
@@ -143,7 +165,7 @@ schema.methods.datify = function(timestamp, options) {
 	if (y) summary = summary+" "+year;
 	if (t) summary = summary+" в "+hour+":"+minute;
 	return summary;
-}
+};
 
 schema.virtual('password')
   .set(function(password) {
@@ -156,7 +178,7 @@ schema.virtual('password')
 
 schema.methods.checkPassword = function(password) {
 		return this.encryptPassword(password) === this.hashedPassword;
-	}
+	};
 	
 schema.methods.changeInfo = function(info, callback) {
 		var user = this;
@@ -194,6 +216,20 @@ schema.statics.registrate = function (username, password, callback) {
 				user = new User({username: username, password: password});
 				user.info.online = true;
                 user.data.dialogues = {test: "test"};
+
+                user.widgetSettings.push({
+                    title: "info"
+                });
+                user.widgetSettings.push({
+                    title: "blog"
+                });
+                user.widgetSettings.push({
+                    title: "photo"
+                });
+                user.widgetSettings.push({
+                    title: "messages"
+                });
+
 				user.save(function(err) {
 					if (err) return callback(err);
 					callback (null, user);
