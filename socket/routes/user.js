@@ -373,10 +373,10 @@ var UserRoute = Route_io.inherit({
                     }
                     answer.sort(function(a,b) {
                         if (a.lastMessage.date < b.lastMessage.date) {
-                            return -1;
+                            return 1;
                         }
                         if (a.lastMessage.date > b.lastMessage.date) {
-                            return 1;
+                            return -1;
                         }
                         return 0;
                     });

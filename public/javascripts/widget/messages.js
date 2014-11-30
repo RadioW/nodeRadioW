@@ -53,7 +53,7 @@
                         that.dialogues[i].wrapper.remove();
                     }
                     that.dialogues = [];
-                    for (var i=data.length-1; i>=0; --i) {
+                    for (var i=0; i<data.length; ++i) {
                         var dialogue = {
                             wrapper:$('<div class="dialogue" id="' + data[i].id + '">'),
                             container:$('<div>').css({
@@ -80,7 +80,7 @@
                         data[i].lastMessage.notHandled = true;
                         var message = new Message(data[i].lastMessage);
                         that.messages[message.id] = message;
-                        if (i/2 !== Math.ceil(i/2)) {
+                        if (i/2 == Math.ceil(i/2)) {
                             dialogue.wrapper
                                 .append($('<img style="right:10px" src="/data/' + data[i].id + '/avatar-md.jpg?'+Math.random()+'">'))
                                 .append($('<p style="float:right;text-align: right">').html(data[i].username));
