@@ -80,7 +80,7 @@
                         data[i].lastMessage.notHandled = true;
                         var message = new Message(data[i].lastMessage);
                         that.messages[message.id] = message;
-                        if (i/2 == Math.ceil(i/2)) {
+                        if (i/2 !== Math.ceil(i/2)) {
                             dialogue.wrapper
                                 .append($('<img style="right:10px" src="/data/' + data[i].id + '/avatar-md.jpg?'+Math.random()+'">'))
                                 .append($('<p style="float:right;text-align: right">').html(data[i].username));
