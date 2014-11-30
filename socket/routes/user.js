@@ -250,6 +250,7 @@ var UserRoute = Route_io.inherit({
         });
 
         that.on("newMessage", function(socket, data) {
+            if (!socket.request.session.user) return that.emit('error', socket, 'Ошибка! Вы не авторизованы! Отправка сообщений и просмотр диалогов невозможны!');
             var snd, rcv;
             async.waterfall([
                 function(callback) {

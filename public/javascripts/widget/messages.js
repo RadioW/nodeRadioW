@@ -159,34 +159,35 @@
                 });
                 that.border.append(that.dialogue);
                 that.dialogue.append($('<p class="text-center lead">').html('Переписка'));
-
-                var messageForm = that.messageForm = $('<form class="comment">');
-                messageForm.on('submit', function (e) {
-                    that.emitMessage();
-                    e.preventDefault();
-                });
-                that.messageArea = $('<textarea class="form-control">');
-                messageForm.append(that.messageArea);
-                messageForm.append($('<input type="submit" class="btn btn-primary">'));
-
-                var messageRoll = that.messageRoll = $('<div class="messageRoll">');
-                that.messageRollContainer = $('<div style="overflow: hidden">');
-                that.messageRoll.append(that.messageRollContainer);
-
-                that.dialogue.append(messageRoll);
-                that.dialogue.append(messageForm);
-
-                if (that.options.userId == core.user.id) {
-                    var buttonBack = $('<button class="btn btn-primary">').append($('<i class="glyphicon glyphicon-chevron-down">')).css({
-                        position: "absolute",
-                        top: 0,
-                        right: 0
+                if (core.user.id && core.user.username) {
+                    var messageForm = that.messageForm = $('<form class="comment">');
+                    messageForm.on('submit', function (e) {
+                        that.emitMessage();
+                        e.preventDefault();
                     });
-                    that.dialogue.append(buttonBack);
-                    buttonBack.on("click", function() {
-                        that.dialogueMode();
-                        that.emit("dialoguesRequest");
-                    });
+                    that.messageArea = $('<textarea class="form-control">');
+                    messageForm.append(that.messageArea);
+                    messageForm.append($('<input type="submit" class="btn btn-primary">'));
+
+                    var messageRoll = that.messageRoll = $('<div class="messageRoll">');
+                    that.messageRollContainer = $('<div style="overflow: hidden">');
+                    that.messageRoll.append(that.messageRollContainer);
+
+                    that.dialogue.append(messageRoll);
+                    that.dialogue.append(messageForm);
+
+                    if (that.options.userId == core.user.id) {
+                        var buttonBack = $('<button class="btn btn-primary">').append($('<i class="glyphicon glyphicon-chevron-down">')).css({
+                            position: "absolute",
+                            top: 0,
+                            right: 0
+                        });
+                        that.dialogue.append(buttonBack);
+                        buttonBack.on("click", function () {
+                            that.dialogueMode();
+                            that.emit("dialoguesRequest");
+                        });
+                    }
                 }
             },
             "emitMessage": function() {
