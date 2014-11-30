@@ -159,7 +159,7 @@
                 });
                 that.border.append(that.dialogue);
                 that.dialogue.append($('<p class="text-center lead">').html('Переписка'));
-                if (core.user.id && core.user.username) {
+                if (core.user.id && core.user.name) {
                     var messageForm = that.messageForm = $('<form class="comment">');
                     messageForm.on('submit', function (e) {
                         that.emitMessage();
