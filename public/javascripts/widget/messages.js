@@ -53,7 +53,7 @@
                         that.dialogues[i].wrapper.remove();
                     }
                     that.dialogues = [];
-                    for (var i=0; i<data.length; ++i) {
+                    for (var i=data.length-1; i>=0; --i) {
                         var dialogue = {
                             wrapper:$('<div class="dialogue" id="' + data[i].id + '">'),
                             container:$('<div>').css({
