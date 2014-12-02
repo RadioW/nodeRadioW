@@ -102,10 +102,10 @@
 
                 setTimeout (function (){
                     cover.css('opacity', 0.5);
-                    car.get(0).className = 'col-xs-12 col-lg-12-v col-md-12-v col-sm-12-v col-xs-12-v';
+                    car.get(0).className = 'col-xs-12 expanded-widget';
                     car.css({
                         width: '',
-                        height: '',
+                        height: cover.height(),
                         position: 'relative',
                         top: '0px',
                         left: '0px'

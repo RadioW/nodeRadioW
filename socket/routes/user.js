@@ -117,7 +117,7 @@ var UserRoute = Route_io.inherit({
                 }
                 var limit = 0;
                 var array = [];
-                for (var i=user.data.blog.length-1; i>=0; i--) {
+                for (var i=user.data.blog.length-1; i>=0; --i) {
                     array.push(user.data.blog[i].message);
                     limit++;
                     if (limit == 5) {
@@ -138,7 +138,7 @@ var UserRoute = Route_io.inherit({
                         return that.emit('error', socket, err.message);
                     }
                     var array = [];
-                    for (var i=blog.length-1; i>=0; i--) {
+                    for (var i=blog.length-1; i>=0; --i) {
 
                         array.push({
                             message: blog[i].message,

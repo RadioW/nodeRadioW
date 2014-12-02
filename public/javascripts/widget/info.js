@@ -112,13 +112,12 @@
             "getExpandedContent": function(container) {
                 var that = this;
 
-                var wrapper = $('<div class="row" style="height:50%">');
-                var firstSection = $('<div class="col-xs-6 col-xs-12-vp">');
-                var secondSection = $('<div class="col-xs-6 col-xs-12-vp text-right">');
-                var thirdSection = $('<div class="col-xs-6 col-xs-12-vp">');
-                var fourthSection = $('<div class="col-xs-6 col-xs-12-vp">');
+                container.append($('<p class="text-center lead">'+that.options.name+'</p>'));
 
-                firstSection.append($('<p class="text-center lead">'+that.options.name+'</p>'));
+                var wrapper = $('<div class="row">');
+                var firstSection = $('<div class="col-xs-6">');
+                var secondSection = $('<div class="col-xs-6 text-right">');
+
                 if (core.user.id == that.options.userId) {
                     that.initAdditionalSockets();
                     var form = $('<form  autocomplete="off" name="userInfo" class="form-inline" onsubmit="return false">');
@@ -181,8 +180,6 @@
                 }
                 wrapper.append(firstSection);
                 wrapper.append(secondSection);
-                wrapper.append(thirdSection);
-                wrapper.append(fourthSection);
                 container.append(wrapper);
 
                 setTimeout(function() {

@@ -51,6 +51,13 @@
           transition: all .5s ease-in-out;
 }
 
+.expanded-widget {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    -webkit-transition: all .5s ease-in-out;
+    transition: all .5s ease-in-out;
+}
+
 .col-xs-12-v {
   height: 600px;
 }
@@ -230,7 +237,7 @@ a.thumbnail-v:hover{
 
 #carett {
 	display:none;
-	position: absolute;
+	position: fixed;
 	z-index:4;
 }
 
@@ -388,20 +395,22 @@ div.userIconName {
 form.comment {
 	height: 70px;
 	width: 100%;
+    position: relative;
+    padding-right: 150px;
 }
 
 form.comment > textarea {
 	height: 100%;
 	float: left;
-	width: 85%;
+	width: 100%;
 	resize: none;
 }
 
 form.comment > input {
 	height: 100%;
-	width: 13%;
-	float: left;
-	margin-left: 15px;
+	width: 135px;
+	position:absolute;
+	right: 0;
 }
 
 div.comment {

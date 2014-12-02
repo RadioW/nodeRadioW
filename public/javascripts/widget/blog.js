@@ -113,7 +113,7 @@
                 that.on('responseBlogListFull', function(data) {
                     for (var i=0; i<data.length; i++) {
                         that.blogs[data[i]._id] = new CBlog(data[i]);
-                        that.blogRoll.prepend(that.blogs[data[i]._id].wrapper);
+                        that.blogRoll.append(that.blogs[data[i]._id].wrapper);
                     }
                 });
             },
@@ -158,7 +158,7 @@
                         that.border.append(editor);
                         editor.append($('<p class="text-center lead">').html('Новый блог'));
                         var area = that.textarea = $('<textarea class="form-control blogArea" name="message">');
-                        editor.append(area.height(that.expanded.height() - that.expandedHeader.height() - parseFloat(that.expandedHeader.css("margin-bottom")) - 2));
+                        editor.append(area.height(that.expanded.height() - that.expandedHeader.height() - parseFloat(that.expandedHeader.css("margin-bottom")) - 8));
                         var closeButton = $('<button class="btn btn-primary">').append($('<i class="glyphicon glyphicon-pencil">')).css({
                             position: "absolute",
                             top: 0,
