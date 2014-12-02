@@ -46,57 +46,56 @@ var UserRoute = Route_io.inherit({
         });
 
         that.on('blog', function (socket, data) {
-            User.findById(socket.request.session.user, function (err, user) {
-                if (err) return that.emit('error', socket, err.message);
-                data.message = data.message.replace(/\n/g, "<br/>");
-                if (data.editing) {
-                    var post = user.data.blog.id(data.editing);
-                    post.message = data.message;
-                    post.date = Date.now();
-                    post.meta.push({
-                        status: "remarked",
-                        date: Date.now()
-                    });
-                    user.save(function (err) {
-                        if (err) return that.emit('error', socket, err.message);
-                        that.to(socket.request.watch, 'remarkedBlog', {
-                            message: data.message,
-                            date: Date.now(),
-                            author: {
-                                username: user.username,
-                                _id: user._id
-                            },
-                            _id: data.editing,
-                            comment: post.comments.length
-                        });
-                    });
-                } else {
-                    user.data.blog.push({
-                        link: 'none',
+            if (!socket.request.session.user) return that.emit('error', socket, "Ошибка! Вы не авторизованы!");
+            var user = socket.request.user;
+            data.message = data.message.replace(/\n/g, "<br/>");
+            if (data.editing) {
+                var post = user.data.blog.id(data.editing);
+                post.message = data.message;
+                post.date = Date.now();
+                post.meta.push({
+                    status: "remarked",
+                    date: Date.now()
+                });
+                user.save(function (err) {
+                    if (err) return that.emit('error', socket, err.message);
+                    that.to(socket.request.watch, 'remarkedBlog', {
                         message: data.message,
-                        author: user._id,
-                        meta: [
-                            {
-                                status: "normal",
-                                date: Date.now()
-                            }
-                        ]
+                        date: Date.now(),
+                        author: {
+                            username: user.username,
+                            _id: user._id
+                        },
+                        _id: data.editing,
+                        comment: post.comments.length
                     });
+                });
+            } else {
+                user.data.blog.push({
+                    link: 'none',
+                    message: data.message,
+                    author: user._id,
+                    meta: [
+                        {
+                            status: "normal",
+                            date: Date.now()
+                        }
+                    ]
+                });
 
-                    user.save(function (err) {
-                        if (err) return that.emit('error', socket, err.message);
-                        that.to(socket.request.watch, 'newBlog', {
-                            message: data.message,
-                            date: Date.now(),
-                            author: {
-                                username: user.username,
-                                _id: user._id
-                            },
-                            _id: user.data.blog[user.data.blog.length - 1]._id
-                        });
+                user.save(function (err) {
+                    if (err) return that.emit('error', socket, err.message);
+                    that.to(socket.request.watch, 'newBlog', {
+                        message: data.message,
+                        date: Date.now(),
+                        author: {
+                            username: user.username,
+                            _id: user._id
+                        },
+                        _id: user.data.blog[user.data.blog.length - 1]._id
                     });
-                }
-            });
+                });
+            }
         });
 
         that.on('requestInfoShort', function(socket, data){
@@ -207,43 +206,34 @@ var UserRoute = Route_io.inherit({
                         socket.request.dialogue = dialogueId;
                         socket.join(dialogueId);
 
-                        User.findById(dialogue.users[0], function (err, user1) {
-                            if (err) {
-                                return that.emit('error', socket, err.message);
-                            }
-                            User.findById(dialogue.users[1], function (err, user2) {
-                                if (err) {
-                                    return that.emit('error', socket, err.message);
-                                }
-                                users[user1._id] = user1;
-                                users[user2._id] = user2;
-                                var answer = [];
-                                var counter = 0;
-                                dialogue = dialogue.messages;
+                        users[user._id] = user;
+                        users[socket.request.user._id] = socket.request.user;
+                        var answer = [];
+                        var counter = 0;
+                        dialogue = dialogue.messages;
 
-                                for (var i = dialogue.length - 1 - data.lastIndex; i >= 0; --i) {
-                                    answer.push({
-                                        message: dialogue[i].message,
-                                        date: dialogue[i].date,
-                                        user: {
-                                            id: dialogue[i].author,
-                                            name: users[dialogue[i].author].username
-                                        },
-                                        type: "message",
-                                        id: dialogue[i]._id,
-                                        state: dialogue[i].meta[dialogue[i].meta.length - 1].status,
-                                        dialogue: dialogueId
-                                    });
-                                    if (++counter > 20) {
-                                        break;
-                                    }
-                                }
-                                that.emit("messageListResponse", socket, {
-                                    messages: answer,
-                                    lastIndex: dialogue.length - i
-                                })
+                        for (var i = dialogue.length - 1 - data.lastIndex; i >= 0; --i) {
+                            answer.push({
+                                message: dialogue[i].message,
+                                date: dialogue[i].date,
+                                user: {
+                                    id: dialogue[i].author,
+                                    name: users[dialogue[i].author].username
+                                },
+                                type: "message",
+                                id: dialogue[i]._id,
+                                state: dialogue[i].meta[dialogue[i].meta.length - 1].status,
+                                dialogue: dialogueId
                             });
-                        });
+                            if (++counter > 20) {
+                                break;
+                            }
+                        }
+                        that.emit("messageListResponse", socket, {
+                            messages: answer,
+                            lastIndex: dialogue.length - i
+                        })
+
                     });
                 }
             });
@@ -251,12 +241,9 @@ var UserRoute = Route_io.inherit({
 
         that.on("newMessage", function(socket, data) {
             if (!socket.request.session.user) return that.emit('error', socket, 'Ошибка! Вы не авторизованы! Отправка сообщений и просмотр диалогов невозможны!');
-            var snd, rcv;
+            var snd = socket.request.user, rcv;
             async.waterfall([
                 function(callback) {
-                    User.findById(socket.request.session.user, callback)
-                },
-                function(sender, callback) {
                     User.findById(data.receiver, function(err, receiver) {
                         if (err) {
                             callback(err);
@@ -266,32 +253,31 @@ var UserRoute = Route_io.inherit({
                             callback({message: "Не удалось найти адресата"});
                             return;
                         }
-                        callback(null, sender, receiver);
+                        callback(null, receiver);
                     });
                 },
-                function(sender, receiver, callback) {
-                    var dialogueId = sender.data.dialogues[receiver._id];
+                function(receiver, callback) {
+                    var dialogueId = snd.data.dialogues[receiver._id];
                     var dialogue;
-                    snd = sender;
                     rcv = receiver;
                     if (!dialogueId) {
                         dialogue = new Dialogue();
-                        sender.data.dialogues[receiver._id] = dialogue._id.toString();
-                        receiver.data.dialogues[sender._id] = dialogue._id.toString();
-                        sender.markModified('data.dialogues');
-                        receiver.markModified('data.dialogues');
-                        sender.save(function(err){
+                        snd.data.dialogues[rcv._id] = dialogue._id.toString();
+                        rcv.data.dialogues[snd._id] = dialogue._id.toString();
+                        snd.markModified('data.dialogues');
+                        rcv.markModified('data.dialogues');
+                        snd.save(function(err){
                             if (err) {
                                 callback(err);
                                 return;
                             }
-                            receiver.save(function(err) {
+                            rcv.save(function(err) {
                                 if (err) {
                                     callback(err);
                                     return;
                                 }
-                                dialogue.users.push(sender._id);
-                                dialogue.users.push(receiver._id);
+                                dialogue.users.push(snd._id);
+                                dialogue.users.push(rcv._id);
                                 socket.request.dialogue = dialogue._id.toString();
                                 socket.join(socket.request.dialogue);
                                 callback(null, dialogue);
@@ -345,45 +331,41 @@ var UserRoute = Route_io.inherit({
         });
 
         that.on("dialoguesRequest", function(socket, data) {
-            User.findById(socket.request.session.user, function(err, user) {
-                if (err) {
-                    return that.emit('error', socket, err.message);
-                }
-                var answer = [];
-                for (var key in user.data.dialogues) {
-                    if (user.data.dialogues.hasOwnProperty(key) && key !== "test") {
-                        answer.push({
-                            id:key,
-                            _id:user.data.dialogues[key]
-                        });
-                    }
-                }
-                async.map(answer, function(obj, callback){
-                    User.findById(obj.id, function(err, user) {
-                        if (err) return callback(err);
-                        obj.username = user.username;
-                        Dialogue.findById(user.data.dialogues[socket.request.session.user], function(err, dialogue){
-                            obj.lastMessage = dialogue.messages[dialogue.messages.length-1];
-                            callback(null, obj);
-                        });
+            if (!socket.request.session.user) return that.emit('error', socket, 'Ошибка! Вы не авторизованы! Отправка сообщений и просмотр диалогов невозможны!');
+            var user = socket.request.user;
+            var answer = [];
+            for (var key in user.data.dialogues) {
+                if (user.data.dialogues.hasOwnProperty(key) && key !== "test") {
+                    answer.push({
+                        id: key,
+                        _id: user.data.dialogues[key]
                     });
-
-                }, function(err, answer) {
-                    if (err) {
-                        that.emit("error", socket, err.message);
-                    }
-                    answer.sort(function(a,b) {
-                        if (a.lastMessage.date < b.lastMessage.date) {
-                            return 1;
-                        }
-                        if (a.lastMessage.date > b.lastMessage.date) {
-                            return -1;
-                        }
-                        return 0;
+                }
+            }
+            async.map(answer, function (obj, callback) {
+                User.findById(obj.id, function (err, user) {
+                    if (err) return callback(err);
+                    obj.username = user.username;
+                    Dialogue.findById(user.data.dialogues[socket.request.session.user], function (err, dialogue) {
+                        obj.lastMessage = dialogue.messages[dialogue.messages.length - 1];
+                        callback(null, obj);
                     });
-                    that.emit("dialoguesResponse", socket, answer);
                 });
 
+            }, function (err, answer) {
+                if (err) {
+                    that.emit("error", socket, err.message);
+                }
+                answer.sort(function (a, b) {
+                    if (a.lastMessage.date < b.lastMessage.date) {
+                        return 1;
+                    }
+                    if (a.lastMessage.date > b.lastMessage.date) {
+                        return -1;
+                    }
+                    return 0;
+                });
+                that.emit("dialoguesResponse", socket, answer);
             });
         });
 

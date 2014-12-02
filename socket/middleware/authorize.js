@@ -1,11 +1,11 @@
 var async = require('async');
 var log = require ('../../libs/logs')(module);
-var connect = require('connect');
 var cookie = require('cookie');
 var sessionStore = require('../../libs/sessionStore');
 var HttpError = require('../../error').HttpError;
 var User = require('../../models/user').User;
 var config = require('../../config');
+var cParser = require('cookie-parser');
 
 module.exports = function(socket, next) {
 		var handshake = socket.request;
@@ -13,7 +13,7 @@ module.exports = function(socket, next) {
 			function (callback) {
 				handshake.cookies = cookie.parse(handshake.headers.cookie || '');
 				var sidCookie = handshake.cookies[config.get('session:key')];
-				var sid = connect.utils.parseSignedCookie(sidCookie, config.get('session:secret')); //todo migrate
+				var sid = cParser.signedCookie(sidCookie, config.get('session:secret'));
 				
 				loadSession(sid, callback);
 			},
