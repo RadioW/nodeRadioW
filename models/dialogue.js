@@ -23,7 +23,8 @@ var schema = new Schema({
     users: [{
         type: Schema.Types.ObjectId,
         ref: "User"
-    }]
+    }],
+    lastModified: Date
 });
 
 exports.Dialogue = mongoose.model('Dialogue', schema);

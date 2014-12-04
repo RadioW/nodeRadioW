@@ -128,7 +128,7 @@
                     width: that.place.right - that.place.left+'px',
                     height: that.place.bottom - that.place.top+'px',
                     position: 'absolute',
-                    top: that.place.top+'px',
+                    top: that.place.top -carett.place.top +'px',
                     left: that.place.left-carett.place.left+'px'
                 });
                 that.expanded.css("opacity",0);

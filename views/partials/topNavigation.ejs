@@ -2,13 +2,14 @@
 <div class="navbar-inner">
 	<ul class="nav navbar-nav">
 		<li><a id="homeLink" href="/">Главная</a></li>
-		<li><a id="usersLink" href="/users">Радиослушатели</a></li>
+
 		<% if (self) { %>
-		<li><a id="chatLink" href="/chat">Чат</a></li>
+		<li><a id="usersLink" href="/users">Радиослушатели</a></li>
 		<% } %>
 	</ul>
 	<ul class="nav navbar-nav navbar-right" style="margin-right: 0">
 		<% if (self) {%>
+		<li><a href="/user/<%- self._id %>"><%- self.username %></a></li>
 		<li><a href="/log" id="logoutHref">Выйти</a></li>
 		<% } else {%>
 		<li><a id="loginLink" href="/login">Войти</a></li>

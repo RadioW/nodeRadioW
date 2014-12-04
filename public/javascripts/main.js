@@ -45,6 +45,7 @@
             $content: "/javascripts/content/content.js",
             $blog: "/javascripts/content/blog.js",
             $message: "/javascripts/message/message.js",
+            $dialogue: "/javascripts/message/dialogue.js",
             message: {
                 $comment: "/javascripts/message/comment.js"
             }
