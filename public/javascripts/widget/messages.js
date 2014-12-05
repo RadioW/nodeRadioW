@@ -55,6 +55,7 @@
                         that.messageRollContainer.prepend(message.wrapper);
                         that.messages[message.id] = message;
                     }
+                    that.pal.html(data.pal.name);
                     setTimeout(function() {
                         if (!that.lastShownMessageIndex) {
                             that.messageRoll.scrollTop(that.messageRollContainer.height());
@@ -103,7 +104,8 @@
                     "opacity": 0
                 });
                 that.border.append(that.dialogue);
-                that.dialogue.append($('<p class="text-center lead">').html('Переписка'));
+                that.pal = $('<span>');
+                that.dialogue.append($('<p class="text-center lead">').html('Диалог с ').append(that.pal));
                 if (core.user.id && core.user.name) {
                     var messageForm = that.messageForm = $('<form class="comment">');
                     messageForm.on('submit', function (e) {
@@ -189,6 +191,7 @@
                     }, true);
                 } else {
                     that.on('messagesResponseShort', function(data){
+                        that.shortRoll.empty();
                         if (data.length == 0) {
                             that.shortRoll.append($('<p>').html("Вы прежде не вели переписку с этим пользователем"));
                         } else {

@@ -232,7 +232,11 @@ var UserRoute = Route_io.inherit({
                         }
                         that.emit("messageListResponse", socket, {
                             messages: answer,
-                            lastIndex: dialogue.length - i
+                            lastIndex: dialogue.length - i,
+                            pal: {
+                                name: user.username,
+                                id: user._id
+                            }
                         })
 
                     });
