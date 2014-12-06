@@ -605,7 +605,18 @@ footer {
 .messages-label {
     position: absolute;
     top: 0;
-    right: 0;
     display: block;
     margin: 0;
 }
+
+/*
+.container-fluid {
+    padding-top: 53px;
+}
+
+.container-fluid > p.text-center.lead {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%
+}*/

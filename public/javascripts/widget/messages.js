@@ -132,7 +132,6 @@
                         that.dialogue.append(buttonBack);
                         buttonBack.on("click", function () {
                             that.dialogueMode();
-                            that.emit("dialoguesRequest");
                         });
                     }
                 }
@@ -177,16 +176,49 @@
                             that.shortRoll.append($('<p>').html("Пока вы не вели переписку ни с кем из радиослушателей"));
                         } else {
                             for (var i = 0; i < that.dialogues.length; ++i) {
-                                var temp = $('<div class="dialogue-label">');
-                                temp.append($('<img src="/data/' + that.dialogues[i].user.id + '/avatar-md.jpg">'));
-                                that.shortRoll.append(temp);
-                                temp.append($('<p>').html(that.dialogues[i].user.name));
-                                if (that.dialogues[i].unreaded != 0) {
-                                    temp.append($('<h4 class="messages-label">')
-                                        .append($('<span  class="label label-primary">')
-                                            .html('<span class="glyphicon glyphicon-envelope"> </span>' + " " + that.dialogues[i].unreaded)));
-                                }
+                                that.shortRoll.append(that.dialogues[i].previewWrapper);
                             }
+                        }
+                    }, true);
+                    that.on("updateDialogue", function(data) {
+                        for (var i = 0; i<that.dialogues.length; ++i) {
+                            if (that.dialogues[i].id == data.id) {
+                                var dialogue = that.dialogues.splice(i, 1)[0];
+                                dialogue.update(data);
+                                that.dialogues.unshift(dialogue);
+                                for (var j = 0; j<that.dialogues.length; ++j) {
+                                    if (Math.floor(j/2) == j/2) {
+                                        that.dialogues[j].moveLeft();
+                                    } else {
+                                        that.dialogues[j].moveRight();
+                                    }
+                                }
+                                if (that.dialogues[1]) {
+                                    that.dialogues[1].previewWrapper.before(dialogue.previewWrapper);
+                                } else {
+                                    that.shortRoll.append(dialogue.previewWrapper);
+                                }
+                                if (that.fullSized) {
+                                    if (that.dialogues[1]) {
+                                        that.dialogues[1].wrapper.before(dialogue.wrapper);
+                                    } else {
+                                        that.expanded.append(dialogue.wrapper);
+                                    }
+                                }
+                                return;
+                            }
+                        }
+                        that.shortRoll.empty();
+                        var dial = new Dialogue(data);
+                        that.dialogues.push(dial);
+                        that.shortRoll.append(dial.previewWrapper);
+                        if (that.fullSized) {
+                            that.expanded.append(dial.wrapper);
+                            dial.wrapper.on("click", (function (id) {
+                                return function () {
+                                    that.dialogueMode(id);
+                                }
+                            })(dial.user.id));
                         }
                     }, true);
                 } else {
@@ -201,6 +233,11 @@
                             }
                         }
                     }, true);
+                    that.on('updateDialogue', function(data) {
+                        if (data.user.id == that.options.userId) {
+                            that.emit("messagesRequestShort", that.options.userId); //not so good solution
+                        }
+                    }, true)
                 }
                 Widget.fn.initSockets.call(that);
             },

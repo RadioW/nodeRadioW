@@ -25,6 +25,13 @@
                 that.initHrefs();
                 that.status(that.state);
             },
+            "destructor": function() {
+                var that = this;
+                that.wrapper.remove();
+                delete that.wrapper;
+
+                Class.fn.destructor.call(that);
+            },
             "initHrefs": function() {
                 core.explorer.clickers($('a', this.wrapper[0]));
             },
@@ -104,7 +111,6 @@
                 }
             },
             "remove": function() {
-                this.wrapper.remove();
                 this.destructor()
             }
         });

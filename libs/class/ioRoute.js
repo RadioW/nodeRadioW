@@ -77,6 +77,14 @@ var Route_io = Class.inherit({
             event: event,
             data: data
         });
+    },
+    "tell": function(uid, event, data) {
+        var that = this;
+        var clients = that.connections;
+        for (var i=0; i<clients.length; i++) {
+            if (clients[i].request.session.user == uid)
+                that.emit(event, clients[i], data);
+        }
     }
 });
 
