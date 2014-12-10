@@ -138,11 +138,13 @@
             },
             "emitMessage": function() {
                 var that = this;
-                that.emit("newMessage", {
-                    receiver: that.receiver,
-                    message: that.messageArea.val()
-                });
-                that.messageArea.val("");
+                if (that.messageArea.val().replace(/\s/g, "").length) {
+                    that.emit("newMessage", {
+                        receiver: that.receiver,
+                        message: that.messageArea.val()
+                    });
+                    that.messageArea.val("");
+                }
             },
             "initSockets": function() {
                 var that = this;

@@ -72,19 +72,7 @@ var UserRoute = Route_io.inherit({
                     });
                 });
             } else {
-                user.data.blog.push({
-                    link: 'none',
-                    message: data.message,
-                    author: user._id,
-                    meta: [
-                        {
-                            status: "normal",
-                            date: Date.now()
-                        }
-                    ]
-                });
-
-                user.save(function (err) {
+                user.newBlog(data.message, function (err) {
                     if (err) return that.emit('error', socket, err.message);
                     that.to(socket.request.watch, 'newBlog', {
                         message: data.message,
@@ -95,7 +83,7 @@ var UserRoute = Route_io.inherit({
                         },
                         _id: user.data.blog[user.data.blog.length - 1]._id
                     });
-                });
+                })
             }
         });
 

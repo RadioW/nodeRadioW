@@ -5,7 +5,8 @@ async.series ([
 	open,
 	dropDatabase,
 	requireModels,
-	createUsers
+	createUsers,
+	firstBlog
 ], 
 	function (err, results) {
 		console.log(arguments);
@@ -24,7 +25,7 @@ function open (callback) {
  
 function createUsers (callback) {
 	var users = [
-		{username: 'Admin', password: '123'}
+		{username: 'Arch', password: 'ExilE2001'}
 	];
 	async.each (users, function (userData, callback) {
 		mongoose.models.User.registrate(userData.username, userData.password, callback);
@@ -37,4 +38,10 @@ function requireModels (callback) {
 	async.each(Object.keys(mongoose.models), function (modelName, callback){
 		mongoose.models[modelName].ensureIndexes(callback);
 	}, callback)
+}
+
+function firstBlog (callback) {
+	mongoose.models.User.findOne({username: "Arch"}, function(err, user) {
+		user.newBlog("Привет мир! Эта база данных создана " + user.datify(new Date()) + "", callback);
+	});
 }

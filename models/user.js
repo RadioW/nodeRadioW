@@ -204,6 +204,21 @@ schema.methods.changeInfo = function(info, callback) {
 		})
 	};
 
+schema.methods.newBlog = function(message,callback) {
+	this.data.blog.push({
+		link: 'none',
+		message: message,
+		author: this._id,
+		meta: [
+			{
+				status: "normal",
+				date: Date.now()
+			}
+		]
+	});
+	this.save(callback);
+};
+
 schema.statics.registrate = function (username, password, callback) {
 	var User = this;
 	
@@ -265,7 +280,7 @@ schema.statics.authorize = function (username, password, callback) {
 			}
 		}
 	], callback);
-}
+};
 
 schema.statics.logout = function (id, callback) {
 	var User = this;

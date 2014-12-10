@@ -104,8 +104,9 @@
                 }
 
                 setTimeout(function() {
-                    container.css("opacity", 1)
-                }, 300);
+                    container.css("opacity", 1);
+                    that.blogRoll.height(that.expanded.height() - that.expandedHeader.height() - parseInt(that.expandedHeader.css('margin-bottom')));
+                }, 500);
             },
             "initAdditionalSockets": function() {
                 var that = this;
@@ -171,12 +172,15 @@
                             top: 0,
                             right: "45px"
                         }).on("click", function() {
-                            that.emit('blog', {
-                                message: area.val(),
-                                editing: that.editingBlog
-                            });
-                            area.val("");
-                            that.writerMode();
+                            var msg = area.val();
+                            if (msg.replace(/\s/g, "").length) {
+                                that.emit('blog', {
+                                    message: msg,
+                                    editing: that.editingBlog
+                                });
+                                area.val("");
+                                that.writerMode();
+                            }
                         });
                         editor.append(closeButton);
                         editor.append(submitButton);

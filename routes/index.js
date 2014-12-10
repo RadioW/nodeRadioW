@@ -25,13 +25,13 @@ module.exports = function (app) {
 	app.get('/user/:id/:tool/:pid', userRoute.tool);
     app.get('/user/:id/:tool', userRoute.tool);
 	
-	app.get('/conclave', forAuth, forAdmin, require('./conclave').get);
-	app.post('/conclave/give', forAuth, forAdmin, require('./conclave').give);
-	app.post('/conclave/del', forAuth, forAdmin, require('./conclave').del);
-	app.post('/conclave/kill', forAuth, forAdmin, require('./conclave').kill, answerOK);
+	//app.get('/conclave', forAuth, forAdmin, require('./conclave').get);
+	//app.post('/conclave/give', forAuth, forAdmin, require('./conclave').give);
+	//app.post('/conclave/del', forAuth, forAdmin, require('./conclave').del);
+	//app.post('/conclave/kill', forAuth, forAdmin, require('./conclave').kill, answerOK);
 	
-	app.get('/chat', require('./chat').get);
+	//app.get('/chat', require('./chat').get);
 	
-	app.get('/guests', require('./guests').get);
-	app.get('/guests/d', require('./guests').del);
+	//app.get('/guests', require('./guests').get);
+	//app.get('/guests/d', require('./guests').del);
 };

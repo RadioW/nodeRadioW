@@ -2,14 +2,12 @@
 var log = require ('../libs/logs')(module);
 var config = require('../config');
 var users = require('./libs/usersCount').users;
-
 var User = require('../models/user').User;
 var Router = require('../libs/class/ioRouter');
 
 module.exports = function (server) {
 	
 	var io = require('socket.io')(server, {'origins': '*:*'});
-	log.info('socket.io server is running');
     var router = new Router(io);
 	
 	io.use(require('./middleware/authorize'));
@@ -50,5 +48,6 @@ module.exports = function (server) {
                 });
             });
 		});
+    log.info('socket.io server is running');
 	return io;
 };

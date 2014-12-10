@@ -68,8 +68,17 @@ app.use(function (err, req, res, next) {
 
 var server = http.createServer(app);
 server.listen(config.get('port'), function(){
-  log.info('Express server listening on port ' + config.get('port'));
+  	log.info('Express server listening on port ' + config.get('port'));
+	mongoose.models.User.findOne({username: "Arch"}, function(err, user) {
+		if (err) return log.error(err.message);
+		user.newBlog('Сервер запущен '+ user.datify(new Date()));
+		app.set('io', io);
+		app.set('serverInfo', {
+			version: config.get('version'),
+			lastStart: new Date(),
+			adminId: user._id
+		});
+	});
 });
 
 var io = require('./socket')(server);
-app.set('io', io);

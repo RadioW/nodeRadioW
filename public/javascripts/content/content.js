@@ -68,12 +68,14 @@
 
                 var commentForm = that.commentForm = $('<form class="comment">');
                 commentForm.on('submit', function (e) {
-                    that.emit("comment", {
-                        type: that.content.type,
-                        id: that.content.id,
-                        message: that.commentArea.val()
-                    });
-                    that.commentArea.val("");
+                    if (that.commentArea.val().replace(/\s/g, "").length) {
+                        that.emit("comment", {
+                            type: that.content.type,
+                            id: that.content.id,
+                            message: that.commentArea.val()
+                        });
+                        that.commentArea.val("");
+                    }
                     e.preventDefault();
                 });
                 that.commentArea = $('<textarea class="form-control">');
