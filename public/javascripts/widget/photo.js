@@ -62,6 +62,9 @@
                                     })
                                         .append($('<img src="/data/' + that.options.userId + '/photo/'+ data[i] +'prev.jpg">')))));
                         }
+                        if (data.length == 0) {
+                            that.littlePhotos.append($('<p class="placeholder">').html(that.options.userId == core.user.id ? "Вы пока не загружали изображений":"Пользователь пока не загрузил ни одного изображения"))
+                        }
                         that.littlePhotos.css("opacity", 1);
                     }, 300);
                 }, true);

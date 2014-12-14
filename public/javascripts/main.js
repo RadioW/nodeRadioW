@@ -39,7 +39,8 @@
                 $registration: "/javascripts/pages/registration.js",
                 $chat: "/javascripts/pages/chat.js",
                 $user: "/javascripts/pages/user.js",
-                $login: "/javascripts/pages/login.js"
+                $login: "/javascripts/pages/login.js",
+                $users: "/javascripts/pages/users.js"
             },
             $fileinput: "/javascripts/ui/fileinput.js",
             $content: "/javascripts/content/content.js",

@@ -15,6 +15,7 @@
         var Page = Class.inherit({
             "className": "Page",
             "title": "page",
+            "name": "Radio W",
             "websocket": false,
             "constructor": function(param) {
                 var that = this;
@@ -48,6 +49,7 @@
             },
             "run": function() {
                 //here you can paste your code
+                $('title').html(this.name);
                 console.log("page "+ this.title + ": code finished!");
             },
             "websocketConnect": function() {

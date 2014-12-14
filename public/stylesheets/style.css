@@ -41,7 +41,9 @@
   height: 8.33333333%;
 }
 
-
+.modal-backdrop {
+    z-index: 0;
+}
 
 
 .col-xs-1-v, .col-sm-1-v, .col-md-1-v, .col-lg-1-v, .col-xs-2-v, .col-sm-2-v, .col-md-2-v, .col-lg-2-v, .col-xs-3-v, .col-sm-3-v, .col-md-3-v, .col-lg-3-v, .col-xs-4-v, .col-sm-4-v, .col-md-4-v, .col-lg-4-v, .col-xs-5-v, .col-sm-5-v, .col-md-5-v, .col-lg-5-v, .col-xs-6-v, .col-sm-6-v, .col-md-6-v, .col-lg-6-v, .col-xs-7-v, .col-sm-7-v, .col-md-7-v, .col-lg-7-v, .col-xs-8-v, .col-sm-8-v, .col-md-8-v, .col-lg-8-v, .col-xs-9-v, .col-sm-9-v, .col-md-9-v, .col-lg-9-v, .col-xs-10-v, .col-sm-10-v, .col-md-10-v, .col-lg-10-v, .col-xs-11-v, .col-sm-11-v, .col-md-11-v, .col-lg-11-v, .col-xs-12-v, .col-sm-12-v, .col-md-12-v, .col-lg-12-v {

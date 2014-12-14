@@ -89,6 +89,11 @@
                 });
                 that.emit("requestWidgets", that.userId);
 
+                that.on("joined", function(data) {
+                    that.user = data;
+                    $('title').html(that.user.name);
+                });
+
                 Page.fn.run.call(that);
             },
             "openWidgets": function(param) {

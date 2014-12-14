@@ -34,8 +34,16 @@
             },
             "appendLittleBlog": function(data) {
                 var that = this;
+                var placeholder = $('.placeholder', that.container[0]);
+                if (placeholder.length){
+                    placeholder.remove();
+                }
                 var blogs = $('p.blog-little', that.container[0]);
-                blogs.first().before($('<p class="bg-info blog-little">').html(data.message));
+                if (blogs.length) {
+                    blogs.first().before($('<p class="bg-info blog-little">').html(data.message));
+                } else {
+                    that.container.append($('<p class="bg-info blog-little">').html(data.message));
+                }
                 if (blogs.length == 5) {
                     blogs.last().remove();
                 }
@@ -53,6 +61,9 @@
                     $('p.blog-little', that.container[0]).remove();
                     for (var i=0; i<data.length; i++) {
                         that.container.append($('<p class="bg-info blog-little">').html(data[i]));
+                    }
+                    if (data.length == 0) {
+                        that.container.append($('<p class="placeholder">').html(that.options.userId == core.user.id ? "Вы пока не писали ничего в блог": "Пользователь еще не делал заметок в блог"))
                     }
                 }, true);
 

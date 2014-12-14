@@ -15,6 +15,7 @@
         var Login = Page.inherit({
             "className": "Login",
             "websocket": false,
+            "name": "Вход",
             "constructor": function(params) {
                 var that = this;
 

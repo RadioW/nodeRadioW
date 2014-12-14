@@ -15,6 +15,7 @@
         var Chat = Page.inherit({
             "className": "Chat",
             "websocket": true,
+            "name": "Чат",
             "constructor": function(params) {
                 var that = this;
 

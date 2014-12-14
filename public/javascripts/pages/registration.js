@@ -15,6 +15,7 @@
         var Registration = Page.inherit({
             "className": "Registration",
             "websocket": true,
+            "name": "Регистрация",
             "constructor": function (param) {
                 var that = this;
 

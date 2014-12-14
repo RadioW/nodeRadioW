@@ -33,6 +33,14 @@ var UserRoute = Route_io.inherit({
         that.on('join', function (socket, data) {
             socket.join(data);
             socket.request.watch = data;
+            User.findById(data, function(err, user) {
+                if (err) return that.emit('error', socket, err.message);
+                if (!user) return that.emit('error', socket, "Can't find user");
+                that.emit('joined', socket, {
+                    id: user._id,
+                    name: user.username
+                })
+            });
         });
 
         that.on('disconnect', function (socket, data) {
