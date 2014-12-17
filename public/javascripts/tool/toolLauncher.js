@@ -8,10 +8,12 @@
     var defineArray = [];
     defineArray.push(m.$class);
     defineArray.push(m.tool.$visitors);
+    defineArray.push(m.tool.$chat);
 
     define(moduleName, defineArray, function tool_module() {
         var Class = require(m.$class);
         var Visitors = require(m.tool.$visitors);
+        var Chat = require(m.tool.$chat);
 
         var ToolLauncher = Class.inherit({
             "className": "ToolLauncher",
@@ -22,6 +24,7 @@
                 $(document.body).prepend($('<div id="toolsRestrictor">'));
                 $(document.body).prepend($('<div id="toolsLayer">'));
                 that.visitors = new Visitors();
+                that.chat = new Chat();
             }
         });
 

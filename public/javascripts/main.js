@@ -54,7 +54,8 @@
             $tool: "/javascripts/tool/tool.js",
             $toolLauncher: "/javascripts/tool/toolLauncher.js",
             tool: {
-                $visitors: "/javascripts/tool/visitors.js"
+                $visitors: "/javascripts/tool/visitors.js",
+                $chat: "/javascripts/tool/chat.js"
             }
 
         };

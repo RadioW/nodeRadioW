@@ -17,10 +17,15 @@ var Route_io = Class.inherit({
         that.io = param.io;
         that.on("connection", function(socket, data) {
             that.connections.push(socket);
+            log.info('connected ' + socket.request.user.username + ' to ' + that.route);
+            log.info('now ' + that.connections.length+ ' in ' + that.route);
             that.emit('connection', socket);
         });
         that.on("disconnect", function(socket, data) {
+
             that.connections.splice(that.connections.indexOf(socket), 1);
+            log.info('disconnected ' + socket.request.user.username+ ' from ' + that.route);
+            log.info('now ' + that.connections.length + ' in ' + that.route);
         })
 
     },
@@ -58,6 +63,7 @@ var Route_io = Class.inherit({
 
         for (var i = 0; i<that.connections.length; i++) {
             that.emit(event, that.connections[i], data);
+            log.info('say to ' + that.connections[i].request.user.username);
         }
     },
     "countWindows": function (sid) {
