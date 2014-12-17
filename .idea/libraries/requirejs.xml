@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="requirejs" type="javaScript">
+    <properties>
+      <sourceFilesUrls>
+        <item url="file://$PROJECT_DIR$/public/vendor/bower_components/requirejs/require.js" />
+      </sourceFilesUrls>
+    </properties>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/public/vendor/bower_components/requirejs/require.js" />
+    </CLASSES>
+    <SOURCES />
+  </library>
+</component>

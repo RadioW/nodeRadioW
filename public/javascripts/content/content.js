@@ -28,6 +28,11 @@
                 that.content = {};
                 that.user = {};
                 that.comments = {};
+                core.connection.socket.emit('event', {
+                    route: "content",
+                    event: "connection",
+                    data: null
+                });
             },
             "initWrapper": function() {
                 var that = this;
@@ -328,6 +333,14 @@
             },
             "initSubscription": function(core) {
                 var that = this;
+
+                core.connection.listen({
+                    route: "content",
+                    event: "connection",
+                    handler: function(data) {
+                        console.log("Content socket connected");
+                    }
+                });
 
                 core.connection.listen({
                     route: "content",

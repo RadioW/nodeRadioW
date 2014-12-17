@@ -24,15 +24,19 @@ module.exports = function (server) {
                     username: socket.request.user.get('username')
                 }
             });
-			socket.emit('event', {
+            io.of('/main').to('authorizedUsers').emit('event', {
                 route: "main",
                 event: "info",
                 data: users(io)
             });
-            socket.broadcast.emit('event', {
-                route: "main",
-                event: "info",
-                data: users(io)
+
+            socket.on('authorized', function() {
+                socket.join('authorizedUsers');
+                socket.emit('event', {
+                    route: "main",
+                    event: "info",
+                    data: users(io)
+                });
             });
 
             socket.on('event', function(params) {
@@ -41,7 +45,8 @@ module.exports = function (server) {
 
             socket.on('disconnect', function () {
                 router.disconnect(socket);
-                socket.broadcast.emit('event', {
+                socket.leave('authorizedUsers');
+                io.of('/main').to('authorizedUsers').emit('event', {
                     route: "main",
                     event: "info",
                     data: users(io)

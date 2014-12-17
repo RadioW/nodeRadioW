@@ -29,21 +29,23 @@
 
                 $(document.forms['login-form']).on('submit', function(e) {
                     var form = $(this);
+                    e.preventDefault();
 
                     $('.error', form).html('');
-                    $(":submit", form).button("loading");
+                    var btn = $(".btn", form);
+                    btn.addClass('disabled').attr('disabled', 'disabled');
 
                     $.ajax({
                         url: "/login",
                         method: "POST",
                         data: form.serialize(),
                         complete: function() {
-                            $(":submit", form).button("reset");
+                            btn.removeClass('disabled').removeAttr('disabled')
                         },
                         statusCode: {
                             200: function() {
                                 form.html("Вы вошли в сайт").addClass('alert-success');
-                                //window.location.href = "/chat";
+                                window.location.href = "/";
                             },
                             403: function(jqXHR) {
                                 var error = JSON.parse(jqXHR.responseText);
@@ -51,7 +53,6 @@
                             }
                         }
                     });
-                    e.preventDefault();
                 });
                 Page.fn.run.call(that);
             }

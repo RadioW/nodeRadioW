@@ -32,7 +32,8 @@
             framawork: {
                 $socketio: "/vendor/bower_components/socket.io-client/socket.io.js",
                 $jquery: "/vendor/bower_components/jquery/dist/jquery.js",
-                $bootstrap: "/vendor/bower_components/bootstrap/dist/js/bootstrap.js"
+                $bootstrap: "/vendor/bower_components/bootstrap/dist/js/bootstrap.js",
+                $jqueryUi: "/vendor/bower_components/jquery-ui/jquery-ui.js"
             },
             $page: "/javascripts/pages/page.js",
             page: {
@@ -49,6 +50,11 @@
             $dialogue: "/javascripts/message/dialogue.js",
             message: {
                 $comment: "/javascripts/message/comment.js"
+            },
+            $tool: "/javascripts/tool/tool.js",
+            $toolLauncher: "/javascripts/tool/toolLauncher.js",
+            tool: {
+                $visitors: "/javascripts/tool/visitors.js"
             }
 
         };
@@ -57,9 +63,11 @@
         defineArray.push(m.$core);
         defineArray.push(m.framawork.$socketio);
         defineArray.push(m.framawork.$bootstrap);
+        defineArray.push(m.framawork.$jqueryUi);
 
         require(defineArray, function main_module() {
             var Core = require(m.$core);
+
             window.core = new Core();
             core.explorer.openPage(window.location);
         });

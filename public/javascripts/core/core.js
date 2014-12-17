@@ -11,12 +11,14 @@
     defineArray.push(m.$asyncExplorer);
     defineArray.push(m.$connection);
     defineArray.push(m.$content);
+    defineArray.push(m.$toolLauncher);
 
     define(moduleName, defineArray, function core_module() {
         var Class = require(m.$class);
         var AsyncExplorer = require(m.$asyncExplorer);
         var Connection = require(m.$connection);
         var Content = require(m.$content);
+        var ToolLauncher = require(m.$toolLauncher);
 
         var Core = Class.inherit({
             "className": "Core",
@@ -28,6 +30,9 @@
                 that.connection = new Connection();
                 that.explorer = new AsyncExplorer();
                 that.content = new Content(that); //need to create subscription;
+            },
+            "initTools": function() {
+                this.tools = new ToolLauncher();
             }
         });
 

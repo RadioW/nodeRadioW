@@ -11,7 +11,8 @@ exports.users = function users(io) {
 				user[clients[key].request.session.id] = {
 												username: clients[key].request.user.get('username'),
 												count: 1,
-												isGuest: false
+												isGuest: false,
+												id: clients[key].request.user._id.toString()
 				};
 				if (user[clients[key].request.session.id].username.slice(0, 6) == 'Guest ') {
 					user[clients[key].request.session.id].isGuest = true;
@@ -27,9 +28,9 @@ function getUsersAndGuests(user) {
 	var guests = [];
 	for (var key in user) {
 		if (user[key].isGuest) {
-			guests.push(user[key].username)
+			guests.push({name: user[key].username});
 		} else {
-			users.push(user[key].username)
+			users.push({name: user[key].username, id:user[key].id});
 		};
 	}
 	return {users: users, guests: guests};

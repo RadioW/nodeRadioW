@@ -81,7 +81,7 @@
                 var that = this;
 
                 that.routes = {};
-                var info = $('#infoBar');
+/*                var info = $('#infoBar');
                 var spans = $('span', info.get(0));
 
                 that.listen({
@@ -92,7 +92,7 @@
                         spans.get(0).innerHTML = data.users.length;
                         spans.get(1).innerHTML = data.guests.length;
                     }
-                });
+                });*/
                 that.listen({
                     route: "main",
                     event: "connected",
@@ -100,6 +100,10 @@
                         core.user = {
                             "id": data.id,
                             "name": data.username
+                        };
+                        if (data.id) {
+                            core.initTools();
+                            that.socket.emit('authorized');
                         }
                     }
                 });

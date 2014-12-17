@@ -611,14 +611,165 @@ footer {
     margin: 0;
 }
 
-/*
-.container-fluid {
-    padding-top: 53px;
+#toolBar {
+    position: fixed;
+    right:0;
+    top:0;
+    z-index:2001;
+    width: 63px;
+    overflow: hidden;
 }
 
-.container-fluid > p.text-center.lead {
+#toolsLayer {
+    position: absolute;
+    top:0;
+    left:0;
+    width:0;
+    height:0;
+    overflow: visible;
+    z-index: 2000;
+}
+
+#toolsRestrictor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+.tool-button {
+    width: 63px;
+    height: 63px;
+    overflow: hidden;
+    position: relative;
+    -webkit-transition: background-color 0.2s ease-in-out;
+    -moz-transition: background-color 0.2s ease-in-out;
+    -ms-transition: background-color 0.2s ease-in-out;
+    -o-transition: background-color 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.tool-button > div {
+    text-align: center;
+}
+
+.tool-color-grey {
+    background-color: #aaaaaa;
+}
+
+.tool-color-blue {
+    background-color: #009dcb;
+    color: #444;
+}
+.tool-color-blue:hover {
+    background-color: #66acda;
+}
+
+.tool-window {
+    position: fixed;
+    height: 350px;
+    width: 250px;
+    top: 100px;
+    left: 100px;
+    background-color: #edf0f5;
+    box-sizing: border-box;
+    padding-top: 30px;
+    -webkit-transition: transform 0.3s ease-in-out, -webkit-transform 0.3s ease-in-out, -moz-transform 0.3s ease-in-out, -o-transform 0.3s ease-in-out;
+    -moz-transition: transform 0.3s ease-in-out, -webkit-transform 0.3s ease-in-out, -moz-transform 0.3s ease-in-out, -o-transform 0.3s ease-in-out;
+    -ms-transition: transform 0.3s ease-in-out, -webkit-transform 0.3s ease-in-out, -moz-transform 0.3s ease-in-out, -o-transform 0.3s ease-in-out;
+    -o-transition: transform 0.3s ease-in-out, -webkit-transform 0.3s ease-in-out, -moz-transform 0.3s ease-in-out, -o-transform 0.3s ease-in-out;
+    transition: transform 0.3s ease-in-out, -webkit-transform 0.3s ease-in-out, -moz-transform 0.3s ease-in-out, -o-transform 0.3s ease-in-out;
+}
+.tool-window.tool-deactivated {
+    transform: scale(0,0);
+    -webkit-transform: scale(0,0);
+    -moz-transform: scale(0,0);
+    -o-transform: scale(0,0);
+}
+
+.tool-handler {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%
-}*/
+    width: 100%;
+    height: 30px;
+    cursor: move;
+    -webkit-transition: background-color 0.2s ease-in-out;
+    -moz-transition: background-color 0.2s ease-in-out;
+    -ms-transition: background-color 0.2s ease-in-out;
+    -o-transition: background-color 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
+    overflow: hidden;
+}
+
+.tool-resize {position: absolute; z-index:2}
+.tool-resize.n {top: -5px; left: 0; width: 100%; height: 7px; cursor: n-resize}
+.tool-resize.ne {top: -5px; right: -5px; width: 10px; height: 10px; z-index: 3; cursor: ne-resize}
+.tool-resize.e {top: 0; right: -5px; width: 7px; height: 100%; cursor: e-resize}
+.tool-resize.se {bottom: -5px; right: -5px; width: 10px; height: 10px; z-index: 3; cursor: se-resize}
+.tool-resize.s {bottom: -5px; left: 0; width: 100%; height: 7px; cursor: s-resize}
+.tool-resize.sw {bottom: -5px; left: -5px; width: 10px; height: 10px; z-index: 3; cursor: sw-resize}
+.tool-resize.w {top: 0; left: -5px; width: 7px; height: 100%; cursor: w-resize}
+.tool-resize.nw {top: -5px; left: -5px; width: 10px; height: 10px; z-index: 3; cursor: nw-resize}
+
+.tool-action {
+    margin-top: 5px;
+    margin-right: 5px;
+    float: right;
+    height: 20px;
+    width: 20px;
+    text-align: center;
+    font-size: 20px;
+    text-indent: 0;
+    line-height: 0;
+    cursor: pointer;
+    -webkit-transition: color 0.2s ease-in-out;
+    -moz-transition: color 0.2s ease-in-out;
+    -ms-transition: color 0.2s ease-in-out;
+    -o-transition: color 0.2s ease-in-out;
+    transition: color 0.2s ease-in-out;
+}
+.tool-toolbar {
+    position: absolute;
+    z-index:2;
+    top: 0;
+    right: 0;
+    overflow: hidden;
+    height: 100%;
+}
+.tool-action:hover {
+    color: #ffffff
+}
+
+.tool-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.tool-handler>p {
+    float: left;
+    font-size: 20px;
+    margin: 5px 0 5px 5px;
+    line-height: 20px;
+    color: #ffffff
+}
+.tool-visitors-link {
+    display: block;
+    width: 100%;
+    color: #2b2b2b;
+    text-align: center;
+    font-size: 16px;
+    -webkit-transition: background-color 0.2s ease-in-out;
+    -moz-transition: background-color 0.2s ease-in-out;
+    -ms-transition: background-color 0.2s ease-in-out;
+    -o-transition: background-color 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
+    text-decoration: none;
+}
+.tool-visitors-link:hover {
+    background-color: #a4d1f3;
+    text-decoration: none;
+}
