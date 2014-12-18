@@ -71,7 +71,7 @@
                 that.on("incomingMessage", function(data){
                     var message = new Message(data);
                     that.messages[message.id] = message;
-                    if (that.messageRollContainer.height() - that.messageRoll.height() == that.messageRoll.scrollTop()) {
+                    if (that.messageRollContainer.height() - that.messageRoll.height() - that.messageRoll.scrollTop() < 5) {
                         setTimeout(function(){
                             that.messageRoll.scrollTop(that.messageRollContainer.height());
                             ++that.lastShownMessageIndex;

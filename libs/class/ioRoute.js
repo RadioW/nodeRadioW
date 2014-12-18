@@ -66,6 +66,27 @@ var Route_io = Class.inherit({
             log.info('say to ' + that.connections[i].request.user.username);
         }
     },
+    "userNames": function(callback) {
+        var that = this;
+        setTimeout(function() {
+            var clients = that.connections;
+            var users = [];
+            for (var i = 0; i< clients.length; ++i) {
+                var user = clients[i].request.user.username;
+                var flag = true;
+                for (var j = 0; j< users.length; ++j) {
+                    if (user === users[j]) {
+                        flag = false;
+                        break;
+                    }
+                }
+                if (flag) {
+                    users.push(user);
+                }
+            }
+            callback(users);
+        },1);
+    },
     "countWindows": function (sid) {
         var that = this;
         var clients = that.connections;
@@ -76,10 +97,10 @@ var Route_io = Class.inherit({
         }
         return count;
     },
-    "to": function(room, event, data) {
+    "to": function(room, event, data, route) {
         var that = this;
         that.io.of('/main').to(room).emit('event', {
-            route: that.route,
+            route: route || that.route,
             event: event,
             data: data
         });

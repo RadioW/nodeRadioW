@@ -236,6 +236,15 @@ var UserRoute = Route_io.inherit({
                         })
 
                     });
+                } else {
+                    that.emit("messageListResponse", socket, {
+                        messages: [],
+                        lastIndex: 0,
+                        pal: {
+                            name: user.username,
+                            id: user._id
+                        }
+                    })
                 }
             });
         });
