@@ -267,15 +267,15 @@ var UserRoute = Route_io.inherit({
                     });
                 },
                 function(receiver, callback) {
-                    var dialogueId = snd.data.dialogues[receiver._id];
+                    var dialogueId = receiver.data.dialogues[snd._id.toString()];
                     var dialogue;
                     rcv = receiver;
                     if (!dialogueId) {
                         dialogue = new Dialogue();
                         delete snd.data.dialogues.test;
                         delete rcv.data.dialogues.test;
-                        snd.data.dialogues[rcv._id] = dialogue._id.toString();
-                        rcv.data.dialogues[snd._id] = dialogue._id.toString();
+                        snd.data.dialogues[rcv._id.toString()] = dialogue._id.toString();
+                        rcv.data.dialogues[snd._id.toString()] = dialogue._id.toString();
                         snd.markModified('data.dialogues');
                         rcv.markModified('data.dialogues');
                         snd.save(function(err){
