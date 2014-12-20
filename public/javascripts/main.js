@@ -38,7 +38,6 @@
             $page: "/javascripts/pages/page.js",
             page: {
                 $registration: "/javascripts/pages/registration.js",
-                $chat: "/javascripts/pages/chat.js",
                 $user: "/javascripts/pages/user.js",
                 $login: "/javascripts/pages/login.js",
                 $users: "/javascripts/pages/users.js"

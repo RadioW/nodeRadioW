@@ -37,9 +37,9 @@
                 var that = this;
                 that.active = true;
                 that.toggable = false;
-                that.wnd.css("display", "block");
+                that.draggy.css("display", "block");
                 setTimeout(function() {
-                    that.wnd.removeClass('tool-deactivated');
+                    that.draggy.removeClass('tool-deactivated');
                     setTimeout(function() {
                         that.toggable = true;
                     },300);
@@ -49,9 +49,9 @@
                 var that = this;
                 that.active = false;
                 that.toggable = false;
-                that.wnd.addClass('tool-deactivated');
+                that.draggy.addClass('tool-deactivated');
                 setTimeout(function() {
-                    that.wnd.css("display", "none");
+                    that.draggy.css("display", "none");
                     that.toggable = true;
                 }, 300);
             },
@@ -78,32 +78,34 @@
             "initListeners": function() {},
             "initWindow": function() {
                 var that = this;
-                that.wnd = $('<div class="tool-window tool-deactivated">');
+                that.draggy = $('<div class="tool-window tool-deactivated">');
+                that.wnd = $('<div class="tool-inside">');
+                that.draggy.append(that.wnd);
                 that.wndHandler = $('<div class="tool-handler tool-color-'+ (that.options.color || "grey") +'">');
                 var close = $('<div class="tool-action">').html('<i class="glyphicon glyphicon-remove"> </i>');
                 close.on("click", function() {
                     that.deactivate();
                 });
-                $('#toolsLayer').prepend(that.wnd);
+                $('#toolsLayer').prepend(that.draggy);
                 that.wnd.append(that.wndHandler);
                 that.wndHandler.append($('<div class="tool-toolbar">').append(close));
 
-                that.wnd.append($('<div class="ui-resizable-handle ui-resizable-n tool-resize n">'));
-                that.wnd.append($('<div class="ui-resizable-handle ui-resizable-ne tool-resize ne">'));
-                that.wnd.append($('<div class="ui-resizable-handle ui-resizable-e tool-resize e">'));
-                that.wnd.append($('<div class="ui-resizable-handle ui-resizable-se tool-resize se">'));
-                that.wnd.append($('<div class="ui-resizable-handle ui-resizable-s tool-resize s">'));
-                that.wnd.append($('<div class="ui-resizable-handle ui-resizable-sw tool-resize sw">'));
-                that.wnd.append($('<div class="ui-resizable-handle ui-resizable-w tool-resize w">'));
-                that.wnd.append($('<div class="ui-resizable-handle ui-resizable-nw tool-resize nw">'));
+                that.draggy.append($('<div class="ui-resizable-handle ui-resizable-n tool-resize n">'));
+                that.draggy.append($('<div class="ui-resizable-handle ui-resizable-ne tool-resize ne">'));
+                that.draggy.append($('<div class="ui-resizable-handle ui-resizable-e tool-resize e">'));
+                that.draggy.append($('<div class="ui-resizable-handle ui-resizable-se tool-resize se">'));
+                that.draggy.append($('<div class="ui-resizable-handle ui-resizable-s tool-resize s">'));
+                that.draggy.append($('<div class="ui-resizable-handle ui-resizable-sw tool-resize sw">'));
+                that.draggy.append($('<div class="ui-resizable-handle ui-resizable-w tool-resize w">'));
+                that.draggy.append($('<div class="ui-resizable-handle ui-resizable-nw tool-resize nw">'));
 
-                that.wnd.draggable({
+                that.draggy.draggable({
                     containment: "#toolsRestrictor",
                     distance: 5,
                     handle: ".tool-handler",
                     cursor: "move"
                 });
-                that.wnd.resizable({
+                that.draggy.resizable({
                     containment: "#toolsRestrictor",
                     handles: {
                         n: ".n",
