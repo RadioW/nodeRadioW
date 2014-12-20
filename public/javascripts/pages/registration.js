@@ -53,7 +53,7 @@
                     if (!that.formValid()) {
                         return;
                     }
-                    submit.button('loading');
+                    submit.addClass('disabled').attr('disabled', 'disabled');
                     $.ajax({
                         url: '/registration',
                         method: 'POST',
