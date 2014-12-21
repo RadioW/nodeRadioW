@@ -131,6 +131,12 @@
                 that.textarea = $('<textarea>');
                 that.form.append(that.textarea);
                 that.form.append($('<button class="tool-color-'+that.options.color+'">').html('Отправить').on("click", function() {that.sendMessage();}));
+                that.textarea.keypress(function(e) {
+                    if (e.keyCode == 13 && !e.shiftKey) {
+                        e.preventDefault();
+                        that.sendMessage();
+                    }
+                });
             },
             "requestMessages": function() {
                 core.connection.socket.emit('event', {

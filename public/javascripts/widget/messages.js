@@ -114,6 +114,12 @@
                     });
                     that.messageArea = $('<textarea class="form-control">');
                     messageForm.append(that.messageArea);
+                    that.messageArea.keypress(function(e) {
+                        if (e.keyCode == 13 && !e.shiftKey) {
+                            e.preventDefault();
+                            that.sendMessage();
+                        }
+                    });
                     messageForm.append($('<input type="submit" class="btn btn-primary">'));
 
                     var messageRoll = that.messageRoll = $('<div class="messageRoll">');

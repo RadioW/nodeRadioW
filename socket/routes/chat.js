@@ -78,7 +78,7 @@ var Chat = Route_io.inherit({
                 });
 
                 that.on('requestMessages', function(socket, data) {
-                    ChatBase.populate(that.chat, {path: 'messages.author'}, function(err, chat) {
+                    ChatBase.populate(that.chat, {path: 'messages.author', select: "_id username"}, function(err, chat) {
                         if (err) return log.error(err.message);
                         var messages = chat.messages;
                         var limit = 20;

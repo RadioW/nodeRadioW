@@ -436,6 +436,7 @@ var UserRoute = Route_io.inherit({
                         return that.emit('error', socket, err.message);
                     }
                     that.to(dialogue._id.toString(), "readMessage", data.id);
+                    that.notifyPals(dialogue);
                 });
             });
         });
@@ -480,59 +481,78 @@ var UserRoute = Route_io.inherit({
     },
     "notifyPals": function(dialogue, u1, u2) {
         var that = this;
-        var id0 = u1.id.toString();
-        var id1 = u2.id.toString();
-        var unreaded0 = 0;
-        var unreaded1 = 0;
-        var idle = 0;
-        for (var i = dialogue.messages.length-1; i>=0; --i) {
-            var mes = dialogue.messages[i];
-            if (mes.author.toString() == id0) {
-                if (mes.meta[mes.meta.length-1].status == "unreaded") {
-                    unreaded1++;
-                    idle = 0;
-                }
-            } else {
-                if (mes.meta[mes.meta.length-1].status == "unreaded") {
-                    unreaded0++;
-                    idle = 0;
+        async.waterfall([
+            function(callback) {
+                if (u1 && u2) {
+                    return callback(null, u1, u2);
+                } else {
+                    if (dialogue) {
+                        Dialogue.populate(dialogue, {path: "users", select:"_id username"}, function(err, dialogue) {
+                            if (err) return callback(err);
+                            callback(null, {id:dialogue.users[0]._id, name:dialogue.users[0].username}, {id:dialogue.users[1]._id, name:dialogue.users[1].username})
+                        });
+                    } else {
+                        callback({message: "missing the dialogue!"});
+                    }
                 }
             }
-            if (idle>20)
-                break;
-        }
-        var lst = dialogue.messages[dialogue.messages.length-1];
-        var last = {
-            id: lst._id,
-            state: lst.meta[lst.meta.length-1].status,
-            type: "message",
-            user: {
-                id: lst.author,
-                name: lst.author.toString() == id0 ? u1.name : u2.name
-            },
-            dialogue: dialogue._id,
-            notHandled: true,
-            date: lst.date,
-            message: lst.message
-        };
-        that.tell(id0, "updateDialogue", {
-            id:dialogue._id,
-            unreaded: unreaded0,
-            lastMessage: last,
-            user: {
-                id: u2.id,
-                name: u2.name
+        ], function(err, u1, u2) {
+            if (err) return log.error(err.message);
+            var id0 = u1.id.toString();
+            var id1 = u2.id.toString();
+            var unreaded0 = 0;
+            var unreaded1 = 0;
+            var idle = 0;
+            for (var i = dialogue.messages.length-1; i>=0; --i) {
+                var mes = dialogue.messages[i];
+                if (mes.author.toString() == id0) {
+                    if (mes.meta[mes.meta.length-1].status == "unreaded") {
+                        unreaded1++;
+                        idle = 0;
+                    }
+                } else {
+                    if (mes.meta[mes.meta.length-1].status == "unreaded") {
+                        unreaded0++;
+                        idle = 0;
+                    }
+                }
+                if (idle>20)
+                    break;
             }
+            var lst = dialogue.messages[dialogue.messages.length-1];
+            var last = {
+                id: lst._id,
+                state: lst.meta[lst.meta.length-1].status,
+                type: "message",
+                user: {
+                    id: lst.author,
+                    name: lst.author.toString() == id0 ? u1.name : u2.name
+                },
+                dialogue: dialogue._id,
+                notHandled: true,
+                date: lst.date,
+                message: lst.message
+            };
+            that.tell(id0, "updateDialogue", {
+                id:dialogue._id,
+                unreaded: unreaded0,
+                lastMessage: last,
+                user: {
+                    id: u2.id,
+                    name: u2.name
+                }
+            });
+            that.tell(id1, "updateDialogue", {
+                id:dialogue._id,
+                unreaded: unreaded1,
+                lastMessage: last,
+                user: {
+                    id: u1.id,
+                    name: u1.name
+                }
+            })
         });
-        that.tell(id1, "updateDialogue", {
-            id:dialogue._id,
-            unreaded: unreaded1,
-            lastMessage: last,
-            user: {
-                id: u1.id,
-                name: u1.name
-            }
-        })
+
     }
 });
 
