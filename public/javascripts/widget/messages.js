@@ -117,7 +117,7 @@
                     that.messageArea.keypress(function(e) {
                         if (e.keyCode == 13 && !e.shiftKey) {
                             e.preventDefault();
-                            that.sendMessage();
+                            that.emitMessage();
                         }
                     });
                     messageForm.append($('<input type="submit" class="btn btn-primary">'));
