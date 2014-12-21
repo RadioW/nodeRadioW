@@ -10,27 +10,32 @@ exports.post = function (req, res, next) {
 	var sid = req.session.id;
 	var uid = req.session.user;
 	var io = req.app.get('io');
+	log.info('user ' + uid + ' logging out');
 
 	req.session.destroy(function (err) {
 	
-	var clients = io.of('/main').connected;
-    for (var key in clients) {
-      if (clients[key].request.session.id == sid) {
-		loadSession(sid, function(err, session) {
-			if (err) {
-			clients[key].emit("error", "server error");
+		var clients = io.of('/main').connected;
+		var count = 0;
+    	for (var key in clients) {
+			if (clients[key].request.session.id == sid) {
+				log.info('Refreshing session of '+clients[key].request.user.username+' (id='+clients[key].request.session.user+')');
+				++count;
+				loadSession(sid, function (err, session, socket) {
+					if (err) {
+						socket.emit("error", "server error");
+					}
+					if (!session) {
+						if (!socket) return;
+						socket.emit("event", {
+							route: "main",
+							event: "logout"
+						});
+						log.info(socket.request.user.username+' kicked by logout');
+					}
+					clients[key].request.session = session;
+				}, clients[key]);
 			}
-			if (!session) {
-				if (!clients[key]) return;
-			clients[key].emit("event", {
-                    route: "main",
-                    event: "logout"
-                });
-			}
-			clients[key].request.session = session;
-		});
-	  }
-    }
+		}
 	
 		if (err) return next(err);
 		User.logout(uid, function (err, user) {
@@ -47,12 +52,12 @@ exports.post = function (req, res, next) {
 	});
 };
 
-function loadSession(sid, callback) {
+function loadSession(sid, callback, socket) {
 	sessionStore.load(sid, function(err, session) {
 		if (arguments.length == 0) {
-			return callback (null, null);
+			return callback (null, null, socket);
 		} else {
-			return callback (null, session);
+			return callback (null, session, socket);
 		}
 	});
 }

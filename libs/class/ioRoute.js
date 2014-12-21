@@ -18,14 +18,16 @@ var Route_io = Class.inherit({
         that.on("connection", function(socket, data) {
             that.connections.push(socket);
             log.info('connected ' + socket.request.user.username + ' to ' + that.route);
-            log.info('now ' + that.connections.length+ ' in ' + that.route);
+            log.info('now ' + that.connections.length+ ' on ' + that.route);
             that.emit('connection', socket);
         });
         that.on("disconnect", function(socket, data) {
-
-            that.connections.splice(that.connections.indexOf(socket), 1);
-            log.info('disconnected ' + socket.request.user.username+ ' from ' + that.route);
-            log.info('now ' + that.connections.length + ' in ' + that.route);
+            var removingIndex = that.connections.indexOf(socket);
+            if (removingIndex !== -1) {
+                that.connections.splice(removingIndex, 1);
+                log.info('disconnected ' + socket.request.user.username + ' from ' + that.route);
+                log.info('now ' + that.connections.length + ' on ' + that.route);
+            }
         })
 
     },
@@ -109,8 +111,10 @@ var Route_io = Class.inherit({
         var that = this;
         var clients = that.connections;
         for (var i=0; i<clients.length; i++) {
-            if (clients[i].request.session.user == uid)
+            if (clients[i].request.session.user == uid) {
                 that.emit(event, clients[i], data);
+                log.info('emmited '+ event+' to '+clients[i].request.user.username);
+            }
         }
     }
 });

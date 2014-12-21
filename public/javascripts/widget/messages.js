@@ -175,7 +175,7 @@
                         }
 
                         if (that.dialogues.length == 0) {
-                            that.shortRoll.append($('<p>').html("Пока вы не вели переписку ни с кем из радиослушателей"));
+                            that.shortRoll.append($('<p class="placeholder">').html("Пока вы не вели переписку ни с кем из радиослушателей"));
                         } else {
                             for (var i = 0; i < that.dialogues.length; ++i) {
                                 that.shortRoll.append(that.dialogues[i].previewWrapper);
@@ -186,42 +186,11 @@
                         for (var i = 0; i<that.dialogues.length; ++i) {
                             if (that.dialogues[i].id == data.id) {
                                 var dialogue = that.dialogues.splice(i, 1)[0];
-                                dialogue.update(data);
-                                that.dialogues.unshift(dialogue);
-                                for (var j = 0; j<that.dialogues.length; ++j) {
-                                    if (Math.floor(j/2) == j/2) {
-                                        that.dialogues[j].moveLeft();
-                                    } else {
-                                        that.dialogues[j].moveRight();
-                                    }
-                                }
-                                if (that.dialogues[1]) {
-                                    that.dialogues[1].previewWrapper.before(dialogue.previewWrapper);
-                                } else {
-                                    that.shortRoll.append(dialogue.previewWrapper);
-                                }
-                                if (that.fullSized) {
-                                    if (that.dialogues[1]) {
-                                        that.dialogues[1].wrapper.before(dialogue.wrapper);
-                                    } else {
-                                        that.expanded.append(dialogue.wrapper);
-                                    }
-                                }
+                                that.updateDialogues(data, dialogue);
                                 return;
                             }
                         }
-                        that.shortRoll.empty();
-                        var dial = new Dialogue(data);
-                        that.dialogues.push(dial);
-                        that.shortRoll.append(dial.previewWrapper);
-                        if (that.fullSized) {
-                            that.expanded.append(dial.wrapper);
-                            dial.wrapper.on("click", (function (id) {
-                                return function () {
-                                    that.dialogueMode(id);
-                                }
-                            })(dial.user.id));
-                        }
+                        that.updateDialogues(data);
                     }, true);
                 } else {
                     that.on('messagesResponseShort', function(data){
@@ -332,6 +301,40 @@
                         lastIndex: that.lastShownMessageIndex,
                         receiver: that.receiver
                     });
+            },
+            "updateDialogues": function(data, dialogue) {
+                var that = this;
+                if (!dialogue) {
+                    dialogue = new Dialogue(data);
+                    that.shortRoll.find('.placeholder').remove();
+                    if (that.expanded) {
+                        dialogue.wrapper.on("click", function () {
+                            that.dialogueMode(dialogue.user.id);
+                        });
+                    }
+                } else {
+                    dialogue.update(data);
+                }
+                that.dialogues.unshift(dialogue);
+                for (var j = 0; j<that.dialogues.length; ++j) {
+                    if (Math.floor(j/2) == j/2) {
+                        that.dialogues[j].moveLeft();
+                    } else {
+                        that.dialogues[j].moveRight();
+                    }
+                }
+                if (that.dialogues[1]) {
+                    that.dialogues[1].previewWrapper.before(dialogue.previewWrapper);
+                } else {
+                    that.shortRoll.append(dialogue.previewWrapper);
+                }
+                if (that.fullSized) {
+                    if (that.dialogues[1]) {
+                        that.dialogues[1].wrapper.before(dialogue.wrapper);
+                    } else {
+                        that.expanded.append(dialogue.wrapper);
+                    }
+                }
             }
         });
 

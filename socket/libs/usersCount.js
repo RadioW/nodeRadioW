@@ -5,17 +5,19 @@ exports.users = function users(io) {
 		var clients = io.of('/main').connected;
 	
 		for (var key in clients) {
-			if (user[clients[key].request.session.id]) {
-				user[clients[key].request.session.id].count++;
-			} else {
-				user[clients[key].request.session.id] = {
-												username: clients[key].request.user.get('username'),
-												count: 1,
-												isGuest: false,
-												id: clients[key].request.user._id.toString()
-				};
-				if (user[clients[key].request.session.id].username.slice(0, 6) == 'Guest ') {
-					user[clients[key].request.session.id].isGuest = true;
+			if (clients[key].request.session) {
+				if (user[clients[key].request.session.id]) {
+					user[clients[key].request.session.id].count++;
+				} else {
+					user[clients[key].request.session.id] = {
+						username: clients[key].request.user.get('username'),
+						count: 1,
+						isGuest: false,
+						id: clients[key].request.user._id.toString()
+					};
+					if (user[clients[key].request.session.id].username.slice(0, 6) == 'Guest ') {
+						user[clients[key].request.session.id].isGuest = true;
+					}
 				}
 			}
 		}
