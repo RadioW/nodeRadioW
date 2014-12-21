@@ -12,7 +12,7 @@ module.exports = function(socket, next) {
 		async.waterfall ([
 			function (callback) {
 				handshake.cookies = cookie.parse(handshake.headers.cookie || '');
-				var sidCookie = handshake.cookies[config.get('session:key')];
+				var sidCookie = handshake.cookies[config.get('session:key')] || '';
 				var sid = cParser.signedCookie(sidCookie, config.get('session:secret'));
 				
 				loadSession(sid, callback);
