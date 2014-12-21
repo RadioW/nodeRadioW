@@ -18,7 +18,7 @@ module.exports = function(socket, next) {
 				loadSession(sid, callback);
 			},
 			function (session, callback) {
-				if (!session) {
+				if (!session || session == null) {
 					callback(new HttpError(401, "No session"));
 				}
 				handshake.session = session;
