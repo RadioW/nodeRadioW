@@ -1,5 +1,6 @@
 var forAuth = require('../middleware/forAuth');
 var forNotAuth = require('../middleware/forNotAuth');
+var loadUser = require('../middleware/loadUser');
 var forAdmin = require('../middleware/forAdmin');
 var answerOK = require('../middleware/answerOK'); // миддвэр который заканчивает ajax запрос, по сути он отправляет "ok!";
 var express = require('express');
@@ -7,23 +8,23 @@ var userRoute = require('./user');
 
 module.exports = function (app) {
 
-	app.get('/', require('./frontpage').get);
+	app.get('/', loadUser, require('./frontpage').get);
 	
-	app.get('/login', forNotAuth, require('./login').get);
-	app.post('/login', forNotAuth, require('./login').post);
-	app.post('/logout', forAuth, require('./logout').post);
-	app.get('/registration', forNotAuth, require('./registration').get);
-	app.post('/registration', forNotAuth, require('./registration').post);
+	app.get('/login', loadUser, forNotAuth, require('./login').get);
+	app.post('/login', loadUser, forNotAuth, require('./login').post);
+	app.post('/logout', loadUser, forAuth, require('./logout').post);
+	app.get('/registration', loadUser, forNotAuth, require('./registration').get);
+	app.post('/registration', loadUser, forNotAuth, require('./registration').post);
 	
-	app.get('/users', require('./users').get);
-	app.get('/user/:id', userRoute.get);
-	app.post('/user/saveInfo', forAuth, userRoute.saveInfo);
-	app.post('/user/savePhoto', express.multipart({uploadDir: './temp'}), forAuth, userRoute.savePhoto, answerOK);
-	app.post('/user/saveAvatar', express.multipart({uploadDir: './temp'}), forAuth, userRoute.savePhoto, userRoute.makeAvatar, answerOK);
-	app.post('/user/makeAvatar/:id', forAuth, userRoute.prepareAva, userRoute.makeAvatar, answerOK);
-	app.post('/user/photoDescription/:id', forAuth, userRoute.photoDescription);
-	app.get('/user/:id/:tool/:pid', userRoute.tool);
-    app.get('/user/:id/:tool', userRoute.tool);
+	app.get('/users', loadUser, require('./users').get);
+	app.get('/user/:id', loadUser, userRoute.get);
+	app.post('/user/saveInfo', loadUser, forAuth, userRoute.saveInfo);
+	app.post('/user/savePhoto', loadUser, express.multipart({uploadDir: './temp'}), forAuth, userRoute.savePhoto, answerOK);
+	app.post('/user/saveAvatar', loadUser, express.multipart({uploadDir: './temp'}), forAuth, userRoute.savePhoto, userRoute.makeAvatar, answerOK);
+	app.post('/user/makeAvatar/:id', loadUser, forAuth, userRoute.prepareAva, userRoute.makeAvatar, answerOK);
+	app.post('/user/photoDescription/:id', loadUser, forAuth, userRoute.photoDescription);
+	app.get('/user/:id/:tool/:pid', loadUser, userRoute.tool);
+    app.get('/user/:id/:tool', loadUser, userRoute.tool);
 	
 	//app.get('/conclave', forAuth, forAdmin, require('./conclave').get);
 	//app.post('/conclave/give', forAuth, forAdmin, require('./conclave').give);

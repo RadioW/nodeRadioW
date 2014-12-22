@@ -11,12 +11,12 @@
     }
   },
   "session": {
-    "secret":"SomeSecret",
+    "secret":"lookAtMyHooURse!",
 	"key":"sid",
 	"cookie": {
 	  "path":"/",
 	  "httpOnly":true,
-	  "maxAge":null
+	  "maxAge":63072000000
 	}
   },
   "version": "0.0.4"
