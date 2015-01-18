@@ -13,6 +13,7 @@
     defineArray.push(m.widget.$blog);
     defineArray.push(m.widget.$photo);
     defineArray.push(m.widget.$messages);
+    defineArray.push(m.widget.$files);
 
     define(moduleName, defineArray, function registration_module(){
         var Page = require(m.$page);
@@ -20,6 +21,7 @@
         var Blog = require(m.widget.$blog);
         var Photo = require(m.widget.$photo);
         var Messages = require(m.widget.$messages);
+        var Files = require(m.widget.$files);
         var User = Page.inherit({
             "className": "User",
             "websocket": true,
@@ -30,7 +32,8 @@
                     info: Info,
                     blog: Blog,
                     photo: Photo,
-                    messages: Messages
+                    messages: Messages,
+                    files: Files
                 };
                 that.jobs = [];
                 that.options = params;
@@ -131,7 +134,7 @@
                     }
                 } else {
                     if (param.type) {
-                        launchModal("Permission error! Widget is not available!");
+                        launchModal("Permission error! Widget is not available or not exist!");
                     }
                 }
             },

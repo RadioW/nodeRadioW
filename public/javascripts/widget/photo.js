@@ -122,7 +122,10 @@
                 if (core.user.id == that.options.userId) {
                     var file = that.file = new Fileinput({
                         "url": "/user/savePhoto",
-                        "multiple": true
+                        "multiple": true,
+                        "maxFileSize": (20 * 1024 * 1024),
+                        "allowedTypes" : ['image/png', 'image/jpg', 'image/gif', 'image/jpeg'],
+                        "successMessage": "Фотографии успешно загружены"
                     });
                     container.append(file.wrapper);
                     file.wrapper.css({

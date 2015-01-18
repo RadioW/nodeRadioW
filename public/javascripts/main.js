@@ -24,7 +24,8 @@
                 "$info": "/javascripts/widget/info.js",
                 "$blog": "/javascripts/widget/blog.js",
                 "$photo": "/javascripts/widget/photo.js",
-                "$messages": "/javascripts/widget/messages.js"
+                "$messages": "/javascripts/widget/messages.js",
+                "$files": "/javascripts/widget/files.js"
             },
             $asyncExplorer : "/javascripts/core/asyncExplorer.js",
             $connection: "/javascripts/core/connection.js",

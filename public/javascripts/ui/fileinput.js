@@ -22,12 +22,18 @@
                     "inputName": "file",
                     "url": "/",
                     "multiple": false,
-                    "successMessage": 'Фотография успешно загружена'
+                    "successMessage": 'Файл успешно загружен',
+                    "maxFileSize": 5368709120,
+                    "allowedTypes": []
                 };
                 $.extend(baseOptions, params);
                 that.options = baseOptions;
 
                 Class.call(that);
+                that.allowedTypes = {};
+                for (var i = 0; i < baseOptions.allowedTypes.length; ++i) {
+                    that.allowedTypes[baseOptions.allowedTypes[i]] = true;
+                }
                 that.initWrapper();
             },
             "destructor": function() {
@@ -57,15 +63,15 @@
                         if (this.files.hasOwnProperty(i)) {
                             if (i != 'length' && i != 'item') {
                                 if (this.files[i].name.length < 1) {
-                                    launchModal('Мне очень жаль, но файл не имеет имени, изображение не будет загружено');
+                                    launchModal('Как минимум один из файлов не имеет имени, загрузка отменена');
                                     return false;
                                 }
-                                if (this.files[i].size > (20 * 1024 * 1024)) {
-                                    launchModal('Мне очень жаль, но один файл слишком велик, изображение не будет загружено');
+                                if (this.files[i].size > that.options.maxFileSize) {
+                                    launchModal('Как минимум один из файлов слишком велик, загрузка отменена');
                                     return false;
                                 }
-                                if (this.files[i].type != 'image/png' && this.files[i].type != 'image/jpg' && this.files[i].type != 'image/gif' && this.files[i].type != 'image/jpeg') {
-                                    launchModal('Мне очень жаль, но здесь может быть загружено только изображение');
+                                if (that.options.allowedTypes.length > 0 && !that.allowedTypes[this.files[i].type]) {
+                                    launchModal('Как минимум один из файлов не прошел проверку типа, загрузка отменена');
                                     return false;
                                 }
                                 data.append('file-' + i, this.files[i]);
