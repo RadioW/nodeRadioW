@@ -12,4 +12,4 @@ module.exports = function (req, res, next) {
 		log.info (req.session.gid + ' registred as guest');
 		return next();
 	});
-}
+};

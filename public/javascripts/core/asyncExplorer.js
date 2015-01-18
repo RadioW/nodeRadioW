@@ -44,6 +44,12 @@
             "goTo": function (link) {
                 var that = this;
                 core.activePage.destructor();
+                $('#errorModal').modal('hide');
+                if (!core.content.isHidden) {
+                    core.content.hide();
+                }
+                $('#carett').html('');
+                $('#cover').css('display', 'none');
                 $.ajax({
                     url: link,
                     method: "GET",
@@ -61,12 +67,6 @@
                 link.onclick = function () {
                     that.goTo (link.href);
                     history.pushState(null, null, link.href);
-                    $('#errorModal').modal('hide');
-                    if (!core.content.isHidden) {
-                        core.content.hide();
-                    }
-                    $('#carett').html('');
-                    $('#cover').css('display', 'none');
                     return false;
                 }
             },
@@ -84,24 +84,35 @@
 
                 var route;
                 var address = link.split("/");
+                var params = [];
+                if (address[0].toLowerCase() === "http") {
+                    address.splice(0, 2);
+                }
+                if (address[0].indexOf(location.host) !== -1) {
+                    address.splice(0, 1);
+                }
                 if (address[address.length-1].length == 0) {
                     address.pop();
                 }
-                address[address.length-1] = address[address.length-1].split("?")[0];
-                route = ((address.length == 1) || (address.length == 3 && address[1] === "")) ? "main" : address[address.length-1].length > 23 ? address[address.length-2] : address[address.length-1];
 
-                if (route == "blog" || route == "photo" || route == "info" || route == "messages") {
-                    core.activePage = new that.pages[ route == address[address.length - 1] ? address[address.length - 3] :address[address.length - 4] ]({
-                        html: html,
-                        type: route,
-                        id: route == address[address.length - 1] ? address[address.length - 2] : address[address.length - 3],
-                        oid: route == address[address.length - 1] ? undefined : address[address.length - 1]
-                    });
-                } else if (route == "user") {
+                for (var i = 0; i < address.length; ++i) {
+                    route = address[i].toLocaleLowerCase();
+                    if (address[i+1] && address[i+1].length > 23) {
+                        params = address.splice(i+1, address.length -1 - i);
+                        break;
+                    }
+                }
+                if (!route) {
+                    route = "main";
+                }
+
+                if (route === "user") {
                     core.activePage = new that.pages[route]({
                         html: html,
-                        id: address[address.length - 1]
-                    });
+                        type: params[1],
+                        id: params[0],
+                        oid: params[2]
+                    })
                 } else if (that.pages[route]) {
                     core.activePage = new that.pages[route]({
                         html: html
