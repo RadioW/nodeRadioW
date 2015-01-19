@@ -74,7 +74,8 @@ server.listen(config.get('port'), function(){
 		app.set('serverInfo', {
 			version: config.get('version'),
 			lastStart: new Date(),
-			adminId: user._id
+			adminId: user._id,
+			userSpace: config.get('userSpace')
 		});
 	});
 });

@@ -103,10 +103,17 @@
                             },
                             500: function(jqXHR) {
                                 var ans = JSON.parse(jqXHR.responseText);
+                                progressBar.parent().css('display', 'none');
+                                launchModal(ans.message);
+                            },
+                            403: function(jqXHR) {
+                                var ans = JSON.parse(jqXHR.responseText);
+                                progressBar.parent().css('display', 'none');
                                 launchModal(ans.message);
                             },
                             404: function(jqXHR) {
                                 var ans = JSON.parse(jqXHR.responseText);
+                                progressBar.parent().css('display', 'none');
                                 launchModal(ans.message);
                             }
                         },

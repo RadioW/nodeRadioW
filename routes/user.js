@@ -76,6 +76,7 @@ exports.saveInfo = function(req, res, next) {
 };
 
 exports.savePhoto = function(req, res, next) {
+	var size = 0;
 	async.waterfall([
 		function(callback) {
 			tool.checkDir(req, 'photo', function (err) {
@@ -85,12 +86,36 @@ exports.savePhoto = function(req, res, next) {
 				callback(null);
 			});
 		},
-		function(callback) {
-			var user = req.self;
+		function (callback) {
 			var files = [];
-			for (var i in req.files) {
-				files.push(req.files[i]);
+			for (var key in req.files) {
+				if (req.files.hasOwnProperty(key)) {
+					files.push(req.files[key]);
+				}
 			}
+			async.map (files, function(file, callback) {
+				fs.stat(file.path, function(err, stats) {
+					if (err) return callback({'err': err, 'fm': 'Failed to read file stats'});
+					size += file.size;
+					callback(null, file);
+				});
+			}, function(err, files) {
+				if (err) return callback(err);
+				tool.dirSize('./public/data/'+req.self._id, function(err, dSize) {
+					if (err) return callback({'err': err, 'fm': 'Failed to read user directory stats'});
+					log.info((req.serverInfo.userSpace - dSize) + " bytes left for " + req.self.username);
+					if (req.serverInfo.userSpace - dSize > size) {
+						callback(null, files);
+					} else {
+						log.info('Not enough memory for '+ req.self.username + ' to upload ' + size + ' bytes');
+						callback({'err': new Error("Out of memory"), 'fm': 'Not enough memory'})
+					}
+				});
+			});
+		},
+		function(files, callback) {
+			var user = req.self;
+
 			async.map(files, function(file, callback) {
 				var oID = new ObjectID();
 				gm(file.path)
@@ -133,9 +158,35 @@ exports.savePhoto = function(req, res, next) {
 			});		
 		}
 	], function(err, user, files) {
+		var uploaded = [];
+		for (var key in req.files) {
+			if (req.files.hasOwnProperty(key)) {
+				uploaded.push(req.files[key]);
+			}
+		}
+		var count = 0;
+		async.each(uploaded, function(item, callback) {
+			fs.exists(item.path, function(exist) {
+				if (exist) {
+					fs.unlink(item.path, function(err) {
+						if (err) {
+							log.error(err.message);
+						}
+					});
+					++count;
+				}
+				callback();
+			})
+		}, function(err){
+			log.info("Removed " + count +  " temp files, after " + req.self.username + "'s photo upload");
+		});
 		if (err) {
 			log.error(err.fm+'\n'+err.err);  //в этом логгере как раз читается свойство fm
-			return next(new HttpError(500));
+			if (err.fm == "Not enough memory") {
+				return next(new HttpError(403, err.message));
+			} else {
+				return next(new HttpError(500));
+			}
 		}
 		var io = req.app.get('io');
 		io.of('/main').to(user._id).emit('event', {
