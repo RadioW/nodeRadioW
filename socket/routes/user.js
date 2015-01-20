@@ -4,7 +4,7 @@
 "use strict";
 
 var log = require('../../libs/logs')(module);
-var ObjectID = require('mongodb').ObjectID;
+var tools = require('../../libs/tools');
 var Route_io = require('../../libs/class/ioRoute');
 var User = require('../../models/user').User;
 var Dialogue = require('../../models/dialogue').Dialogue;
@@ -476,6 +476,19 @@ var UserRoute = Route_io.inherit({
                         that.emit("messagesResponseShort", socket, array);
                     }
 
+            });
+        });
+        that.on("sizeRequest", function(socket, data) {
+            if (!data) {
+                return that.emit('error', socket, "Missed user id in sizeRequest event!");
+            }
+            var total = that.io.config.get('userSpace');
+            fs.exists("./public/data/"+data, function(exist) {
+                if (!exist) return emit("sizeResponse", socket, {total: total, used:0});
+                tools.dirSize("./public/data/"+data, function(err, size) {
+                    if (err) return that.emit('error', socket, err.message);
+                    that.emit("sizeResponse", socket, {total: total, used:size});
+                });
             });
         });
     },

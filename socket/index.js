@@ -8,6 +8,7 @@ var Router = require('../libs/class/ioRouter');
 module.exports = function (server) {
 	
 	var io = require('socket.io')(server, {'origins': '*:*'});
+    io.config = config;
     var router = new Router(io);
 	
 	io.use(require('./middleware/authorize'));

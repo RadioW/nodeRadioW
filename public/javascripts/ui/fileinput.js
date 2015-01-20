@@ -107,7 +107,7 @@
                                 launchModal(ans.message);
                             },
                             403: function(jqXHR) {
-                                var ans = JSON.parse(jqXHR.responseText);
+                                var ans = JSON.parse("Ошибка. Файлы не будут загружены, не хватает доступного места");
                                 progressBar.parent().css('display', 'none');
                                 launchModal(ans.message);
                             },
