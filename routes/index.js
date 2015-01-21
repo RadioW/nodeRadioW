@@ -20,6 +20,7 @@ module.exports = function (app) {
 	app.get('/user/:id', loadUser, userRoute.get);
 	app.post('/user/saveInfo', loadUser, forAuth, userRoute.saveInfo);
 	app.post('/user/savePhoto', loadUser, express.multipart({uploadDir: './temp'}), forAuth, userRoute.savePhoto, answerOK);
+	app.post('/user/saveFile', loadUser, express.multipart({uploadDir: './temp'}), forAuth, userRoute.saveFile, answerOK);
 	app.post('/user/saveAvatar', loadUser, express.multipart({uploadDir: './temp'}), forAuth, userRoute.savePhoto, userRoute.makeAvatar, answerOK);
 	app.post('/user/makeAvatar/:id', loadUser, forAuth, userRoute.prepareAva, userRoute.makeAvatar, answerOK);
 	app.post('/user/photoDescription/:id', loadUser, forAuth, userRoute.photoDescription);

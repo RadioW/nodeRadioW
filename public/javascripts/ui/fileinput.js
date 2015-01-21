@@ -4,7 +4,7 @@
 "use strict";
 
 (function fileinputjs() {
-    var moduleName = m.$fileinput;
+    var moduleName = m.ui.$fileinput;
     requirejs._moduleLoad(moduleName);
 
     var defineArray = [];
@@ -39,6 +39,8 @@
             "destructor": function() {
                 var that = this;
 
+                that.form.off();
+                that.input.off();
                 that.wrapper.remove();
                 Class.fn.destructor.call(that);
             },

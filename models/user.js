@@ -94,6 +94,7 @@ var schema = new Schema({
   data: {
 	blog:[userData],
 	photo:[userData],
+	file:[userData],
 	comments:[userData],
     dialogues: {}
   },

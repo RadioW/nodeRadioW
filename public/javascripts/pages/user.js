@@ -124,6 +124,11 @@
                                 that.widgets.messages.expand();
                             });
                             break;
+                        case "files":
+                            that.jobs.push(function () {
+                                that.widgets.files.expand();
+                            });
+                            break;
                         default:
                             return;
                     }

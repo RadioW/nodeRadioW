@@ -43,7 +43,10 @@
                 $login: "/javascripts/pages/login.js",
                 $users: "/javascripts/pages/users.js"
             },
-            $fileinput: "/javascripts/ui/fileinput.js",
+            ui:{
+                $fileinput: "/javascripts/ui/fileinput.js",
+                $grid: "/javascripts/ui/grid.js"
+            },
             $content: "/javascripts/content/content.js",
             $blog: "/javascripts/content/blog.js",
             $message: "/javascripts/message/message.js",

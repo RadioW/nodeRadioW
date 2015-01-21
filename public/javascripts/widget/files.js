@@ -8,11 +8,13 @@
 
     var defineArray = [];
     defineArray.push(m.$widget);
-    defineArray.push(m.$fileinput);
+    defineArray.push(m.ui.$fileinput);
+    defineArray.push(m.ui.$grid);
 
     define(moduleName, defineArray, function files_module() {
         var Widget = require(m.$widget);
-        var Fileinput = require(m.$fileinput);
+        var Fileinput = require(m.ui.$fileinput);
+        var Grid = require(m.ui.$grid);
 
         var Files = Widget.inherit({
             "className": "Files",
@@ -33,6 +35,42 @@
 
                 that.expandedHeader = $('<p class="text-center lead">').html(that.options.name);
                 container.append(that.expandedHeader);
+
+                if (core.user.id == that.options.userId) {
+                    var fileInput = that.fileInput = new Fileinput({
+                        "url": "/user/saveFile",
+                        "multiple": true,
+                        "successMessage": "Файлы успешно загружены"
+                    });
+                    container.append(fileInput.wrapper);
+                    fileInput.wrapper.css({
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        "text-align": "right"
+                    })
+                }
+
+                that.grid = new Grid({
+                    columns: [
+                        {key: "image", title: ""},
+                        {key: "name", title:"Название"},
+                        {key: "size", title: "Размер"},
+                        {key: "description", title: "Описание"},
+                        {key: "buttons", title: ""}
+                    ]
+                });
+
+                that.grid.data([
+                    {
+                        image: "test1",
+                        name: "someName",
+                        size: "100500",
+                        description: "hate Grids!"
+                    }
+                ]);
+                container.append(that.grid.wrapper);
 
                 setTimeout(function () {
                     container.css("opacity", 1);
@@ -66,6 +104,19 @@
 
                 that.smallSizeBar.inside.css("width", (100*(size.used / size.total)) + "%");
                 that.smallSizeBar.title.html("Использовано " + Math.round(size.used/1048576) + "Mb из " + Math.round(size.total/1048576) + "Mb");
+            },
+            "standBy": function() {
+                var that = this;
+
+                Widget.fn.standBy.call(that);
+
+                if (that.fileInput) {
+                    that.fileInput.destructor();
+                    delete that.fileInput;
+                }
+                if (that.grid) {
+                    that.grid.destructor();
+                }
             }
         });
 

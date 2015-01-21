@@ -9,11 +9,11 @@
 
     var defineArray = [];
     defineArray.push(m.$widget);
-    defineArray.push(m.$fileinput);
+    defineArray.push(m.ui.$fileinput);
 
     define(moduleName, defineArray, function photo_module() {
         var Widget = require(m.$widget);
-        var Fileinput = require(m.$fileinput);
+        var Fileinput = require(m.ui.$fileinput);
 
         var Photo = Widget.inherit({
             "className": "Photo",
@@ -68,6 +68,32 @@
                         that.littlePhotos.css("opacity", 1);
                     }, 300);
                 }, true);
+                that.on('new photo', function(data) {
+                    if (that.fullSized) {
+                        for (var i=0; i<data.length; i++) {
+                            that.photoRoll.prepend($('<div class="photoPrev" id="'+data[i]+'">')
+                                    .append($('<img src="/data/' + that.options.userId + '/photo/'+ data[i] +'prev.jpg">'))
+                                    .on("click", (function(i){
+                                        return function() {
+                                            core.content.subscribe(that.options.userId, "photo", data[i]);
+                                        }
+                                    })(i))
+                            );
+                        }
+                    } else {
+                        that.emit("photoShortRequest", that.options.userId);
+                    }
+                }, true);
+
+                that.on('removed photo', function(id) {
+                    if (that.fullSized) {
+                        if ($('#'+id, that.expanded[0])[0]) {
+                            $('#'+id).remove();
+                        }
+                    } else {
+                        that.emit("photoShortRequest", that.options.userId);
+                    }
+                }, true);
                 Widget.fn.initSockets.call(that);
             },
             "getExpandedContent": function(container) {
@@ -95,25 +121,6 @@
                                     }
                                 })(i))
                         );
-                    }
-                });
-
-                that.on('new photo', function(data) {
-                    for (var i=0; i<data.length; i++) {
-                        that.photoRoll.prepend($('<div class="photoPrev" id="'+data[i]+'">')
-                                .append($('<img src="/data/' + that.options.userId + '/photo/'+ data[i] +'prev.jpg">'))
-                                .on("click", (function(i){
-                                    return function() {
-                                        core.content.subscribe(that.options.userId, "photo", data[i]);
-                                    }
-                                })(i))
-                        );
-                    }
-                });
-
-                that.on('removed photo', function(id) {
-                    if ($('#'+id, that.expanded[0])[0]) {
-                        $('#'+id).remove();
                     }
                 });
 

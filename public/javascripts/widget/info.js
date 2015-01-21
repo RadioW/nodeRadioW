@@ -8,11 +8,11 @@
 
     var defineArray = [];
     defineArray.push(m.$widget);
-    defineArray.push(m.$fileinput);
+    defineArray.push(m.ui.$fileinput);
 
     define(moduleName, defineArray, function info_module() {
         var Widget = require(m.$widget);
-        var Fileinput = require(m.$fileinput);
+        var Fileinput = require(m.ui.$fileinput);
 
         var Info = Widget.inherit({
             "className": "Info",

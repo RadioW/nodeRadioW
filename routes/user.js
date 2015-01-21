@@ -194,6 +194,14 @@ exports.savePhoto = function(req, res, next) {
             route: "user",
             data: files
         });
+		tool.dirSize("./public/data/"+user._id, function(err, size) {
+			if (err) return log.error("Error of dirSize function after " + user.username + " photo upload");
+			io.of("/main").to(user._id).emit("event", {
+			event: "sizeResponse",
+			route: "user",
+			data: {total: req.serverInfo.userSpace, used:size}
+			});
+		});
 		req.files = files;
 		next();
 	});
@@ -217,85 +225,6 @@ exports.tool = function (req, res, next) {
 		});
 	});
 };
-
-/*exports.photo = function (req, res, next) {
-	var ajax = false;
-	var objectToRender = {};
-    var toRender;
-	if (req.xhr) {
-		ajax = true;
-		toRender = 'photo';
-	} else {
-		objectToRender.special = true;
-		toRender = 'user';
-	}
-	objectToRender.ajax = ajax;
-	tool.checkObjectID(req.params.id, function(err) {
-		if (err) {
-            return next(new HttpError(404, 'Wrong user ID'));
-        }
-		tool.checkObjectID(req.params.pid, function(err) {
-			if (err) {
-                return next(new HttpError(404, 'Wrong photo ID'));
-            }
-			User.findById(req.params.id, function(err, user) {
-				if (err) {
-                    return next(err);
-                }
-				if (!user) {
-                    return next(new HttpError(404, 'There is no user with same id in my base!'));
-                }
-				var index = user.data.photo.indexOf(user.data.photo.id(req.params.pid));
-				if (index === -1) {
-                    return next(new HttpError(404, 'There is no such photo in that collection!'));
-                }
-				User.populate(user.data.photo, {path: 'comments.author'}, function(err, photo) {  
-					if (err) {
-                        return next(err);
-                    }                                           // Я буду гореть на священном костре
-													            // инквизиции за это! Это пиздец какая дорогостоящая операция!
-					objectToRender.photo = photo;				// Теоретически... мне даже представить себе сложно, как долго все это
-					objectToRender.index = index;				// будет отрабатывать, ведь он заполняет каждый комменты к каждой фотке
-					objectToRender.user = user;					// гигантскими объектами пользователя
-																// просто для того, что бы динамически подтягивалось имя.
-					objectToRender.User = User;
-					res.render(toRender, objectToRender);
-				});
-			});
-		});
-	});
-};*/
-
-/*exports.photo = function (req, res, next) {
-    var objectToRender = {};
-    tool.checkObjectID(req.params.id, function(err) {
-        if (err) {
-            return next(new HttpError(404, 'Wrong user ID'));
-        }
-        tool.checkObjectID(req.params.pid, function(err) {
-            if (err) {
-                return next(new HttpError(404, 'Wrong photo ID'));
-            }
-            User.findById(req.params.id, function(err, user) {
-                if (err) {
-                    return next(err);
-                }
-                if (!user) {
-                    return next(new HttpError(404, 'There is no user with such id in my base!'));
-                }
-                var photo = user.data.photo.id(req.params.pid);
-                if (!photo)
-                    return next(new HttpError(404, 'There is no such photo in that collection!'));
-                objectToRender.photo = photo;
-                objectToRender.user = user;
-                objectToRender.type = 'photo';
-                objectToRender.ajax = req.xhr;
-                objectToRender.special = true;
-                res.render('user', objectToRender);
-            });
-        });
-    });
-};*/
 
 exports.photoDescription = function (req, res, next) {
 	tool.checkObjectID(req.params.id, function(err) {
@@ -420,4 +349,130 @@ exports.makeAvatar = function(req, res, next) {
 					});
 			});
 		});
+};
+
+exports.saveFile = function(req, res, next) {
+	var size = 0;
+	async.waterfall([
+		function(callback) {
+			tool.checkDir(req, 'files', function (err) {
+				if (err) {
+					return callback({'err': err, 'fm': 'Failed to check directory'});
+				} //fm - это свойство ошибки, по которому я в конце понимаю, где процесс пошел неверно
+				callback(null);
+			});
+		},
+		function (callback) {
+			var files = [];
+			for (var key in req.files) {
+				if (req.files.hasOwnProperty(key)) {
+					files.push(req.files[key]);
+				}
+			}
+			async.map (files, function(file, callback) {
+				fs.stat(file.path, function(err, stats) {
+					if (err) return callback({'err': err, 'fm': 'Failed to read file stats'});
+					size += file.size;
+					callback(null, file);
+				});
+			}, function(err, files) {
+				if (err) return callback(err);
+				tool.dirSize('./public/data/'+req.self._id, function(err, dSize) {
+					if (err) return callback({'err': err, 'fm': 'Failed to read user directory stats'});
+					log.info((req.serverInfo.userSpace - dSize) + " bytes left for " + req.self.username);
+					if (req.serverInfo.userSpace - dSize > size) {
+						callback(null, files);
+					} else {
+						log.info('Not enough memory for '+ req.self.username + ' to upload ' + size + ' bytes');
+						callback({'err': new Error("Out of memory"), 'fm': 'Not enough memory'})
+					}
+				});
+			});
+		},
+		function(files, callback) {
+			var user = req.self;
+			async.map(files, function (file, callback) {
+				var oID = new ObjectID();
+				fs.exists("./public/data/" + req.self._id + "/file/" + file.name, function (exists) {
+					if (exists) {
+						var fileName = file.name.split('.');
+						if (fileName.length === 1) {
+							file.name = file.name + '(' + new Date().toString() + ')';
+						} else {
+							file.name = fileName[fileName.length - 2] + '(' + new Date().toString() + ').' + fileName[fileName.length - 1];
+						}
+					}
+					user.data.file.push({
+						_id: oID,
+						type: 'file',
+						link: '/data/' + user._id + '/file/' + file.name,
+						message: ''
+					});
+					fs.rename(file.path, "./public/data/" + req.self._id + "/files/" + file.name, function (err) {
+						if (err) {
+							return callback({'err': err, 'fm': 'Failed to replace file'});
+						}
+						callback(null, oID);
+					});
+				});
+			}, function(err, files) {
+				if (err) {
+					return callback(err);
+				}
+				user.save(function(err) {
+					if (err) {
+						return callback({'err': err, 'fm': 'Failed to save user'});
+					}
+					callback(null, user, files);
+				});
+			});
+		}
+	], function(err, user, files) {
+		var uploaded = [];
+		for (var key in req.files) {
+			if (req.files.hasOwnProperty(key)) {
+				uploaded.push(req.files[key]);
+			}
+		}
+		var count = 0;
+		async.each(uploaded, function(item, callback) {
+			fs.exists(item.path, function(exist) {
+				if (exist) {
+					fs.unlink(item.path, function(err) {
+						if (err) {
+							log.error(err.message);
+						}
+					});
+					++count;
+				}
+				callback();
+			})
+		}, function(err){
+			log.info("Removed " + count +  " temp files, after " + req.self.username + "'s file upload");
+		});
+		if (err) {
+			log.error(err.fm+'\n'+err.err);  //в этом логгере как раз читается свойство fm
+			if (err.fm == "Not enough memory") {
+				return next(new HttpError(403, err.message));
+			} else {
+				return next(new HttpError(500));
+			}
+		}
+		var io = req.app.get('io');
+		io.of('/main').to(user._id).emit('event', {
+			event: "new file",
+			route: "user",
+			data: files
+		});
+		tool.dirSize("./public/data/"+user._id, function(err, size) {
+			if (err) return log.error("Error of dirSize function after " + user.username + " file upload");
+			io.of("/main").to(user._id).emit("event", {
+				event: "sizeResponse",
+				route: "user",
+				data: {total: req.serverInfo.userSpace, used:size}
+			});
+		});
+		req.files = files;
+		next();
+	});
 };
