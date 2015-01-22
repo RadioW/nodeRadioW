@@ -19,7 +19,7 @@
                 var baseOptions = {
                     "columns": false, //must be array of objects
                     "width": "100%",
-                    "height": "100%"
+                    "height": ""
                 };
                 $.extend(baseOptions, params);
                 that.options = baseOptions;
@@ -35,31 +35,77 @@
                 that.wrapper.remove();
                 Class.fn.destructor.call(that);
             },
-            "data": function(array) {
+            "createRow": function(model) {
                 var that = this;
-                var content = "";
-                for (var i = 0; i < array.length; ++i) {
-                    var row = new Array(that.options.columns.length);
-                    content += '<tr>';
-                    for (var key in that.columns) {
-                        if (that.columns.hasOwnProperty(key)) {
-                            var col = that.columns[key];
-                            row[col.number] = '<td>';
-                            if (array[i].hasOwnProperty && array[i].hasOwnProperty(key)) {
-                                var item = array[i][key];
-                                if (col.template instanceof Function) {
-                                    row[col.number] += col.template(item) || "";
-                                } else {
-                                    row[col.number] += item.toString();
-                                }
+                var row = new Array(that.options.columns.length);
+                var tr = $('<tr>');
+                if (model.id) {
+                    tr.attr('id', 'w-grid-model-' + model.id + '');
+                }
+                for (var key in that.columns) {
+                    if (that.columns.hasOwnProperty(key)) {
+                        var col = that.columns[key];
+                        row[col.number] = $('<td>');
+                        if (model.hasOwnProperty && model.hasOwnProperty(key)) {
+                            var item = model[key];
+                            if (col.template instanceof Function) {
+                                row[col.number].append(col.template(item));
+                            } else {
+                                row[col.number].html(item.toString());
                             }
-                            row[col.number] += '</td>';
                         }
                     }
-                    content += row.join('') + '</tr>';
                 }
-                that.table.find('tbody').html(content);
+                tr.append(row);
+                model._wrapper = tr;
+                return tr;
+            },
+            "data": function(array) {
+                var that = this;
+                if (that.options.sort) {
+                    var field = that.options.sort.field;
+                    var des = that.options.sort.descending;
+                    array.sort(function (a, b) {
+                        if (a[field] < b[field]) return des ? 1 : -1;
+                        if (a[field] > b[field]) return des ? -1 : 1;
+                        return 0;
+                    });
+                }
+                var content = $('<tbody>');
+                for (var i = 0; i < array.length; ++i) {
+                    content.append(that.createRow(array[i]));
+
+                }
+                that.table.find('tbody').remove();
+                that.table.append(content);
                 that._data = array;
+            },
+            "add": function(model) {
+                var that = this;
+                var data = that._data;
+                var sort = that.options.sort;
+                var row = that.createRow(model);
+                if (sort) {
+                    if (sort.descending) {
+                        for (var i = 0; i < data.length; ++ i) {
+                            if (model[sort.field] > data[i][sort.field]) {
+                                data[i]._wrapper.before(row);
+                                data.splice(i, 0, model);
+                                return;
+                            }
+                        }
+                    } else {
+                        for (var j = 0; j < data.length; ++j) {
+                            if (model[sort.field] < data[j][sort.field]) {
+                                data[j]._wrapper.before(row);
+                                data.splice(j, 0, model);
+                                return;
+                            }
+                        }
+                    }
+                }
+                that.table.find('tbody').append(row);
+                data.push(model);
             },
             "initHeader": function() {
                 var that = this;

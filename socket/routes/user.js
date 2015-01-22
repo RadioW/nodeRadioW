@@ -484,11 +484,34 @@ var UserRoute = Route_io.inherit({
             }
             var total = that.io.config.get('userSpace');
             fs.exists("./public/data/"+data, function(exist) {
-                if (!exist) return emit("sizeResponse", socket, {total: total, used:0});
+                if (!exist) return that.emit("sizeResponse", socket, {total: total, used:0});
                 tools.dirSize("./public/data/"+data, function(err, size) {
                     if (err) return that.emit('error', socket, err.message);
                     that.emit("sizeResponse", socket, {total: total, used:size});
                 });
+            });
+        });
+        that.on("filesRequest", function(socket, data) {
+            User.findById(data, function(err, user) {
+                if (err) {
+                    return that.emit('error', socket, err.message);
+                }
+                if (!user) return that.emit('error', socket, "Can't find user");
+
+                var answer = [];
+                var files = user.data.file;
+
+                for (var i = 0; i < files.length; ++i) {
+                    answer.push({
+                        id: files[i]._id,
+                        description: files[i].description,
+                        date: files[i].date,
+                        name: files[i].name,
+                        size: files[i].size,
+                        link: files[i].link
+                    })
+                }
+                that.emit("filesResponse", socket, answer);
             });
         });
     },

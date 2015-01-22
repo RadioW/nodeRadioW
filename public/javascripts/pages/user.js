@@ -13,7 +13,7 @@
     defineArray.push(m.widget.$blog);
     defineArray.push(m.widget.$photo);
     defineArray.push(m.widget.$messages);
-    defineArray.push(m.widget.$files);
+    defineArray.push(m.widget.$file);
 
     define(moduleName, defineArray, function registration_module(){
         var Page = require(m.$page);
@@ -21,7 +21,7 @@
         var Blog = require(m.widget.$blog);
         var Photo = require(m.widget.$photo);
         var Messages = require(m.widget.$messages);
-        var Files = require(m.widget.$files);
+        var File = require(m.widget.$file);
         var User = Page.inherit({
             "className": "User",
             "websocket": true,
@@ -33,7 +33,7 @@
                     blog: Blog,
                     photo: Photo,
                     messages: Messages,
-                    files: Files
+                    file: File
                 };
                 that.jobs = [];
                 that.options = params;
@@ -124,9 +124,9 @@
                                 that.widgets.messages.expand();
                             });
                             break;
-                        case "files":
+                        case "file":
                             that.jobs.push(function () {
-                                that.widgets.files.expand();
+                                that.widgets.file.expand();
                             });
                             break;
                         default:

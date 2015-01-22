@@ -2,8 +2,8 @@
  * Created by betrayer on 19.01.15.
  */
 "use strict";
-(function filesjs() {
-    var moduleName = m.widget.$files;
+(function filejs() {
+    var moduleName = m.widget.$file;
     requirejs._moduleLoad(moduleName);
 
     var defineArray = [];
@@ -11,18 +11,18 @@
     defineArray.push(m.ui.$fileinput);
     defineArray.push(m.ui.$grid);
 
-    define(moduleName, defineArray, function files_module() {
+    define(moduleName, defineArray, function file_module() {
         var Widget = require(m.$widget);
         var Fileinput = require(m.ui.$fileinput);
         var Grid = require(m.ui.$grid);
 
-        var Files = Widget.inherit({
+        var File = Widget.inherit({
             "className": "Files",
             "constructor": function (params) {
                 var that = this;
                 var baseOptions = {
                     "name": "Хранилище",
-                    "path": "files",
+                    "path": "file",
                     "userId": "" //REQUIRED IN PARAMS!
                 };
                 that.size = {};
@@ -56,20 +56,23 @@
                     columns: [
                         {key: "image", title: ""},
                         {key: "name", title:"Название"},
-                        {key: "size", title: "Размер"},
+                        {key: "size", title: "Размер", template: function(data) {
+                            return bytify(data);
+                        }},
                         {key: "description", title: "Описание"},
-                        {key: "buttons", title: ""}
-                    ]
+                        {key: "date", title: "Дата", template: function(data) {return datify(data)}},
+                        {key: "link", title: "Ссылка", template: function(data) {
+                            var elem = $('<a href="'+data+'?download" type="button" class="btn btn-primary">').html("Скачать");
+                            elem.attr('download', data.substr(data.lastIndexOf('/') + 1, data.length));
+                            return elem;
+                        }}
+                    ],
+                    sort: {field: "date", descending: true}
                 });
-
-                that.grid.data([
-                    {
-                        image: "test1",
-                        name: "someName",
-                        size: "100500",
-                        description: "hate Grids!"
-                    }
-                ]);
+                that.on("filesResponse", function(data) {
+                    that.grid.data(data);
+                });
+                that.emit("filesRequest", that.options.userId);
                 container.append(that.grid.wrapper);
 
                 setTimeout(function () {
@@ -95,6 +98,13 @@
                 that.on("sizeResponse", function (data) {
                     that.setSize(data);
                 }, true);
+                that.on("new file", function(data) {
+                    if (that.fullSized && that.grid) {
+                        for (var i = 0; i < data.length; ++i) {
+                            that.grid.add(data[i]);
+                        }
+                    }
+                }, true);
                 Widget.fn.initSockets.call(that);
             },
             "setSize": function(size) {
@@ -103,7 +113,7 @@
                 that.size.used = size.used || that.size.used;
 
                 that.smallSizeBar.inside.css("width", (100*(size.used / size.total)) + "%");
-                that.smallSizeBar.title.html("Использовано " + Math.round(size.used/1048576) + "Mb из " + Math.round(size.total/1048576) + "Mb");
+                that.smallSizeBar.title.html("Использовано " + bytify(size.used) + " из " + bytify(size.total));
             },
             "standBy": function() {
                 var that = this;
@@ -121,6 +131,6 @@
         });
 
         requirejs._moduleExecute(moduleName);
-        return Files;
+        return File;
     });
 })();

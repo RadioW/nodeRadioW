@@ -128,7 +128,8 @@ exports.savePhoto = function(req, res, next) {
 						user.data.photo.push({_id: oID,
 										type: 'photo',
 										link: '/data/'+user._id+'/photo/'+oID,
-										message: ''
+										message: '',
+										author: user._id
 										});
 						gm(file.path)
 							.quality(100)
@@ -355,7 +356,7 @@ exports.saveFile = function(req, res, next) {
 	var size = 0;
 	async.waterfall([
 		function(callback) {
-			tool.checkDir(req, 'files', function (err) {
+			tool.checkDir(req, 'file', function (err) {
 				if (err) {
 					return callback({'err': err, 'fm': 'Failed to check directory'});
 				} //fm - это свойство ошибки, по которому я в конце понимаю, где процесс пошел неверно
@@ -370,11 +371,8 @@ exports.saveFile = function(req, res, next) {
 				}
 			}
 			async.map (files, function(file, callback) {
-				fs.stat(file.path, function(err, stats) {
-					if (err) return callback({'err': err, 'fm': 'Failed to read file stats'});
 					size += file.size;
 					callback(null, file);
-				});
 			}, function(err, files) {
 				if (err) return callback(err);
 				tool.dirSize('./public/data/'+req.self._id, function(err, dSize) {
@@ -402,17 +400,22 @@ exports.saveFile = function(req, res, next) {
 							file.name = fileName[fileName.length - 2] + '(' + new Date().toString() + ').' + fileName[fileName.length - 1];
 						}
 					}
-					user.data.file.push({
+					var nfile = {
 						_id: oID,
 						type: 'file',
 						link: '/data/' + user._id + '/file/' + file.name,
-						message: ''
-					});
-					fs.rename(file.path, "./public/data/" + req.self._id + "/files/" + file.name, function (err) {
+						message: '',
+						author: user._id,
+						name: file.name,
+						size: file.size,
+						date: new Date()
+					};
+					user.data.file.push(nfile);
+					fs.rename(file.path, "./public/data/" + req.self._id + "/file/" + file.name, function (err) {
 						if (err) {
 							return callback({'err': err, 'fm': 'Failed to replace file'});
 						}
-						callback(null, oID);
+						callback(null, nfile);
 					});
 				});
 			}, function(err, files) {

@@ -67,6 +67,26 @@ function convertDate(date) {
 	
 }
 
+function bytify (data) {
+	"use strict";
+	if (data > 1024) {
+		data = data/1024;
+		if (data > 1024) {
+			data = data/1024;
+			if (data > 1024) {
+				data = data/1024;
+				return data.toFixed(2) + " ГБ";
+			} else {
+				return data.toFixed(2) + " МБ";
+			}
+		} else {
+			return data.toFixed(2) + " кБ"
+		}
+	} else {
+		return data + " Б"
+	}
+}
+
 function datify(timestamp, dateOnly) {
 	var date = new Date(timestamp);
 	var year = date.getFullYear();

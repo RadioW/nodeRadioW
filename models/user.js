@@ -32,6 +32,8 @@ var userData = new Schema ({
 		type: Date,
 		default: Date.now
 	},
+	name: String,
+	size: Number,
 	link: String,
 	author: {
 		type: Schema.Types.ObjectId,
@@ -245,6 +247,9 @@ schema.statics.registrate = function (username, password, callback) {
                 user.widgetSettings.push({
                     title: "messages"
                 });
+				user.widgetSettings.push({
+					title: "file"
+				});
 
 				user.save(function(err) {
 					if (err) return callback(err);
