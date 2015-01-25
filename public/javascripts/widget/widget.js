@@ -46,6 +46,7 @@
                 that.border.remove();
                 that.wrapper.off();
                 that.wrapper.remove();
+                $("#cover").off("click", that.proxy.collapse);
 
                 for (var key in that.panes) {
                     if (that.panes.hasOwnProperty(key)) {
