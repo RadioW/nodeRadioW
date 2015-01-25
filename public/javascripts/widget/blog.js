@@ -19,10 +19,66 @@
             "className": "Blog",
             "constructor": function (params) {
                 var that = this;
+                var panes = {
+                    mainExpanded: {
+                        title: "Блог",
+                        name: "mainExpanded",
+                        type: "mainExpanded",
+                        "staticScroll": true,
+                        deactivate: function() {
+                            that.standBy(this);
+                        },
+                        activate: function() {
+                            that.initExpandedContent(this);
+                            that.initAdditionalSockets(this);
+                        }
+                    }
+                };
+                if (params.userId == core.user.id) {
+                    panes.writerMode = {
+                        title: "Новый блог",
+                        type: "modeExpanded",
+                        name: "writerMode",
+                        icon: "pencil",
+                        initialize: function() {
+                            var area = this.textarea = $('<textarea class="form-control blogArea" name="message">');
+                            this.content.append(area);
+                        },
+                        activate: function(options) {
+                            if (options) {
+                                that.editingBlog = options.id;
+                                this.textarea.val(options.message);
+                            }
+                        },
+                        deactivate: function() {
+                            this.textarea.val("");
+                            that.editingBlog = undefined;
+                        },
+                        controls: [
+                            {
+                                name:"submit",
+                                icon: "ok",
+                                color: "success",
+                                click: function() {
+                                    var msg = this.textarea.val();
+                                    if (msg.replace(/\s/g, "").length) {
+                                        that.emit('blog', {
+                                            message: msg,
+                                            editing: that.editingBlog
+                                        });
+                                        this.textarea.val("");
+                                        that.switchMode();
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
                 var baseOptions = {
                     "name": "Блог",
                     "path": "blog",
-                    "userId": "" //REQUIRED IN PARAMS!
+                    "userId": "", //REQUIRED IN PARAMS!
+                    "panes": panes
                 };
                 $.extend(baseOptions, params);
                 that.options = baseOptions;
@@ -48,22 +104,22 @@
                     blogs.last().remove();
                 }
             },
-            "initContent": function() {
+            "initContent": function(pane) {
                 var that = this;
 
                 Widget.fn.initContent.call(that);
                 that.emit('requestBlogShort', that.options.userId);
             },
-            "initSockets": function() {
+            "initSockets": function(pane) {
                 var that = this;
 
                 that.on('responseBlogListShort', function(data) {
-                    $('p.blog-little', that.container[0]).remove();
+                    pane.content.empty();
                     for (var i=0; i<data.length; i++) {
-                        that.container.append($('<p class="bg-info blog-little">').html(data[i]));
+                        pane.content.append($('<p class="bg-info blog-little">').html(data[i]));
                     }
                     if (data.length == 0) {
-                        that.container.append($('<p class="placeholder">').html(that.options.userId == core.user.id ? "Вы пока не писали ничего в блог": "Пользователь еще не делал заметок в блог"))
+                        pane.content.append($('<p class="placeholder">').html(that.options.userId == core.user.id ? "Вы пока не писали ничего в блог": "Пользователь еще не делал заметок в блог"))
                     }
                 }, true);
 
@@ -71,7 +127,7 @@
                     that.appendLittleBlog(data);
                     if (that.fullSized) {
                         that.blogs[data._id] = new CBlog(data);
-                        that.blogRoll.prepend(that.blogs[data._id].wrapper);
+                        that.panes.mainExpanded.content.prepend(that.blogs[data._id].wrapper);
                     }
                 }, true);
 
@@ -86,46 +142,22 @@
                 that.on('removed blog', function(data) {
                     that.emit('requestBlogShort', that.options.userId);
                     if (that.fullSized) {
-                        $('#'+data, that.expanded[0]).remove();
+                        $('#'+data, pane.content[0]).remove();
                     }
                 }, true);
                 Widget.fn.initSockets.call(that);
             },
-            "getExpandedContent":function(container) {
+            "initExpandedContent": function(container) {
                 var that = this;
-
-                that.expandedHeader = $('<p class="text-center lead">').html(that.options.name);
-                container.append(that.expandedHeader);
-                var roll = that.blogRoll = $('<div class="col-xs-12" style="overflow-y:auto; float:right;" id="blogRoll">');
-                container.append($('<div class="row">').append(roll));
-
-                that.initAdditionalSockets();
                 that.emit('requestBlogFull', that.options.userId);
-
-                if (that.options.userId == core.user.id) {
-                    var buttonEdit = $('<button class="btn btn-primary">').append($('<i class="glyphicon glyphicon-pencil">')).css({
-                        position: "absolute",
-                        top: 0,
-                        right: 0
-                    });
-                    container.append(buttonEdit);
-                    buttonEdit.on("click", function() {
-                        that.writerMode();
-                    });
-                }
-
-                setTimeout(function() {
-                    container.css("opacity", 1);
-                    that.blogRoll.height(that.expanded.height() - that.expandedHeader.height() - parseInt(that.expandedHeader.css('margin-bottom')));
-                }, 500);
             },
-            "initAdditionalSockets": function() {
+            "initAdditionalSockets": function(pane) {
                 var that = this;
 
                 that.on('responseBlogListFull', function(data) {
                     for (var i=0; i<data.length; i++) {
                         that.blogs[data[i]._id] = new CBlog(data[i]);
-                        that.blogRoll.append(that.blogs[data[i]._id].wrapper);
+                        pane.content.append(that.blogs[data[i]._id].wrapper);
                     }
                 });
             },
@@ -133,9 +165,6 @@
                 var that = this;
 
                 Widget.fn.standBy.call(that);
-                if (that.writerModeOn) {
-                    that.writerMode();
-                }
 
                 for (var key in that.blogs) {
                     if (that.blogs.hasOwnProperty(key)) {
@@ -143,65 +172,6 @@
                     }
                 }
                 that.blogs = {};
-            },
-            "writerMode": function() {
-                var that = this;
-
-                if (that.writerModeOn) {
-                    that.expanded.css("height", "100%");
-                    setTimeout(function() {
-                        that.editor.css("display", "none");
-                        that.writerModeOn = false;
-                        if (that.editingBlog) {
-                            that.textarea.val("");
-                            that.editingBlog = undefined;
-                        }
-                    }, 500);
-                } else {
-                    var editor = that.editor;
-                    if (!editor) {
-                        editor = that.editor = $('<div class="container-fluid">');
-                        editor.css({
-                            "position": "relative",
-                            "height": "100%",
-                            "display": "none",
-                            "background-color": "white"
-                        });
-                        that.border.append(editor);
-                        editor.append($('<p class="text-center lead">').html('Новый блог'));
-                        var area = that.textarea = $('<textarea class="form-control blogArea" name="message">');
-                        editor.append(area.height(that.expanded.height() - that.expandedHeader.height() - parseFloat(that.expandedHeader.css("margin-bottom")) - 8));
-                        var closeButton = $('<button class="btn btn-primary">').append($('<i class="glyphicon glyphicon-pencil">')).css({
-                            position: "absolute",
-                            top: 0,
-                            right: 0
-                        }).on("click", function() {
-                            that.writerMode();
-                        });
-                        var submitButton = $('<button class="btn btn-primary">').append($('<i class="glyphicon glyphicon-ok">')).css({
-                            position: "absolute",
-                            top: 0,
-                            right: "45px"
-                        }).on("click", function() {
-                            var msg = area.val();
-                            if (msg.replace(/\s/g, "").length) {
-                                that.emit('blog', {
-                                    message: msg,
-                                    editing: that.editingBlog
-                                });
-                                area.val("");
-                                that.writerMode();
-                            }
-                        });
-                        editor.append(closeButton);
-                        editor.append(submitButton);
-                    }
-                    that.writerModeOn = true;
-                    editor.css({
-                        "display": "block"
-                    });
-                    that.expanded.css("height", 0);
-                }
             }
         });
 

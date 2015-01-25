@@ -45,7 +45,8 @@
             },
             ui:{
                 $fileinput: "/javascripts/ui/fileinput.js",
-                $grid: "/javascripts/ui/grid.js"
+                $grid: "/javascripts/ui/grid.js",
+                $pane: "/javascripts/ui/pane.js"
             },
             $content: "/javascripts/content/content.js",
             $blog: "/javascripts/content/blog.js",

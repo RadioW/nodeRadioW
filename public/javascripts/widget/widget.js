@@ -10,9 +10,11 @@
     var defineArray = [];
     defineArray.push(m.$class);
     defineArray.push(m.$page);
+    defineArray.push(m.ui.$pane);
 
     define(moduleName, defineArray, function widget_module() {
         var Class = require(m.$class);
+        var Pane = require(m.ui.$pane);
         var Page = require(m.$page);
 
         var Widget = Class.inherit({
@@ -35,16 +37,74 @@
                 that.listeners = [];
                 that.initWrapper();
                 that.initProxy();
-                that.initSockets();
-                that.initContent();
-                that.initHandlers();
+                that.initPanes();
             },
             "destructor": function() {
                 var that = this;
 
                 that.container.remove();
                 that.border.remove();
+                that.wrapper.off();
                 that.wrapper.remove();
+
+                for (var key in that.panes) {
+                    if (that.panes.hasOwnProperty(key)) {
+                        that.panes[key].destroy();
+                    }
+                }
+
+                Class.fn.destructor.call(that);
+            },
+            "initPanes": function() {
+                var that = this;
+                that.panes = {};
+                for (var name in that.options.panes) {
+                    if (that.options.panes.hasOwnProperty(name) && name !== "main" && name !== "mainExpanded") {
+                        var pane = new Pane(that.options.panes[name]);
+                        that.container.append(pane.wrapper);
+                        that.panes[pane.name] = pane;
+                    }
+                }
+                var mOpts = that.options.panes && that.options.panes.main;
+                that.panes.main = new Pane(mOpts || {
+                    title: that.options.name,
+                    name: "main",
+                    type: "main",
+                    initialize: function() {
+                        that.initContent(this);
+                        that.initSockets(this);
+                    }
+                });
+                var eOpts = that.options.panes && that.options.panes.mainExpanded;
+                that.panes.mainExpanded = new Pane(eOpts || {
+                    title: that.options.name,
+                    name: "mainExpanded",
+                    type: "mainExpanded",
+                    initialize: function() {
+                        that.initExpandedContent(this);
+                        //that.initSockets();
+                    },
+                    deactivate: function() {
+                        that.standBy(this);
+                    },
+                    activate: function() {
+                        that.initAdditionalSockets(this);
+                    }
+                });
+                for (var key in that.panes) {
+                    if (that.panes.hasOwnProperty(key) && !that.panes[key].noSwitch) {
+                        if (that.panes[key].type === "mode") {
+                            that.panes.main.switchSlot.append(that.panes[key].switchOn);
+                        }
+                        if (that.panes[key].type === "modeExpanded") {
+                            that.panes.mainExpanded.switchSlot.append(that.panes[key].switchOn);
+                        }
+                    }
+                }
+                that.container.append(that.panes.mainExpanded.wrapper);
+                that.container.append(that.panes.main.wrapper);
+                that.wrapper.on("click", that.proxy.expand);
+                that.panes.main.activate();
             },
             "initWrapper": function() {
                 var that = this;
@@ -52,34 +112,35 @@
                 var border = that.border = $('<div class="thumbnail widgetBorder">');
                 border.css("overflow", "hidden");
                 that.wrapper.append(border);
-                var container = that.container = $('<div class="container-fluid" id="widget_'+ that.options.path +'" style="height:100%; overflow:hidden">');
-                border.append(container);
+                border.on("switchMode", function(e, mode, param) {
+                    that.switchMode(mode, param);
+                });
+                that.container = $('<div class="widget-container">');
+                that.border.append(that.container);
                 $("#pseudoBody").append(that.wrapper);
+                that.container.css("opacity", 1);
             },
             "initContent": function() {
-                var that = this;
-
-                var header = that.header = $('<p class="text-center lead">').html(that.options.name);
-                that.container.append(header);
-            },
-            "initHandlers": function() {
-                var that = this;
-                that.wrapper.on("click", that.proxy.expand)
             },
             "initSockets": function() {
                 var that = this;
 
                 console.log("Sockets for widget "+ that.options.path +" are ready");
             },
+            "initAdditionalSockets": function() {},
             "expand": function() {
                 var that = this;
+                that.switchMode();
                 that.fullSized = true;
                 that.wrapper.off("click", that.proxy.expand);
 
-                var tool = that.expanded = $('<div class="container-fluid widget-container">');
-                that.getExpandedContent(tool);
-                that.container.css('display', 'none');
-                that.container.after(tool);
+                that.panes.main.deactivate();
+                that.container.css("opacity", 0);
+                setTimeout(function() {
+                    that.panes.mainExpanded.activate();
+                    that.container.css("opacity", 1);
+                }, 300);
+                //that.container.after(tool);
 
                 that.place = getCoords(that.wrapper.get(0));
                 var carett = $('#carett');
@@ -117,6 +178,7 @@
             },
             "collapse": function() {
                 var that = this;
+                that.switchMode();
                 that.fullSized = false;
                 var cover = $('#cover');
                 cover.off("click", that.proxy.collapse);
@@ -131,19 +193,20 @@
                     top: that.place.top -carett.place.top +'px',
                     left: that.place.left-carett.place.left+'px'
                 });
-                that.expanded.css("opacity",0);
+                that.panes.mainExpanded.deactivate();
+                that.container.css("opacity", 0);
                 setTimeout (function() {
                     cover.css('display', 'none');
                     that.wrapper.append(that.border);
+                    setTimeout(function() {
+                        that.container.css("opacity", 1);
+                    }, 20);
                     carett.css("display", 'none');
-                    that.expanded.remove();
+                    that.panes.main.activate();
                     car.remove();
-                    delete that.expanded;
-                    that.container.css("display", 'block');
                     history.pushState(null, null, "/user/" + that.options.userId + "/");
                     that.wrapper.on("click", that.proxy.expand);
                 }, 500);
-                that.standBy();
             },
             "initProxy": function() {
                 var that = this;
@@ -151,6 +214,9 @@
                     "expand": $.proxy(that.expand, that),
                     "collapse": $.proxy(that.collapse, that)
                 }
+            },
+            "initExpandedContent": function(container) {
+                //it's a function for inheriters.
             },
             "on": function(event, handler, bothStates) {
                 var that = this;
@@ -165,31 +231,41 @@
             "emit": function() {
                 Page.fn.emit.apply(this, arguments);
             },
-            "getExpandedContent": function(container) {
-                var that = this;
-                $.ajax({
-                    url: that.href || "/",
-                    method: 'GET',
-                    data: null,
-                    statusCode:{
-                        200: function(jqXHR) {
-                            container.html(jqXHR);
-                            container.css("opacity", 1);
-                            var script = $('script', container.get(0)).get(0); // Если в инструменте есть тег скрипт - эта приписка его запустит
-                            if (script) {
-                                var start = new Function ('', script.innerHTML);
-                                start();
-                            }
-                        }
-                    }
-                });
-            },
             "standBy": function() {
                 var that = this;
                 for(var i=0; i<that.listeners.length; i++) {
                     that.off(that.listeners[i]);
                 }
                 that.listeners = [];
+            },
+            "switchMode": function(name, param) {
+                var that = this;
+                if (!name) {
+                    if (that.fullSized) {
+                        that.panes.mainExpanded.wrapper.css("height", "100%");
+                    } else {
+                        that.panes.main.wrapper.css("height", "100%")
+                    }
+                    if (that.activeMode) {
+                        setTimeout(function() {
+                            that.panes[that.activeMode].deactivate(param);
+                            that.activeMode = false;
+                        }, 300);
+                    }
+                } else {
+                    if (that.panes[name]) {
+                        that.activeMode = name;
+                        if (that.fullSized) {
+                            that.panes.mainExpanded.wrapper.after(that.panes[name].wrapper);
+                            that.panes.mainExpanded.wrapper.css("height", 0);
+                        } else {
+                            that.panes.main.wrapper.after(that.panes[name].wrapper);
+                            that.panes.main.wrapper.css("height", 0);
+                        }
+                        that.panes[name].activate(param);
+                    }
+                }
+
             }
         });
 

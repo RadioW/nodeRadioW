@@ -21,10 +21,205 @@
             "className": "Messages",
             "constructor": function (params) {
                 var that = this;
+                var panes = {};
+                var dialogueMode = {
+                    "name": "mainExpanded",
+                    "type": "mainExpanded",
+                    "title": "Диалог",
+                    initialize: function() {
+                        var pane = this;
+                        var messageForm = pane.messageForm = $('<form class="comment">').css({
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0
+                        });
+                        pane.content.css({
+                            "padding-bottom": "85px",
+                            "overflow": "hidden",
+                            "padding-right": 0
+                        });
+                        messageForm.on('submit', function (e) {
+                            e.preventDefault();
+                            that.emitMessage(pane.messageArea.val());
+                            pane.messageArea.val("")
+                        });
+                        pane.messageArea = $('<textarea class="form-control">');
+                        messageForm.append(pane.messageArea);
+                        pane.messageArea.keypress(function(e) {
+                            if (e.keyCode == 13 && !e.shiftKey) {
+                                e.preventDefault();
+                                that.emitMessage();
+                                pane.messageArea.val("")
+                            }
+                        });
+                        messageForm.append($('<input type="submit" class="btn btn-primary">'));
+                        var messageRoll = that.messageRoll = $('<div class="messageRoll">');
+                        that.messageRollContainer = $('<div style="overflow: hidden">');
+                        that.messageRoll.append(that.messageRollContainer);
+
+                        pane.content.append(messageRoll);
+                        pane.content.append(messageForm);
+                    },
+                    deactivate: function() {
+                        that.emit("leaveDialogue", {});
+                        that.receiver = "";
+                        that.lastShownMessageIndex = 0;
+                        that.messageRollContainer.empty();
+
+                        for (var key in that.messages) {
+                            if (that.messages.hasOwnProperty(key)) {
+                                that.messages[key].destructor();
+                                delete that.messages[key];
+                            }
+                        }
+                        if (that.options.userId !== core.user.id) {
+                            that.emit("messagesRequestShort", that.options.userId);
+                        }
+                        that.standBy(this);
+                    },
+                    activate: function(receiver) {
+                        var pane = this;
+                        receiver = receiver || that.options.userId;
+
+                        that.receiver = receiver;
+                        that.requestMessages();
+
+                        that.on("messageListResponse", function(data) {
+                            for (var i=0; i<data.messages.length; ++i) {
+                                var message = new Message(data.messages[i]);
+                                that.messageRollContainer.prepend(message.wrapper);
+                                that.messages[message.id] = message;
+                            }
+                            pane.setTitle("Диалог с " + data.pal.name);
+                            setTimeout(function() {
+                                if (!that.lastShownMessageIndex) {
+                                    that.messageRoll.scrollTop(that.messageRollContainer.height());
+                                }
+                                that.lastShownMessageIndex = data.lastIndex;
+                            }, 20);
+                        });
+                        that.on('readMessage', function(data) {
+                            if (that.messages[data] instanceof Message)
+                                that.messages[data].status("normal")
+                        });
+
+                        that.on("incomingMessage", function(data) {
+                            var message = new Message(data);
+                            that.messages[message.id] = message;
+                            if (that.messageRollContainer.height() - that.messageRoll.height() - that.messageRoll.scrollTop() < 5) {
+                                setTimeout(function(){
+                                    that.messageRoll.scrollTop(that.messageRollContainer.height());
+                                    ++that.lastShownMessageIndex;
+                                }, 20);
+                            }
+                            that.messageRollContainer.append(message.wrapper);
+                        });
+                    }
+                };
+                var main = {
+                    "name": "main",
+                    "type": "main",
+                    "title": "Сообщения",
+                    initialize: function() {
+                        var pane = this;
+                        pane.content.css("overflow", "hidden");
+                        that.on('messagesResponseShort', function(data) {
+                            pane.content.empty();
+                            if (data.length == 0) {
+                                pane.content.append($('<p>').html("Вы прежде не вели переписку с этим пользователем"));
+                            } else {
+                                for (var i = 0; i< data.length; ++i) {
+                                    var message = new Message(data[i]);
+                                    pane.content.append(message.wrapper);
+                                }
+                            }
+                        }, true);
+                        that.on('updateDialogue', function(data) {
+                            if (data.user.id == that.options.userId) {
+                                that.emit("messagesRequestShort", that.options.userId); //not so good solution
+                            }
+                        }, true);
+                        that.emit("messagesRequestShort", that.options.userId);
+                    }
+                };
+                if (params.userId === core.user.id) {
+                    main.initialize = function() {
+                        var pane = this;
+                        pane.content.css("overflow", "hidden");
+                        that.on("dialoguesResponse", function (data) {
+                            for (var i = 0; i < that.dialogues.length; ++i) {
+                                that.dialogues[i].destructor();
+                            }
+                            that.dialogues = [];
+                            pane.content.empty();
+                            var right = false;
+                            for (var i = 0; i < data.length; ++i) {
+                                var dialogue = new Dialogue($.extend(data[i], {
+                                    right: right
+                                }));
+
+                                that.dialogues.push(dialogue);
+                                if (that.fullSized) {
+                                    that.panes.mainExpanded.content.append(dialogue.wrapper);
+                                    dialogue.wrapper.on("click", (function (id) {
+                                        return function () {
+                                            that.dialogueMode(id);
+                                        }
+                                    })(data[i].user.id));
+                                }
+                                right = !right;
+                            }
+
+                            if (that.dialogues.length == 0) {
+                                pane.content.append($('<p class="placeholder">').html("Пока вы не вели переписку ни с кем из радиослушателей"));
+                            } else {
+                                for (var i = 0; i < that.dialogues.length; ++i) {
+                                    pane.content.append(that.dialogues[i].previewWrapper);
+                                }
+                            }
+                        }, true);
+                        that.on("updateDialogue", function(data) {
+                            for (var i = 0; i<that.dialogues.length; ++i) {
+                                if (that.dialogues[i].id == data.id) {
+                                    var dialogue = that.dialogues.splice(i, 1)[0];
+                                    that.updateDialogues(data, dialogue);
+                                    return;
+                                }
+                            }
+                            that.updateDialogues(data);
+                        }, true);
+                        that.emit("dialoguesRequest", that.options.userId);
+                    };
+                    panes.mainExpanded = {
+                        "name": "mainExpanded",
+                        "type": "mainExpanded",
+                        "title": "Диалоги",
+                        "initialize": function() {
+                            for (var i=0; i<that.dialogues.length; ++i) {
+                                this.content.append(that.dialogues[i].wrapper);
+                                that.dialogues[i].wrapper.on("click", (function(id){
+                                    return function(){
+                                        that.switchMode("dialogueMode", id);
+                                    }
+                                })(that.dialogues[i].user.id));
+                            }
+                        },
+                        "activate": function() {},
+                        "deactivate": function() {}
+                    };
+                    panes.dialogueMode = dialogueMode;
+                    dialogueMode.type = "modeExpanded";
+                    dialogueMode.name = "dialogueMode";
+                    dialogueMode.noSwitch = true;
+                } else {
+                    panes.mainExpanded = dialogueMode;
+                }
+                panes.main = main;
                 var baseOptions = {
                     "name": "Сообщения",
                     "path": "messages",
-                    "userId": "" //REQUIRED IN PARAMS!
+                    "userId": "", //REQUIRED IN PARAMS!
+                    "panes": panes
                 };
                 $.extend(baseOptions, params);
                 that.options = baseOptions;
@@ -34,7 +229,6 @@
                 that.messages = {};
 
                 Widget.fn.constructor.call(that, baseOptions);
-                that.initDialogue();
             },
             "destructor": function() {
                 var that = this;
@@ -46,259 +240,13 @@
                 that.dialogues = undefined;
                 Widget.fn.destructor.call(that);
             },
-            "initAdditionalSockets": function() {
+            "emitMessage": function(message) {
                 var that = this;
-
-                that.on("messageListResponse", function(data) {
-                    for (var i=0; i<data.messages.length; ++i) {
-                        var message = new Message(data.messages[i]);
-                        that.messageRollContainer.prepend(message.wrapper);
-                        that.messages[message.id] = message;
-                    }
-                    that.pal.html(data.pal.name);
-                    setTimeout(function() {
-                        if (!that.lastShownMessageIndex) {
-                            that.messageRoll.scrollTop(that.messageRollContainer.height());
-                        }
-                        that.lastShownMessageIndex = data.lastIndex;
-                    }, 20);
-                });
-                that.on('readMessage', function(data) {
-                    if (that.messages[data] instanceof Message)
-                    that.messages[data].status("normal")
-                });
-
-                that.on("incomingMessage", function(data){
-                    var message = new Message(data);
-                    that.messages[message.id] = message;
-                    if (that.messageRollContainer.height() - that.messageRoll.height() - that.messageRoll.scrollTop() < 5) {
-                        setTimeout(function(){
-                            that.messageRoll.scrollTop(that.messageRollContainer.height());
-                            ++that.lastShownMessageIndex;
-                        }, 20);
-                    }
-                    that.messageRollContainer.append(message.wrapper);
-
-                });
-            },
-            "initContent": function() {
-                var that = this;
-
-                if (that.options.userId == core.user.id) {
-                    that.emit("dialoguesRequest", that.options.userId);
-                } else {
-                    that.emit("messagesRequestShort", that.options.userId);
-                }
-                Widget.fn.initContent.call(that);
-                that.shortRoll = $("<div>");
-                that.container.append(that.shortRoll);
-            },
-            "initDialogue": function() {
-                var that = this;
-                that.dialogue = $('<div class="container-fluid widget-dialogue">');
-                that.dialogue.css({
-                    "position": "relative",
-                    "height": "100%",
-                    "display": "none",
-                    "background-color": "white",
-                    "opacity": 0
-                });
-                that.border.append(that.dialogue);
-                that.pal = $('<span>');
-                that.dialogue.append($('<p class="text-center lead">').html('Диалог с ').append(that.pal));
-                if (core.user.id && core.user.name) {
-                    var messageForm = that.messageForm = $('<form class="comment">');
-                    messageForm.on('submit', function (e) {
-                        that.emitMessage();
-                        e.preventDefault();
-                    });
-                    that.messageArea = $('<textarea class="form-control">');
-                    messageForm.append(that.messageArea);
-                    that.messageArea.keypress(function(e) {
-                        if (e.keyCode == 13 && !e.shiftKey) {
-                            e.preventDefault();
-                            that.emitMessage();
-                        }
-                    });
-                    messageForm.append($('<input type="submit" class="btn btn-primary">'));
-
-                    var messageRoll = that.messageRoll = $('<div class="messageRoll">');
-                    that.messageRollContainer = $('<div style="overflow: hidden">');
-                    that.messageRoll.append(that.messageRollContainer);
-
-                    that.dialogue.append(messageRoll);
-                    that.dialogue.append(messageForm);
-
-                    if (that.options.userId == core.user.id) {
-                        var buttonBack = $('<button class="btn btn-primary">').append($('<i class="glyphicon glyphicon-chevron-down">')).css({
-                            position: "absolute",
-                            top: 0,
-                            right: 0
-                        });
-                        that.dialogue.append(buttonBack);
-                        buttonBack.on("click", function () {
-                            that.dialogueMode();
-                        });
-                    }
-                }
-            },
-            "emitMessage": function() {
-                var that = this;
-                if (that.messageArea.val().replace(/\s/g, "").length) {
+                if (message && message.replace(/\s/g, "").length) {
                     that.emit("newMessage", {
                         receiver: that.receiver,
-                        message: that.messageArea.val()
+                        message: message
                     });
-                    that.messageArea.val("");
-                }
-            },
-            "initSockets": function() {
-                var that = this;
-
-                if (that.options.userId == core.user.id) {
-                    that.on("dialoguesResponse", function (data) {
-                        for (var i = 0; i < that.dialogues.length; ++i) {
-                            that.dialogues[i].destructor();
-                        }
-                        that.dialogues = [];
-                        that.shortRoll.empty();
-                        var right = false;
-                        for (var i = 0; i < data.length; ++i) {
-                            var dialogue = new Dialogue($.extend(data[i], {
-                                right: right
-                            }));
-
-                            that.dialogues.push(dialogue);
-                            if (that.fullSized) {
-                                that.expanded.append(dialogue.wrapper);
-                                dialogue.wrapper.on("click", (function (id) {
-                                    return function () {
-                                        that.dialogueMode(id);
-                                    }
-                                })(data[i].user.id));
-                            }
-                            right = !right;
-                        }
-
-                        if (that.dialogues.length == 0) {
-                            that.shortRoll.append($('<p class="placeholder">').html("Пока вы не вели переписку ни с кем из радиослушателей"));
-                        } else {
-                            for (var i = 0; i < that.dialogues.length; ++i) {
-                                that.shortRoll.append(that.dialogues[i].previewWrapper);
-                            }
-                        }
-                    }, true);
-                    that.on("updateDialogue", function(data) {
-                        for (var i = 0; i<that.dialogues.length; ++i) {
-                            if (that.dialogues[i].id == data.id) {
-                                var dialogue = that.dialogues.splice(i, 1)[0];
-                                that.updateDialogues(data, dialogue);
-                                return;
-                            }
-                        }
-                        that.updateDialogues(data);
-                    }, true);
-                } else {
-                    that.on('messagesResponseShort', function(data){
-                        that.shortRoll.empty();
-                        if (data.length == 0) {
-                            that.shortRoll.append($('<p>').html("Вы прежде не вели переписку с этим пользователем"));
-                        } else {
-                            for (var i = 0; i< data.length; ++i) {
-                                var message = new Message(data[i]);
-                                that.shortRoll.append(message.wrapper);
-                            }
-                        }
-                    }, true);
-                    that.on('updateDialogue', function(data) {
-                        if (data.user.id == that.options.userId) {
-                            that.emit("messagesRequestShort", that.options.userId); //not so good solution
-                        }
-                    }, true)
-                }
-                Widget.fn.initSockets.call(that);
-            },
-            "getExpandedContent":function(container) {
-                var that = this;
-
-                that.expandedHeader = $('<p class="text-center lead">').html(that.options.name);
-                container.append(that.expandedHeader);
-                that.initAdditionalSockets();
-                if (that.options.userId == core.user.id) {
-                    for (var i=0; i<that.dialogues.length; ++i) {
-                        that.expanded.append(that.dialogues[i].wrapper);
-                        that.dialogues[i].wrapper.on("click", (function(id){
-                            return function(){
-                                that.dialogueMode(id);
-                            }
-                        })(that.dialogues[i].user.id));
-                    }
-                } else {
-                    that.dialogueMode();
-                }
-
-                setTimeout(function() {
-                    container.css("opacity", 1);
-                    that.dialogue.css("opacity", 1);
-                }, 550);
-            },
-            "dialogueMode": function(receiver) {
-                var that = this;
-                receiver = receiver || that.options.userId;
-                for (var key in that.messages) {
-                    if (that.messages.hasOwnProperty(key)) {
-                        that.messages[key].destructor();
-                        delete that.messages[key];
-                    }
-                }
-
-                if (that.dialogueModeOn) {
-                    that.expanded.css("height", "100%");
-                    that.emit("leaveDialogue", {});
-                    setTimeout(function() {
-                        that.dialogue.css("display", "none");
-                        that.dialogueModeOn = false;
-                        that.receiver = "";
-                        that.lastShownMessageIndex = 0;
-                        that.messageRollContainer.empty();
-                    }, 500);
-                } else {
-                    that.dialogueModeOn = true;
-                    that.dialogue.css({
-                        "display": "block"
-                    });
-                    that.receiver = receiver;
-
-                    that.expanded.css("height", 0);
-                    if (that.dialogue.height() < 350) {
-                        setTimeout(function() {
-                            that.messageRoll.height(that.dialogue.height() - that.expandedHeader.height() - parseFloat(that.expandedHeader.css("margin-bottom")) - that.messageForm.height() - 30);
-                            that.requestMessages();
-                        }, 550);
-                    } else {
-                        that.messageRoll.height(that.dialogue.height() - that.expandedHeader.height() - parseFloat(that.expandedHeader.css("margin-bottom")) - that.messageForm.height() - 30);
-                        that.requestMessages();
-                    }
-
-                }
-            },
-            "standBy": function() {
-                var that = this;
-
-                Widget.fn.standBy.call(that);
-                if (that.dialogueModeOn) {
-                    that.dialogue.css("opacity", 0);
-                    that.dialogueMode();
-                } else {
-                    for (var key in that.messages) {
-                        if (that.messages.hasOwnProperty(key)) {
-                            that.messages[key].destructor();
-                            delete that.messages[key];
-                        }
-                    }
-                }
-                if (that.options.userId !== core.user.id) {
-                    that.emit("messagesRequestShort", that.options.userId);
                 }
             },
             "requestMessages": function() {
@@ -312,10 +260,10 @@
                 var that = this;
                 if (!dialogue) {
                     dialogue = new Dialogue(data);
-                    that.shortRoll.find('.placeholder').remove();
-                    if (that.expanded) {
+                    that.panes.main.content.find('.placeholder').remove();
+                    if (that.fullSized) {
                         dialogue.wrapper.on("click", function () {
-                            that.dialogueMode(dialogue.user.id);
+                            that.switchMode("dialogueMode", dialogue.user.id);
                         });
                     }
                 } else {
@@ -332,13 +280,13 @@
                 if (that.dialogues[1]) {
                     that.dialogues[1].previewWrapper.before(dialogue.previewWrapper);
                 } else {
-                    that.shortRoll.append(dialogue.previewWrapper);
+                    that.panes.main.content.append(dialogue.previewWrapper);
                 }
                 if (that.fullSized) {
                     if (that.dialogues[1]) {
                         that.dialogues[1].wrapper.before(dialogue.wrapper);
                     } else {
-                        that.expanded.append(dialogue.wrapper);
+                        that.panes.mainExpanded.content.append(dialogue.wrapper);
                     }
                 }
             }

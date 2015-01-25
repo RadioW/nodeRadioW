@@ -47,10 +47,11 @@
             "initWrapper": function() {
                 var that = this;
 
-                var wrapper = that.wrapper = $('<div>');
+                var wrapper = that.wrapper = $('<div>').css("overflow", "hidden");
                 var input = that.input = $('<input type="file" name="'+ that.options.inputName +'"'+ (that.options.multiple ? "multiple": "") +'>');
                 var form = that.form = $('<form enctype="multipart/form-data" method="POST">');
-                form.append($('<span class="btn btn-primary btn-file">').html(that.options.title)
+                that.button = $('<span class="btn btn-primary btn-file">').css("position", "relative");
+                form.append(that.button.html(that.options.title)
                     .append(input));
 
                 var progressBar = that.progressBar = $('<div class="progress-bar" role="progressbar" style="width:0">');
@@ -100,34 +101,45 @@
                         cache: false,
                         statusCode: {
                             200: function() {
-                                progressBar.parent().css('display', 'none');
-                                launchModal(that.options.successMessage);
+                                afterAll(that.options.successMessage);
                             },
                             500: function(jqXHR) {
                                 var ans = JSON.parse(jqXHR.responseText);
-                                progressBar.parent().css('display', 'none');
-                                launchModal(ans.message);
+                                afterAll(ans.message);
                             },
                             403: function(jqXHR) {
-                                var ans = JSON.parse("Ошибка. Файлы не будут загружены, не хватает доступного места");
-                                progressBar.parent().css('display', 'none');
-                                launchModal(ans.message);
+                                afterAll("Ошибка. Файлы не будут загружены, не хватает доступного места");
                             },
                             404: function(jqXHR) {
                                 var ans = JSON.parse(jqXHR.responseText);
-                                progressBar.parent().css('display', 'none');
-                                launchModal(ans.message);
+                                afterAll(ans.message);
                             }
                         },
                         beforeSend: function() {
                             progressBar.parent().css('display', 'block');
+                            that.button.css({
+                                "height": "10px",
+                                "top": "-10px",
+                                "opacity": "0"
+                            });
                             progressBar.css('width', 0);
                         }
                     });
                     function moveProgress(e) {
                         progressBar.css('width', 100*e.loaded/e.total+'%');
                     }
+                    function afterAll(message) {
+                        progressBar.parent().css('display', 'none');
+                        that.button.css({
+                            "height": "",
+                            "top": "0",
+                            "opacity": "1"
+                        });
+                        progressBar.css('width', 0);
+                        launchModal(message);
+                    }
                 });
+                that.wrapper.css("minWidth", that.button.width() + "px");
             }
         });
 

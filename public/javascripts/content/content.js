@@ -186,11 +186,10 @@
                                 if (!core.activePage.widgets.blog.fullSized) {
                                     core.activePage.widgets.blog.expand();
                                 }
-                                if (!core.activePage.widgets.blog.writerModeOn) {
-                                    core.activePage.widgets.blog.writerMode();
-                                }
-                                core.activePage.widgets.blog.editingBlog = that.content.id; //TODO
-                                core.activePage.widgets.blog.textarea.val(message);
+                                core.activePage.widgets.blog.switchMode("writerMode",{
+                                    message: message,
+                                    id: that.content.id
+                                });
                             }
                         });
                         buttonEditBlog.html('Редактировать');

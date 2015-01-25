@@ -19,10 +19,62 @@
             "className": "Photo",
             "constructor": function (params) {
                 var that = this;
+                var panes = {
+                    mainExpanded: {
+                        title: "Фото",
+                        name: "mainExpanded",
+                        type: "mainExpanded",
+                        "staticScroll": true,
+                        initialize: function() {
+                            this.content.css({
+                                "padding-left": "10px",
+                                "padding-right": 0
+                            });
+                        },
+                        deactivate: function() {
+                            this.content.empty();
+                            that.standBy(this);
+                        },
+                        activate: function() {
+                            var pane = this;
+                            that.on("photoResponse", function(data) {
+                                pane.content.empty();
+                                for (var i=0; i<data.length; i++) {
+                                    pane.content.append($('<div class="photoPrev" id="'+data[i]+'">')
+                                            .append($('<img src="/data/' + that.options.userId + '/photo/'+ data[i] +'prev.jpg">'))
+                                            .on("click", (function(i){
+                                                return function() {
+                                                    core.content.subscribe(that.options.userId, "photo", data[i]);
+                                                }
+                                            })(i))
+                                    );
+                                }
+                            });
+                            that.emit('photoRequest', that.options.userId);
+                        }
+                    }
+                };
+                if (core.user.id == params.userId) {
+                    var file = that.file = new Fileinput({
+                        "url": "/user/savePhoto",
+                        "multiple": true,
+                        "maxFileSize": (20 * 1024 * 1024),
+                        "allowedTypes" : ['image/png', 'image/jpg', 'image/gif', 'image/jpeg'],
+                        "successMessage": "Фотографии успешно загружены"
+                    });
+                    panes.mainExpanded.controls = [{
+                        name: "upload",
+                        wrapper: file.wrapper
+                    }];
+                    panes.mainExpanded.destroy = function() {
+                        that.file.destructor();
+                    }
+                }
                 var baseOptions = {
                     "name": "Фото",
                     "path": "photo",
-                    "userId": "" //REQUIRED IN PARAMS!
+                    "userId": "", //REQUIRED IN PARAMS!
+                    "panes": panes
                 };
                 $.extend(baseOptions, params);
                 that.options = baseOptions;
@@ -35,19 +87,19 @@
                 clearInterval(that.requester);
                 Widget.fn.destructor.call(that);
             },
-            "initContent": function() {
+            "initContent": function(pane) {
                 var that = this;
                 Widget.fn.initContent.call(that);
 
                 var littlePhotos = that.littlePhotos = $('<div class="col-xs-12" id="miniPhotoRoll">'); //todo
-                that.container.append($('<div class="row">').append(littlePhotos));
+                pane.content.append($('<div class="row">').append(littlePhotos));
 
                 that.emit("photoShortRequest", that.options.userId);
                 that.requester = setInterval(function() {
                     that.emit("photoShortRequest", that.options.userId);
                 }, 60000);
             },
-            "initSockets": function() {
+            "initSockets": function(pane) {
                 var that = this;
                 that.on("photoShortResponse", function(data) {
                     that.littlePhotos.css("opacity", 0);
@@ -71,7 +123,7 @@
                 that.on('new photo', function(data) {
                     if (that.fullSized) {
                         for (var i=0; i<data.length; i++) {
-                            that.photoRoll.prepend($('<div class="photoPrev" id="'+data[i]+'">')
+                            that.panes.mainExpanded.content.prepend($('<div class="photoPrev" id="'+data[i]+'">')
                                     .append($('<img src="/data/' + that.options.userId + '/photo/'+ data[i] +'prev.jpg">'))
                                     .on("click", (function(i){
                                         return function() {
@@ -87,7 +139,7 @@
 
                 that.on('removed photo', function(id) {
                     if (that.fullSized) {
-                        if ($('#'+id, that.expanded[0])[0]) {
+                        if ($('#'+id, that.panes.mainExpanded.content[0])[0]) {
                             $('#'+id).remove();
                         }
                     } else {
@@ -95,68 +147,6 @@
                     }
                 }, true);
                 Widget.fn.initSockets.call(that);
-            },
-            "getExpandedContent": function(container) {
-                var that = this;
-
-                container.css({
-                    "padding-left": "10px",
-                    "padding-right": 0
-                });
-
-                that.expandedHeader = $('<p class="text-center lead">').html(that.options.name);
-                container.append(that.expandedHeader);
-
-                var photoRoll = that.photoRoll = $('<div class="row">');
-                container.append($('<div class="col-xs-12 col-xs-11-vp" style="overflow-y:scroll; float:right;" id="photoRoll">').append(photoRoll));
-
-                that.on("photoResponse", function(data) {
-                    that.photoRoll.empty();
-                    for (var i=0; i<data.length; i++) {
-                        that.photoRoll.append($('<div class="photoPrev" id="'+data[i]+'">')
-                            .append($('<img src="/data/' + that.options.userId + '/photo/'+ data[i] +'prev.jpg">'))
-                            .on("click", (function(i){
-                                    return function() {
-                                        core.content.subscribe(that.options.userId, "photo", data[i]);
-                                    }
-                                })(i))
-                        );
-                    }
-                });
-
-                that.emit('photoRequest', that.options.userId);
-
-                if (core.user.id == that.options.userId) {
-                    var file = that.file = new Fileinput({
-                        "url": "/user/savePhoto",
-                        "multiple": true,
-                        "maxFileSize": (20 * 1024 * 1024),
-                        "allowedTypes" : ['image/png', 'image/jpg', 'image/gif', 'image/jpeg'],
-                        "successMessage": "Фотографии успешно загружены"
-                    });
-                    container.append(file.wrapper);
-                    file.wrapper.css({
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        "text-align": "right"
-                    })
-                }
-
-                setTimeout(function() {
-                    container.css("opacity", 1)
-                }, 300);
-            },
-            "standBy": function() {
-                var that = this;
-
-                Widget.fn.standBy.call(that);
-
-                if (that.file) {
-                    that.file.destructor();
-                    delete that.file;
-                }
             }
         });
 

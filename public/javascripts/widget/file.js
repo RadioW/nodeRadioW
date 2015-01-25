@@ -20,37 +20,47 @@
             "className": "Files",
             "constructor": function (params) {
                 var that = this;
+                var mainExpanded = {
+                    title: "Хранилище",
+                    name: "mainExpanded",
+                    type: "mainExpanded",
+                    "staticScroll": true,
+                    deactivate: function() {
+                        that.standBy(this);
+                    },
+                    activate: function() {
+                        that.initExpandedContent(this);
+                    }
+                };
+                if (params.userId === core.user.id) {
+                    that.file = new Fileinput({
+                        "url": "/user/saveFile",
+                        "multiple": true,
+                        "successMessage": "Файлы успешно загружены"
+                    });
+                    mainExpanded.controls = [{
+                        name: "file",
+                        wrapper: that.file.wrapper
+                    }];
+                    mainExpanded.destroy = function() {
+                        that.file.destructor();
+                    }
+                }
                 var baseOptions = {
                     "name": "Хранилище",
                     "path": "file",
-                    "userId": "" //REQUIRED IN PARAMS!
+                    "userId": "", //REQUIRED IN PARAMS!
+                    "panes": {
+                        mainExpanded: mainExpanded
+                    }
                 };
                 that.size = {};
                 $.extend(baseOptions, params);
                 that.options = baseOptions;
                 Widget.fn.constructor.call(that, baseOptions);
             },
-            "getExpandedContent": function (container) {
+            "initExpandedContent": function (pane) {
                 var that = this;
-
-                that.expandedHeader = $('<p class="text-center lead">').html(that.options.name);
-                container.append(that.expandedHeader);
-
-                if (core.user.id == that.options.userId) {
-                    var fileInput = that.fileInput = new Fileinput({
-                        "url": "/user/saveFile",
-                        "multiple": true,
-                        "successMessage": "Файлы успешно загружены"
-                    });
-                    container.append(fileInput.wrapper);
-                    fileInput.wrapper.css({
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        "text-align": "right"
-                    })
-                }
 
                 that.grid = new Grid({
                     columns: [
@@ -73,13 +83,9 @@
                     that.grid.data(data);
                 });
                 that.emit("filesRequest", that.options.userId);
-                container.append(that.grid.wrapper);
-
-                setTimeout(function () {
-                    container.css("opacity", 1);
-                }, 500);
+                pane.content.append(that.grid.wrapper);
             },
-            "initContent": function() {
+            "initContent": function(pane) {
                 var that = this;
                 Widget.fn.initContent.call(that);
 
@@ -91,7 +97,7 @@
                 };
                 that.smallSizeBar.wrapper.append(that.smallSizeBar.outside.append(that.smallSizeBar.inside)).append(that.smallSizeBar.title);
                 that.emit("sizeRequest", that.options.userId);
-                that.container.append(that.smallSizeBar.wrapper);
+                pane.content.append(that.smallSizeBar.wrapper);
             },
             "initSockets": function () {
                 var that = this;
@@ -120,10 +126,6 @@
 
                 Widget.fn.standBy.call(that);
 
-                if (that.fileInput) {
-                    that.fileInput.destructor();
-                    delete that.fileInput;
-                }
                 if (that.grid) {
                     that.grid.destructor();
                 }
