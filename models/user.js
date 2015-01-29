@@ -3,6 +3,7 @@ var crypto = require('crypto');
 var async = require('async');
 var HttpError = require('../error').HttpError;
 var util = require ('util');
+var fs = require('fs');
 
 var mongoose = require('../libs/mongoose'),
   Schema = mongoose.Schema;
