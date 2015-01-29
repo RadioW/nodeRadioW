@@ -256,7 +256,7 @@ schema.statics.registrate = function (username, password, callback) {
 				fs.mkdir('./public/data/'+user._id, function(err) {
 					if (err) return callback(err);
 					async.each(["photo", "file"], function(name, callback) { //initializing directories
-						fs.mkdir('./public/data/'+user._id+'/photo', function(err) {
+						fs.mkdir('./public/data/'+user._id+'/' + name, function(err) {
 							callback(err, user);
 						});
 					}, function(err) {
