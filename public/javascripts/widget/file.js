@@ -62,21 +62,41 @@
             "initExpandedContent": function (pane) {
                 var that = this;
 
+                var cols = [
+                    {key: "image", title: ""},
+                    {key: "name", title:"Название"},
+                    {key: "size", title: "Размер", template: function(data) {
+                        return bytify(data);
+                    }},
+                    {key: "description", title: "Описание"},
+                    {key: "date", title: "Дата", template: function(data) {return datify(data)}},
+                    {key: "link", title: "Ссылка", template: function(data) {
+                        var elem = $('<a href="'+data+'?download" type="button" class="btn btn-primary">').html("Скачать");
+                        elem.attr('download', data.substr(data.lastIndexOf('/') + 1, data.length));
+                        return elem;
+                    }}
+                ];
+                if (that.options.userId === core.user.id) {
+                    cols.push({key: "remove", title: " ", template: function(data, model) {
+                        var elem = $('<button type="button" class="btn btn-danger">').html("Удалить");
+                        elem.on("click", (function(id) {
+                            return function() {
+                                core.connection.socket.emit('event', {
+                                    route: "content",
+                                    event: "contentRemove",
+                                    data: {
+                                        uid: that.options.userId,
+                                        type: "file",
+                                        oid: id
+                                    }
+                                });
+                            }
+                        })(model.id));
+                        return elem;
+                    }})
+                }
                 that.grid = new Grid({
-                    columns: [
-                        {key: "image", title: ""},
-                        {key: "name", title:"Название"},
-                        {key: "size", title: "Размер", template: function(data) {
-                            return bytify(data);
-                        }},
-                        {key: "description", title: "Описание"},
-                        {key: "date", title: "Дата", template: function(data) {return datify(data)}},
-                        {key: "link", title: "Ссылка", template: function(data) {
-                            var elem = $('<a href="'+data+'?download" type="button" class="btn btn-primary">').html("Скачать");
-                            elem.attr('download', data.substr(data.lastIndexOf('/') + 1, data.length));
-                            return elem;
-                        }}
-                    ],
+                    columns: cols,
                     sort: {field: "date", descending: true}
                 });
                 that.on("filesResponse", function(data) {
@@ -110,6 +130,12 @@
                             that.grid.add(data[i]);
                         }
                     }
+                }, true);
+                that.on("remove file", function(data) {
+                    if (that.fullSized && that.grid) {
+                        that.grid.remove(data);
+                    }
+                    that.emit("sizeRequest", that.options.userId);
                 }, true);
                 Widget.fn.initSockets.call(that);
             },

@@ -77,79 +77,52 @@ exports.saveInfo = function(req, res, next) {
 
 exports.savePhoto = function(req, res, next) {
 	var size = 0;
+	var files = [];
+	for (var key in req.files) {
+		if (req.files.hasOwnProperty(key)) {
+			files.push(req.files[key]);
+			size += req.files[key].size;
+		}
+	}
 	async.waterfall([
-		function(callback) {
-			tool.checkDir(req, 'photo', function (err) {
-				if (err) {
-                    return callback({'err': err, 'fm': 'Failed to check directory'});
-                } //fm - это свойство ошибки, по которому я в конце понимаю, где процесс пошел неверно
-				callback(null);
-			});
-		},
 		function (callback) {
-			var files = [];
-			for (var key in req.files) {
-				if (req.files.hasOwnProperty(key)) {
-					files.push(req.files[key]);
+			tool.dirSize('./public/data/'+req.self._id, function(err, dSize) {
+				if (err) return callback({'err': err, 'fm': 'Failed to read user directory stats'});
+				if (req.serverInfo.userSpace - dSize > size) {
+					callback(null, files);
+				} else {
+					log.error('Not enough memory for '+ req.self.username + ' to upload ' + size + ' bytes');
+					callback({'err': new Error("Out of memory"), 'fm': 'Not enough memory'})
 				}
-			}
-			async.map (files, function(file, callback) {
-				fs.stat(file.path, function(err, stats) {
-					if (err) return callback({'err': err, 'fm': 'Failed to read file stats'});
-					size += file.size;
-					callback(null, file);
-				});
-			}, function(err, files) {
-				if (err) return callback(err);
-				tool.dirSize('./public/data/'+req.self._id, function(err, dSize) {
-					if (err) return callback({'err': err, 'fm': 'Failed to read user directory stats'});
-					log.info((req.serverInfo.userSpace - dSize) + " bytes left for " + req.self.username);
-					if (req.serverInfo.userSpace - dSize > size) {
-						callback(null, files);
-					} else {
-						log.info('Not enough memory for '+ req.self.username + ' to upload ' + size + ' bytes');
-						callback({'err': new Error("Out of memory"), 'fm': 'Not enough memory'})
-					}
-				});
 			});
 		},
 		function(files, callback) {
 			var user = req.self;
-
 			async.map(files, function(file, callback) {
 				var oID = new ObjectID();
-				gm(file.path)
-					.resize(130, 260)
-					.noProfile()
-					.write('./public/data/'+user._id+'/photo/'+oID+'prev.jpg', function(err) {
-						if (err) {
-                            return callback({'err': err, 'fm': 'Failed to write preview'});
-                        }
-						user.data.photo.push({_id: oID,
-										type: 'photo',
-										link: '/data/'+user._id+'/photo/'+oID,
-										message: '',
-										author: user._id
-										});
-						gm(file.path)
-							.quality(100)
-							.noProfile()
-							.write('./public/data/'+user._id+'/photo/'+oID+'.jpg', function(err) {
-								if (err) {
-                                    return callback({'err': err, 'fm': 'Failed to write fullsize'});
-                                }
-								fs.unlink(file.path, function(err) {
-									if (err) {
-                                        return callback({'err': err, 'fm': 'Failed to unlnk temp'});
-                                    }
-									callback(null, oID);
-								});
-							});
+				gm(file.path).resize(130, 260).noProfile().write('./public/data/'+user._id+'/photo/'+oID+'prev.jpg', function(err) {
+					if (err) {
+						return callback({'err': err, 'fm': 'Failed to write preview'});
+					}
+					user.data.photo.push({_id: oID,
+						type: 'photo',
+						link: '/data/'+user._id+'/photo/'+oID,
+						message: '',
+						author: user._id
 					});
+					gm(file.path)
+						.quality(100)
+						.noProfile()
+						.write('./public/data/'+user._id+'/photo/'+oID+'.jpg', function(err) {
+							if (err) return callback({'err': err, 'fm': 'Failed to write fullsize'});
+							fs.unlink(file.path, function(err) {
+								if (err) return callback({'err': err, 'fm': 'Failed to unlnk temp'});
+								callback(null, oID);
+							});
+						});
+				});
 			}, function(err, files) {
-				if (err) {
-                    return callback(err);
-                }
+				if (err) return callback(err);
 				user.save(function(err) {
 					if (err) {
                         return callback({'err': err, 'fm': 'Failed to save user'});
@@ -158,15 +131,9 @@ exports.savePhoto = function(req, res, next) {
 				});
 			});		
 		}
-	], function(err, user, files) {
-		var uploaded = [];
-		for (var key in req.files) {
-			if (req.files.hasOwnProperty(key)) {
-				uploaded.push(req.files[key]);
-			}
-		}
+	], function(err, user, oids) {
 		var count = 0;
-		async.each(uploaded, function(item, callback) {
+		async.each(files, function(item, callback) {
 			fs.exists(item.path, function(exist) {
 				if (exist) {
 					fs.unlink(item.path, function(err) {
@@ -178,7 +145,7 @@ exports.savePhoto = function(req, res, next) {
 				}
 				callback();
 			})
-		}, function(err){
+		}, function(){
 			log.info("Removed " + count +  " temp files, after " + req.self.username + "'s photo upload");
 		});
 		if (err) {
@@ -193,7 +160,7 @@ exports.savePhoto = function(req, res, next) {
 		io.of('/main').to(user._id).emit('event', {
             event: "new photo",
             route: "user",
-            data: files
+            data: oids
         });
 		tool.dirSize("./public/data/"+user._id, function(err, size) {
 			if (err) return log.error("Error of dirSize function after " + user.username + " photo upload");
@@ -203,7 +170,7 @@ exports.savePhoto = function(req, res, next) {
 			data: {total: req.serverInfo.userSpace, used:size}
 			});
 		});
-		req.files = files;
+		req.files = oids;
 		next();
 	});
 };
@@ -354,22 +321,15 @@ exports.makeAvatar = function(req, res, next) {
 
 exports.saveFile = function(req, res, next) {
 	var size = 0;
+	var files = [];
+	for (var key in req.files) {
+		if (req.files.hasOwnProperty(key)) {
+			files.push(req.files[key]);
+			size += req.files[key].size;
+		}
+	}
 	async.waterfall([
-		function(callback) {
-			tool.checkDir(req, 'file', function (err) {
-				if (err) {
-					return callback({'err': err, 'fm': 'Failed to check directory'});
-				} //fm - это свойство ошибки, по которому я в конце понимаю, где процесс пошел неверно
-				callback(null);
-			});
-		},
 		function (callback) {
-			var files = [];
-			for (var key in req.files) {
-				if (req.files.hasOwnProperty(key)) {
-					files.push(req.files[key]);
-				}
-			}
 			async.map (files, function(file, callback) {
 					size += file.size;
 					callback(null, file);
@@ -377,7 +337,6 @@ exports.saveFile = function(req, res, next) {
 				if (err) return callback(err);
 				tool.dirSize('./public/data/'+req.self._id, function(err, dSize) {
 					if (err) return callback({'err': err, 'fm': 'Failed to read user directory stats'});
-					log.info((req.serverInfo.userSpace - dSize) + " bytes left for " + req.self.username);
 					if (req.serverInfo.userSpace - dSize > size) {
 						callback(null, files);
 					} else {
@@ -430,15 +389,9 @@ exports.saveFile = function(req, res, next) {
 				});
 			});
 		}
-	], function(err, user, files) {
-		var uploaded = [];
-		for (var key in req.files) {
-			if (req.files.hasOwnProperty(key)) {
-				uploaded.push(req.files[key]);
-			}
-		}
+	], function(err, user, savedFiles) {
 		var count = 0;
-		async.each(uploaded, function(item, callback) {
+		async.each(files, function(item, callback) {
 			fs.exists(item.path, function(exist) {
 				if (exist) {
 					fs.unlink(item.path, function(err) {
@@ -450,7 +403,7 @@ exports.saveFile = function(req, res, next) {
 				}
 				callback();
 			})
-		}, function(err){
+		}, function(){
 			log.info("Removed " + count +  " temp files, after " + req.self.username + "'s file upload");
 		});
 		if (err) {
@@ -465,7 +418,7 @@ exports.saveFile = function(req, res, next) {
 		io.of('/main').to(user._id).emit('event', {
 			event: "new file",
 			route: "user",
-			data: files
+			data: savedFiles
 		});
 		tool.dirSize("./public/data/"+user._id, function(err, size) {
 			if (err) return log.error("Error of dirSize function after " + user.username + " file upload");
@@ -475,7 +428,7 @@ exports.saveFile = function(req, res, next) {
 				data: {total: req.serverInfo.userSpace, used:size}
 			});
 		});
-		req.files = files;
+		req.files = savedFiles;
 		next();
 	});
 };

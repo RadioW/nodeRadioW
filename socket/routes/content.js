@@ -303,6 +303,18 @@ var ContentRoute = Route_io.inherit({
                                 data: content._id
                             });
                             break;
+                        case "file":
+                            fs.unlink('./public' + content.link, function (err) {
+                                if (err) {
+                                    return that.emit('error', socket, err.message);
+                                }
+                                that.io.of('/main').to(socket.request.watch).emit('event', {
+                                    route: "user",
+                                    event: "remove file",
+                                    data: content._id
+                                });
+                            });
+                            break;
                     }
                 });
             });

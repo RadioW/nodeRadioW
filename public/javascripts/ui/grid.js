@@ -46,14 +46,14 @@
                     if (that.columns.hasOwnProperty(key)) {
                         var col = that.columns[key];
                         row[col.number] = $('<td>');
-                        if (model.hasOwnProperty && model.hasOwnProperty(key)) {
+                        //if (model.hasOwnProperty && model.hasOwnProperty(key)) {
                             var item = model[key];
                             if (col.template instanceof Function) {
-                                row[col.number].append(col.template(item));
+                                row[col.number].append(col.template(item, model));
                             } else {
-                                row[col.number].html(item.toString());
+                                row[col.number].html(item && item.toString());
                             }
-                        }
+                        //}
                     }
                 }
                 tr.append(row);
@@ -149,6 +149,15 @@
                     that.initHeader();
                 }
                 that.table.append($('<tbody>'));
+            },
+            "remove": function(id) {
+                var that = this;
+                for (var i = 0; i < that._data.length; ++i) {
+                    if (that._data[i].id === id) {
+                        that._data.splice(i, 1)[0]._wrapper.remove();
+                        break;
+                    }
+                }
             }
         });
 

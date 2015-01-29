@@ -11,33 +11,33 @@ exports.convertDate = function(date) {
 	return date.getFullYear()+'-'+(date.getMonth()+1 > 9 ? date.getMonth()+1 : '0' + (date.getMonth() + 1))+'-'+(date.getDate() > 9 ? date.getDate() : '0'+date.getDate());
 };
 
-exports.checkDir = function(req, dirName, callback) {
+exports.checkDir = function(id, dirName, callback) {
 	
-		fs.exists('./public/data/'+req.session.user, function(exists) {
+		fs.exists('./public/data/'+id, function(exists) {
 			if (exists) {
-				fs.exists('./public/data/'+req.session.user+'/'+dirName, function(pExists) {
+				fs.exists('./public/data/'+id+'/'+dirName, function(pExists) {
 					if (pExists) {
 						return callback();
 					} else {
-						fs.mkdir('./public/data/'+req.session.user+'/'+dirName, function(err) {
+						fs.mkdir('./public/data/'+id+'/'+dirName, function(err) {
 							if (err) {
-								log.error('can\'t create '+dirName+' in ./public/'+req.session.user);
-								return callback(new Error('Can\'t create '+dirName+' in ./public/'+req.session.user));
+								log.error('can\'t create '+dirName+' in ./public/'+id);
+								return callback(new Error('Can\'t create '+dirName+' in ./public/'+id));
 							}
 							return callback();
 						});
 					}
 				});
 			} else {
-				fs.mkdir('./public/data/'+req.session.user, function(err) {
+				fs.mkdir('./public/data/'+id, function(err) {
 					if (err) {
-						log.error('can\'t create /'+req.session.user+' in ./public/');
-						return callback(new Error('can\'t create /'+req.session.user+' in ./public/'));
+						log.error('can\'t create /'+id+' in ./public/');
+						return callback(new Error('can\'t create /'+id+' in ./public/'));
 					}
-					fs.mkdir('./public/data/'+req.session.user+'/'+dirName, function(err) {
+					fs.mkdir('./public/data/'+id+'/'+dirName, function(err) {
 						if (err) {
-							log.error('can\'t create '+dirName+' in ./public/'+req.session.user);
-							return callback(new Error('Can\'t create '+dirName+' in ./public/'+req.session.user));
+							log.error('can\'t create '+dirName+' in ./public/'+id);
+							return callback(new Error('Can\'t create '+dirName+' in ./public/'+id));
 						}
 						return callback();
 					});

@@ -1,3 +1,4 @@
+"use strict";
 var crypto = require('crypto');
 var async = require('async');
 var HttpError = require('../error').HttpError;
@@ -251,10 +252,19 @@ schema.statics.registrate = function (username, password, callback) {
 					title: "file"
 				});
 
-				user.save(function(err) {
+				fs.mkdir('./public/data/'+user._id, function(err) {
 					if (err) return callback(err);
-					callback (null, user);
-				});
+					async.each(["photo", "file"], function(name, callback) { //initializing directories
+						fs.mkdir('./public/data/'+user._id+'/photo', function(err) {
+							callback(err, user);
+						});
+					}, function(err) {
+						if (err) return callback(err);
+						user.save(function(err) {
+							callback (err, user);
+						});
+					});
+				})
 			} else {
 				callback (new RegError('Пользователь с таким именем уже существует'))
 			}
