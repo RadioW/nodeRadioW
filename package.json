@@ -1,6 +1,6 @@
 {
   "name": "application-name",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "private": true,
   "scripts": {
     "start": "node app.js"
@@ -13,8 +13,8 @@
     "async": "*",
     "connect": "2.x.x",
     "connect-mongo": "*",
-    "mongodb": "1.x.x",
-    "mongoose": "3.x.x",
+    "mongodb": "*",
+    "mongoose": "*",
     "bson": "*",
     "nconf": "*",
     "winston": "*",

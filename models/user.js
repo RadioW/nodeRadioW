@@ -42,7 +42,7 @@ var userData = new Schema ({
 		ref: "User"
 	},
 	message: String,
-	comments: [userData],
+	comments: [],
 	meta: [{
         status: String,
         date: Date
