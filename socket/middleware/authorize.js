@@ -62,6 +62,7 @@ function loadUser(session, callback) {
 	}
 	var username = "Guest " + session.gid;
 	var user = new User({username: username, password: "123"});
+	user.isGuest = true;
 	return callback(null, user); 
   }
 
@@ -74,6 +75,7 @@ function loadUser(session, callback) {
       return callback(null, null);
     }
     //log.debug("user findbyId result: " + user);
+    user.isGuest = false;
     callback(null, user);
   });
 }

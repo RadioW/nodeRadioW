@@ -48,7 +48,7 @@
                         pane.messageArea.keypress(function(e) {
                             if (e.keyCode == 13 && !e.shiftKey) {
                                 e.preventDefault();
-                                that.emitMessage();
+                                that.emitMessage(pane.messageArea.val());
                                 pane.messageArea.val("")
                             }
                         });

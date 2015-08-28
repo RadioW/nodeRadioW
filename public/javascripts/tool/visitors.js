@@ -26,7 +26,7 @@
                                 event: "info",
                                 route: "main",
                                 handler: function(data) {
-                                    return data.users.length;
+                                    return data.userCount;
                                 }
                             }
                         },
@@ -36,7 +36,7 @@
                                 event: "info",
                                 route: "main",
                                 handler: function(data) {
-                                    return data.guests.length;
+                                    return data.guestCount;
                                 }
                             }
                         }
@@ -67,8 +67,11 @@
             "refresh": function() {
                 var that = this;
                 that.content.empty();
-                for (var i = 0; i < that.users.length; ++i) {
-                    that.content.append($('<a class="tool-visitors-link" href="/user/'+that.users[i].id+'">').html(that.users[i].name));
+                for (var name in that.users) {
+                    if (that.users.hasOwnProperty(name)) {
+                        var user = that.users[name];
+                        that.content.append($('<a class="tool-visitors-link" href="/user/'+user.id+'">').html(name));
+                    }
                 }
                 core.explorer.clickers(that.content.find('a'));
             }

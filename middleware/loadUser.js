@@ -7,7 +7,6 @@ module.exports = function(req, res, next) {
 	User.findById(req.session.user, function (err, user) {
 		if (err) return next(err);
 		if (!user) return next(err);
-		console.log('loaded user');
 
 		req.self = res.locals.self = user;
 		next();
