@@ -12,6 +12,7 @@
     defineArray.push(m.page.$chat);
     defineArray.push(m.page.$login);
     defineArray.push(m.page.$users);
+    defineArray.push(m.page.$music);
 
     define(moduleName, defineArray, function pageCollection_module(){
         var PageCollection = {};

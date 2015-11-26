@@ -33,18 +33,13 @@
                     }
                 };
                 if (params.userId === core.user.id) {
-                    that.file = new Fileinput({
+                    var file = new Fileinput({
                         "url": "/user/saveFile",
                         "multiple": true,
-                        "successMessage": "Файлы успешно загружены"
+                        "successMessage": "Файлы успешно загружены",
+                        "name": "file"
                     });
-                    mainExpanded.controls = [{
-                        name: "file",
-                        wrapper: that.file.wrapper
-                    }];
-                    mainExpanded.destroy = function() {
-                        that.file.destructor();
-                    }
+                    mainExpanded.controls = [file];
                 }
                 var baseOptions = {
                     "name": "Хранилище",
@@ -91,13 +86,14 @@
                                     }
                                 });
                             }
-                        })(model.id));
+                        })(model._id));
                         return elem;
                     }})
                 }
                 that.grid = new Grid({
                     columns: cols,
-                    sort: {field: "date", descending: true}
+                    sort: {field: "date", descending: true},
+                    id: "_id"
                 });
                 that.on("filesResponse", function(data) {
                     that.grid.data(data);

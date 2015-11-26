@@ -51,20 +51,19 @@
                 }
 
                 CClass.call(that);
-                that.uncyclic = [];
+                that._uncyclic = [];
             },
             "destructor": function () {
                 var that = this;
-                var lIndex, lKey;
 
-                for (lIndex = 0; lIndex < that.uncyclic.length; ++lIndex) {
-                    that.uncyclic[lIndex].call();
+                for (var i = 0; i < this._uncyclic.length; ++i) {
+                    this._uncyclic[i]();
                 }
 
-                for (lKey in that) {
-                    if (that.hasOwnProperty(lKey)) {
-                        that[lKey] = undefined;
-                        delete that[lKey];
+                for (var key in that) {
+                    if (that.hasOwnProperty(key)) {
+                        that[key] = undefined;
+                        delete that[key];
                     }
                 }
             }

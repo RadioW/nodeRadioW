@@ -10,10 +10,12 @@
     var defineArray = [];
     defineArray.push(m.$widget);
     defineArray.push(m.$blog);
+    defineArray.push(m.ui.$button);
 
     define(moduleName, defineArray, function blog_module() {
         var Widget = require(m.$widget);
         var CBlog = require(m.$blog);
+        var Button = require(m.ui.$button);
 
         var Blog = Widget.inherit({
             "className": "Blog",
@@ -35,43 +37,43 @@
                     }
                 };
                 if (params.userId == core.user.id) {
+
+                    var newBlog = new Button({
+                        name:"submit",
+                        icon: "ok",
+                        color: "success"
+                    });
+                    newBlog.on("click", function() {
+                        var msg = that.textarea.val();
+                        if (msg.replace(/\s/g, "").length) {
+                            that.emit('blog', {
+                                message: msg,
+                                editing: that.editingBlog
+                            });
+                            that.textarea.val("");
+                            that.switchMode();
+                        }
+                    });
                     panes.writerMode = {
                         title: "Новый блог",
                         type: "modeExpanded",
                         name: "writerMode",
                         icon: "pencil",
                         initialize: function() {
-                            var area = this.textarea = $('<textarea class="form-control blogArea" name="message">');
+                            var area = that.textarea = $('<textarea class="form-control blogArea" name="message">');
                             this.content.append(area);
                         },
                         activate: function(options) {
                             if (options) {
                                 that.editingBlog = options.id;
-                                this.textarea.val(options.message);
+                                that.textarea.val(options.message);
                             }
                         },
                         deactivate: function() {
-                            this.textarea.val("");
+                            that.textarea.val("");
                             that.editingBlog = undefined;
                         },
-                        controls: [
-                            {
-                                name:"submit",
-                                icon: "ok",
-                                color: "success",
-                                click: function() {
-                                    var msg = this.textarea.val();
-                                    if (msg.replace(/\s/g, "").length) {
-                                        that.emit('blog', {
-                                            message: msg,
-                                            editing: that.editingBlog
-                                        });
-                                        this.textarea.val("");
-                                        that.switchMode();
-                                    }
-                                }
-                            }
-                        ]
+                        controls: [newBlog]
                     }
                 }
                 var baseOptions = {

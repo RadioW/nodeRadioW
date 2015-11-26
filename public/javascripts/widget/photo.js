@@ -55,20 +55,15 @@
                     }
                 };
                 if (core.user.id == params.userId) {
-                    var file = that.file = new Fileinput({
+                    var file = new Fileinput({
                         "url": "/user/savePhoto",
                         "multiple": true,
                         "maxFileSize": (20 * 1024 * 1024),
                         "allowedTypes" : ['image/png', 'image/jpg', 'image/gif', 'image/jpeg'],
-                        "successMessage": "Фотографии успешно загружены"
+                        "successMessage": "Фотографии успешно загружены",
+                        "name": "upload"
                     });
-                    panes.mainExpanded.controls = [{
-                        name: "upload",
-                        wrapper: file.wrapper
-                    }];
-                    panes.mainExpanded.destroy = function() {
-                        that.file.destructor();
-                    }
+                    panes.mainExpanded.controls = [file];
                 }
                 var baseOptions = {
                     "name": "Фото",

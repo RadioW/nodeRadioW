@@ -904,3 +904,32 @@ footer {
     overflow-y: scroll;
     padding: 0 0 0 15px;
 }
+
+.w-list {
+    float: left;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    border: 1px solid black;
+}
+
+.w-list .w-list-item:not(:last-child) {
+    border-bottom: 1px solid black
+}
+
+.w-list-item {
+    height: 40px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.w-list-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.w-list-content {
+    height: 100%;
+    text-align: center;
+    overflow: hidden;
+}

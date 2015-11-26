@@ -25,7 +25,7 @@
                     that.title = param.route;
                 }
                 var pb = that.wrapper = $('#pseudoBody');
-                if (param && param.html) {
+                if (param && typeof param.html == "string") {
                     pb.html(param.html);
                     core.explorer.clickers($('a', pb.get(0)));
                 }

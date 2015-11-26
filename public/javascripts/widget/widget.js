@@ -63,7 +63,13 @@
                     if (that.options.panes.hasOwnProperty(name) && name !== "main" && name !== "mainExpanded") {
                         var pane = new Pane(that.options.panes[name]);
                         that.container.append(pane.wrapper);
-                        that.panes[pane.name] = pane;
+                        that.panes[pane.name()] = pane;
+                        pane.on("switchMode", function() {
+                            that.switchMode(this.name());
+                        });
+                        pane.on("switchOffMode", function() {
+                            that.switchMode();
+                        });
                     }
                 }
                 var mOpts = that.options.panes && that.options.panes.main;
@@ -71,6 +77,7 @@
                     title: that.options.name,
                     name: "main",
                     type: "main",
+                    noSwitch: true,
                     initialize: function() {
                         that.initContent(this);
                         that.initSockets(this);
@@ -81,6 +88,7 @@
                     title: that.options.name,
                     name: "mainExpanded",
                     type: "mainExpanded",
+                    noSwitch: true,
                     initialize: function() {
                         that.initExpandedContent(this);
                         //that.initSockets();
@@ -95,10 +103,10 @@
                 for (var key in that.panes) {
                     if (that.panes.hasOwnProperty(key) && !that.panes[key].noSwitch) {
                         if (that.panes[key].type === "mode") {
-                            that.panes.main.switchSlot.append(that.panes[key].switchOn);
+                            that.panes.main.switchSlot.append(that.panes[key].switchOn.wrapper);
                         }
-                        if (that.panes[key].type === "modeExpanded") {
-                            that.panes.mainExpanded.switchSlot.append(that.panes[key].switchOn);
+                        if (that.panes[key].type === "modeExpanded" && that.panes[key].switchOn) {
+                            that.panes.mainExpanded.switchSlot.append(that.panes[key].switchOn.wrapper);
                         }
                     }
                 }
@@ -106,6 +114,10 @@
                 that.container.append(that.panes.main.wrapper);
                 that.wrapper.on("click", that.proxy.expand);
                 that.panes.main.activate();
+
+                that._uncyclic.push(function() {
+                    that = null;
+                });
             },
             "initWrapper": function() {
                 var that = this;
@@ -113,13 +125,19 @@
                 var border = that.border = $('<div class="thumbnail widgetBorder">');
                 border.css("overflow", "hidden");
                 that.wrapper.append(border);
-                border.on("switchMode", function(e, mode, param) {
+                that.on("switchMode", function(mode, param) {
                     that.switchMode(mode, param);
                 });
+
+
                 that.container = $('<div class="widget-container">');
                 that.border.append(that.container);
                 $("#pseudoBody").append(that.wrapper);
                 that.container.css("opacity", 1);
+
+                that._uncyclic.push(function() {
+                    that = null;
+                });
             },
             "initContent": function() {
             },

@@ -41,12 +41,16 @@
                 $registration: "/javascripts/pages/registration.js",
                 $user: "/javascripts/pages/user.js",
                 $login: "/javascripts/pages/login.js",
-                $users: "/javascripts/pages/users.js"
+                $users: "/javascripts/pages/users.js",
+                $music: "/javascripts/pages/music.js"
             },
+            "$ui": "/javascripts/ui/ui.js",
             ui:{
                 $fileinput: "/javascripts/ui/fileinput.js",
                 $grid: "/javascripts/ui/grid.js",
-                $pane: "/javascripts/ui/pane.js"
+                $list: "/javascripts/ui/list.js",
+                $pane: "/javascripts/ui/pane.js",
+                $button: "/javascripts/ui/button.js"
             },
             $content: "/javascripts/content/content.js",
             $blog: "/javascripts/content/blog.js",

@@ -8,12 +8,12 @@
     requirejs._moduleLoad(moduleName);
 
     var defineArray = [];
-    defineArray.push(m.$class);
+    defineArray.push(m.$ui);
 
     define(moduleName, defineArray, function fileinput_module() {
-        var Class = require(m.$class);
+        var Ui = require(m.$ui);
 
-        var Fileinput = Class.inherit({
+        var Fileinput = Ui.inherit({
             "className": "Fileinput",
             "constructor": function (params) {
                 var that = this;
@@ -27,9 +27,7 @@
                     "allowedTypes": []
                 };
                 $.extend(baseOptions, params);
-                that.options = baseOptions;
-
-                Class.call(that);
+                Ui.fn.constructor.call(that, baseOptions);
                 that.allowedTypes = {};
                 for (var i = 0; i < baseOptions.allowedTypes.length; ++i) {
                     that.allowedTypes[baseOptions.allowedTypes[i]] = true;
@@ -39,15 +37,16 @@
             "destructor": function() {
                 var that = this;
 
+                delete this.allowedTypes;
                 that.form.off();
                 that.input.off();
                 that.wrapper.remove();
-                Class.fn.destructor.call(that);
+                Ui.fn.destructor.call(that);
             },
             "initWrapper": function() {
                 var that = this;
 
-                var wrapper = that.wrapper = $('<div>').css("overflow", "hidden");
+                var wrapper = that.wrapper.css("overflow", "hidden");
                 var input = that.input = $('<input type="file" name="'+ that.options.inputName +'"'+ (that.options.multiple ? "multiple": "") +'>');
                 var form = that.form = $('<form enctype="multipart/form-data" method="POST">');
                 that.button = $('<span class="btn btn-primary btn-file">').css("position", "relative");
@@ -136,6 +135,7 @@
                             "opacity": "1"
                         });
                         progressBar.css('width', 0);
+                        form[0].reset();
                         launchModal(message);
                     }
                 });

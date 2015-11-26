@@ -113,6 +113,13 @@
                         id: params[0],
                         oid: params[2]
                     })
+                } else if (route === "music") {
+                    core.activePage = new that.pages[route]({
+                        html: html,
+                        artist: params[0],
+                        album: params[1],
+                        sound: params[2]
+                    });
                 } else if (that.pages[route]) {
                     core.activePage = new that.pages[route]({
                         html: html

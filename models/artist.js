@@ -1,8 +1,9 @@
 /**
  * Created by betrayer on 28.08.15.
  */
-var mongoose = require('../libs/mongoose'),
-  Schema = mongoose.Schema;
+"use strict";
+var mongoose = require('../libs/mongoose');
+var Schema = mongoose.Schema;
 
 var schema = new Schema({
 	name: {
@@ -30,5 +31,16 @@ var schema = new Schema({
         type: Date
     }
 });
+
+schema.statics.register = function(proto, callback) {
+    var Artist = this;
+
+    var artist = new Artist(proto);
+    artist.save(callback);
+};
+
+schema.methods.addAlbum = function(album) {
+    this.albums.push(album);
+};
 
 exports.Artist = mongoose.model('Artist', schema);

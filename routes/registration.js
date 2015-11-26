@@ -9,7 +9,7 @@ exports.get = function (req, res) {
 	var ajax = false;
 	if (req.xhr) ajax = true;
 	res.render('registration', {ajax:ajax});
-}
+};
 
 exports.post = function (req, res, next) {
 	if (!req.body.username) return next (new HttpError (403, "Не получено имя пользователя"));
@@ -36,4 +36,4 @@ exports.post = function (req, res, next) {
 				res.send({});
 		})
 	});
-}
+};

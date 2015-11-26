@@ -19,7 +19,8 @@
                 var baseOptions = {
                     "columns": false, //must be array of objects
                     "width": "100%",
-                    "height": ""
+                    "height": "",
+                    "id": "id"
                 };
                 $.extend(baseOptions, params);
                 that.options = baseOptions;
@@ -39,8 +40,8 @@
                 var that = this;
                 var row = new Array(that.options.columns.length);
                 var tr = $('<tr>');
-                if (model.id) {
-                    tr.attr('id', 'w-grid-model-' + model.id + '');
+                if (model[that.options.id]) {
+                    tr.attr('id', 'w-grid-model-' + model[that.options.id] + '');
                 }
                 for (var key in that.columns) {
                     if (that.columns.hasOwnProperty(key)) {
@@ -153,7 +154,7 @@
             "remove": function(id) {
                 var that = this;
                 for (var i = 0; i < that._data.length; ++i) {
-                    if (that._data[i].id === id) {
+                    if (that._data[i][that.options.id] === id) {
                         that._data.splice(i, 1)[0]._wrapper.remove();
                         break;
                     }

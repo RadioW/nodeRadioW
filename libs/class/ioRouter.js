@@ -9,6 +9,7 @@ var Chat = require('../../socket/routes/chat');
 var Registration = require('../../socket/routes/registration');
 var User = require('../../socket/routes/user');
 var Content = require('../../socket/routes/content');
+var Music = require('../../socket/routes/music');
 
 var Router_io = Class.inherit({
     "className": "Router_io",
@@ -27,7 +28,8 @@ var Router_io = Class.inherit({
             chat: new Chat(that.io),
             registration: new Registration(that.io),
             user: new User(that.io),
-            content: new Content(that.io)
+            content: new Content(that.io),
+            music: new Music(that.io)
         }
     },
     "route": function(params, socket) {

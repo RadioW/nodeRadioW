@@ -7,12 +7,14 @@
     requirejs._moduleLoad(moduleName);
 
     var defineArray = [];
-    defineArray.push(m.$class);
+    defineArray.push(m.ui.$button);
+    defineArray.push(m.$ui);
 
     define(moduleName, defineArray, function pane_module() {
-        var Class = require(m.$class);
+        var Button = require(m.ui.$button);
+        var Ui = require(m.$ui);
 
-        var Pane = Class.inherit({
+        var Pane = Ui.inherit({
             "className": "Pane",
             "constructor": function(options) {
                 var that = this;
@@ -20,18 +22,16 @@
                     "name": "Pane",
                     "title": "Pane",
                     "type": "main",
-                    "staticScroll": false
+                    "staticScroll": false,
+                    "switchOnText": ""
                 };
                 $.extend(baseOptions, options);
-                that.options = baseOptions;
+                Ui.fn.constructor.call(that, baseOptions);
                 that.initialized = false;
                 that.deactivated = false;
                 that.activated = false;
                 that.type = that.options.type;
-                that.name = that.options.name;
-                that.noSwitch = that.options.noSwitch === true;
-                that.noFade = false;
-                Class.call(that);
+
                 that.initWrapper();
                 if (that.type.indexOf("mode") !== -1) {
                     that.initSwitches();
@@ -45,24 +45,20 @@
 
                 for (var i in that.controls) {
                     if (that.controls.hasOwnProperty(i)) {
-                        that.controls[i].off();
-                        that.controls[i].remove();
+                        that.controls[i].destructor();
                     }
                 }
                 if (that.switchOn) {
-                    that.switchOn.off();
-                    that.switchOn.remove();
+                    that.switchOn.destructor();
+                }
+
+                if (that.switchOff) {
+                    that.switchOff.destructor()
                 }
                 that.switchOn = undefined;
-                if (that.switchOff) {
-                    that.switchOff.off();
-                    that.switchOff.remove();
-                }
                 that.switchOff = undefined;
-                that.controls = {};
-
-                that.wrapper.remove();
-                Class.fn.destructor.call(that);
+                that.controls = undefined;
+                Ui.fn.destructor.call(that);
             },
             "activate": function (param) {
                 var that = this;
@@ -111,59 +107,39 @@
                 that.controls = {};
                 for (var i = 0; i<that.options.controls.length; ++i) {
                     var opt = that.options.controls[i];
-                    if (!opt.name) continue;
-                    if (opt.wrapper) {
-                        that.controls[opt.name] = opt.wrapper;
+                    if (opt instanceof Ui) {
+                        that.controls[opt.name()] = opt;
                         that.controlsSlot.append(opt.wrapper);
-                        continue;
                     }
-                    var wrapper = $('<button class="btn">');
-                    if (opt.color) {
-                        if (opt.color == "default" || opt.color == "primary" || opt.color == "default" || opt.color == "danger" || opt.color == "success" || opt.color == "warning" || opt.color == "info") {
-                            wrapper.addClass("btn-" + opt.color + "");
-                        } else {
-                            wrapper.css("color", opt.color);
-                        }
-                    }
-                    if (opt.icon) {
-                        wrapper.append($('<i class="glyphicon glyphicon-'+ opt.icon +'">'));
-                    } else if (opt.text) {
-                        wrapper.html(opt.text);
-                    } else {
-                        wrapper.html(opt.name);
-                    }
-                    wrapper.on("click", (function(click) {
-                        return function () {click.call(that)}
-                    })(opt.click));
-                    that.controls[opt.name] = wrapper;
-                    that.controlsSlot.append(wrapper);
                 }
             },
             "initSwitches": function() {
                 var that = this;
-                if (!that.noSwitch) {
-                    that.switchOn = $('<button class="btn btn-primary">');
-                    var switchOnText = that.options.switchOnText || that.options.name;
-                    var switchOnInner;
-                    if (that.options.icon) {
-                        switchOnInner = $('<i class="glyphicon glyphicon-' + that.options.icon + '">');
-                    } else {
-                        switchOnInner = $('<p>' + switchOnText + '</p>');
-                    }
-                    that.switchOn.append(switchOnInner).css({
+                if (!that.options.noSwitch) {
+                    that.switchOn = new Button({
+                        name: that.options.name,
+                        text: that.options.switchOnText,
+                        icon: that.options.icon,
                         float: "left"
-                    }).on("click", function () {
-                        that.wrapper.parent().trigger("switchMode", [that.options.name]);
+                    });
+                    that.switchOn.on("click", function() {
+                        that.trigger("switchMode");
                     });
                 }
+                that.switchOff = new Button({
+                    name: that.options.name + "_off",
+                    color: "danger",
+                    icon: "chevron-down"
+                });
+                that.switchOff.on("click", function() {
+                    that.trigger("switchOffMode");
+                });
 
-                that.switchOff = $('<button class="btn btn-danger">')
-                    .append($('<i class="glyphicon glyphicon-chevron-down">'))
-                    .css({float: "left"})
-                    .on("click", function() {
-                        that.wrapper.parent().trigger("switchMode");
-                    });
-                that.switchSlot.append(that.switchOff);
+                that.switchSlot.append(that.switchOff.wrapper);
+
+                that._uncyclic.push(function() {
+                    that = null;
+                });
             },
             "initWrapper": function() {
                 var that = this;

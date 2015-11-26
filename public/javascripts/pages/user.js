@@ -15,7 +15,7 @@
     defineArray.push(m.widget.$messages);
     defineArray.push(m.widget.$file);
 
-    define(moduleName, defineArray, function registration_module(){
+    define(moduleName, defineArray, function user_module(){
         var Page = require(m.$page);
         var Info = require(m.widget.$info);
         var Blog = require(m.widget.$blog);

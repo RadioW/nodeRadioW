@@ -503,7 +503,7 @@ var UserRoute = Route_io.inherit({
 
                 for (var i = 0; i < files.length; ++i) {
                     answer.push({
-                        id: files[i]._id,
+                        _id: files[i]._id,
                         description: files[i].description,
                         date: files[i].date,
                         name: files[i].name,

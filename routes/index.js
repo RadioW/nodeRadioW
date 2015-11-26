@@ -26,6 +26,7 @@ module.exports = function (app) {
 	app.post('/user/photoDescription/:id', loadUser, forAuth, userRoute.photoDescription);
 	app.get('/user/:id/:tool/:pid', loadUser, userRoute.tool);
     app.get('/user/:id/:tool', loadUser, userRoute.tool);
+	app.get('/music', loadUser, forAuth, require('./music').get);
 	
 	//app.get('/conclave', forAuth, forAdmin, require('./conclave').get);
 	//app.post('/conclave/give', forAuth, forAdmin, require('./conclave').give);
